@@ -1,0 +1,20 @@
+# MD trajectories and large files
+*.nc
+*.dcd
+*.xtc
+*.trr
+*.rst
+*.restrt
+
+# Temporary files
+*~
+*.tmp
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
