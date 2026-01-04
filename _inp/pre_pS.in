@@ -1,0 +1,55 @@
+Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
+ &cntrl
+	! GENERAL FLAGS DESCRIBING THE CALCULATION
+	imin=0,
+
+	! NATURE AND FORMAT OF THE INPUT
+	irest=1,
+	ntx=5,
+	ntwr=10000,    ! Number of timesteps to write out a backup restrt file
+	ntwx=10000,
+
+	! NATURE AND FORMAT OF THE OUTPUT
+	ntxo=2,
+	ntpr=5000,
+	iwrap=0,
+
+	! FROZEN OR RESTRAINT ATOMS
+	ntr=1,
+	restraint_wt=1.0,
+	restraintmask='(!:WAT & !@H=)',
+
+
+	! MOLECULAR DYNAMICS
+	nstlim=250000,
+	dt=0.004,
+
+	! TEMPERATURE REGULATION
+	ntt=3,
+	temp0=300.0,
+	tautp=2.0,
+	gamma_ln=5 
+	
+	! PRESSURE REGULATION
+	ntp=1,
+	barostat=2
+	taup=2.0,
+
+	! SHAKE BOND LENGTH CONSTRAINTS
+	ntc=2,
+	
+	! POTENTIAL FUNCTION PARAMETERS
+	ntf=2,
+	ntb=2,
+	dielc=1.0,
+	cut=9.0,
+
+	! NON-EQUILIBRIUM FREE ENERGY METHOD
+	infe = 1,
+ /
+ &pmd
+ 	output_file = 'pmd_pre_pS.txt'
+ 	output_freq = 50
+ 	cv_file = 'pS.r'
+ /
+eof

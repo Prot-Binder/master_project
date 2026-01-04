@@ -1,0 +1,57 @@
+Pull COM-Dist with NVT Ensemble for Adv-FE-Calculation
+ &cntrl
+	! GENERAL FLAGS DESCRIBING THE CALCULATION
+	imin=0,
+	nmropt=1,
+
+	! NATURE AND FORMAT OF THE INPUT
+	irest=1,
+	ntx=5,
+	ntwr=5000,    ! Number of timesteps to write out a backup restrt file
+	ntwx=5000,
+
+	! NATURE AND FORMAT OF THE OUTPUT
+	ntxo=2,
+	ntpr=1000,
+	iwrap=0,
+
+	! FROZEN OR RESTRAINT ATOMS
+	ntr=0,
+
+	! MOLECULAR DYNAMICS
+	nstlim=250000,
+	dt=0.004,
+
+	! TEMPERATURE REGULATION
+	ntt=3,
+	temp0=300.0,
+	tautp=2.0,
+	gamma_ln=5 
+	
+	! PRESSURE REGULATION
+	ntp=0,
+
+	! SHAKE BOND LENGTH CONSTRAINTS
+	ntc=2,
+	
+	! POTENTIAL FUNCTION PARAMETERS
+	ntf=2,
+	ntb=2,
+	dielc=1.0,
+	cut=9.0,
+ 
+ 	! NON-EQUILIBRIUM FREE ENERGY METHOD
+	infe = 1,
+ /
+ &pmd
+ 	output_file = 'pmd_pre_pull.txt'
+ 	output_freq = 50
+ 	cv_file = '_pnoa.r'
+ /
+ &wt type='REST', istep1=0, istep2=1,value1=1.0,value2=1.0,/
+ &wt type='DUMPFREQ', istep1=100,/
+ &wt type='END',/
+ DUMPAVE=_pnoa_pull.dat
+ DISANG=_pnoa_pull.r
+ /
+eof

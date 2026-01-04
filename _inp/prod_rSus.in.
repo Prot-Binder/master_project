@@ -1,0 +1,50 @@
+Prod HREUS-Run for Adv-FE-Calculation
+ &cntrl
+	! GENERAL FLAGS DESCRIBING THE CALCULATION
+	imin=0,
+
+	! NATURE AND FORMAT OF THE INPUT
+	irest=1,
+	ntx=5,
+	ntwr=125000,    ! Number of timesteps to write out a backup restrt file
+	ntwx=125000,
+
+	! NATURE AND FORMAT OF THE OUTPUT
+	ntxo=2,
+	ntpr=5000,
+	iwrap=0,
+
+	! FROZEN OR RESTRAINT ATOMS
+	ntr=0,
+
+	! MOLECULAR DYNAMICS
+	nstlim=12500000,
+	dt=0.004,
+
+	! TEMPERATURE REGULATION
+	ntt=3,
+	temp0=300.0,
+	tautp=2.0,
+	gamma_ln=5 
+	
+	! PRESSURE REGULATION
+	ntp=0,
+
+	! SHAKE BOND LENGTH CONSTRAINTS
+	ntc=2,
+	
+	! POTENTIAL FUNCTION PARAMETERS
+	ntf=2,
+	ntb=1,
+	dielc=1.0,
+	cut=9.0,
+
+	! NON-EQUILIBRIUM FREE ENERGY METHOD
+	infe = 1,
+ /
+ &pmd
+ 	output_file = 'pmd_prod_hreusWINDOW.txt'
+ 	output_freq = 50
+ 	cv_file = '_lroausWINDOW.r'
+ /
+eof
