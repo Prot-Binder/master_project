@@ -49,4 +49,4 @@ def setup_simulation(cfg, setup_dir, top_dir):
     scaled_topologies_dir = top_dir / "prmtop"
     generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
                               cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
-                              cfg.system.protein_residues, cfg.system.ligand_residues)
+                              ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)

@@ -156,7 +156,7 @@ def generate_scaled_top_files(topology_file: Path, num_replicas: int, distances:
     if not coordinate_file.exists():
         raise FileNotFoundError(f"Coordinate file not found: {coordinate_file}")
 
-    parm = pmd.amber.AmberParm(topology_file, xyz=coordinate_file)
+    # parm = pmd.amber.AmberParm(topology_file, xyz=coordinate_file)
     print(topology_file)
     print(coordinate_file)
     parm = pmd.amber.AmberParm(topology_file, xyz=coordinate_file)
