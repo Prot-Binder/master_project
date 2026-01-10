@@ -174,8 +174,8 @@ def load_config(path: str | Path) -> Config:
     rs_raw = _ensure_mapping(_require(raw, "replica_scaling", "top-level"), "replica_scaling")
     replica_scaling = ReplicaScaling(
         n_rep=int(_require(rs_raw, "n_rep", "replica_scaling")),
-        d_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "d_scaling", "replica_scaling"), "replica_scaling.distances")],
-        e_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "e_scaling", "replica_scaling"), "replica_scaling.epsilons")],
+        d_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "d_scaling", "replica_scaling"), "replica_scaling.d_scaling")],
+        e_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "e_scaling", "replica_scaling"), "replica_scaling.e_scaling")],
     )
 
     # method-specific sections
