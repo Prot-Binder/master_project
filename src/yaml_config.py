@@ -65,8 +65,8 @@ class MethodCfg:
 @dataclass(frozen=True)
 class ReplicaScaling:
     n_rep: int
-    distances: list[float]
-    epsilons: list[float]
+    d_scaling: list[float]
+    e_scaling: list[float]
 
 # -------------------------
 # Method-specific configs
@@ -90,6 +90,7 @@ class Config:
     system: SystemCfg
     restraints: RestraintsCfg
     method: MethodCfg
+    replica_scaling: ReplicaScaling
     rs_remd: Optional[RSREMDCfg] = None
     us: Optional[USCfg] = None
 
@@ -173,8 +174,8 @@ def load_config(path: str | Path) -> Config:
     rs_raw = _ensure_mapping(_require(raw, "replica_scaling", "top-level"), "replica_scaling")
     replica_scaling = ReplicaScaling(
         n_rep=int(_require(rs_raw, "n_rep", "replica_scaling")),
-        distances=[float(x) for x in _ensure_list(_require(rs_raw, "distances", "replica_scaling"), "replica_scaling.distances")],
-        epsilons=[float(x) for x in _ensure_list(_require(rs_raw, "epsilons", "replica_scaling"), "replica_scaling.epsilons")],
+        d_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "d_scaling", "replica_scaling"), "replica_scaling.distances")],
+        e_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "e_scaling", "replica_scaling"), "replica_scaling.epsilons")],
     )
 
     # method-specific sections
@@ -200,6 +201,7 @@ def load_config(path: str | Path) -> Config:
         system=system,
         restraints=restraints,
         method=method,
+        replica_scaling=replica_scaling,
         rs_remd=rs_remd,
         us=us,
     )

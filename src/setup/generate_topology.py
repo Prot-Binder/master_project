@@ -8,7 +8,6 @@ import numpy as np
 from pathlib import Path
 import parmed as pmd
 import parmed.tools as t
-# from openpyxl.pivot.fields import Boolean
 from parmed.amber import AmberMask
 
 
