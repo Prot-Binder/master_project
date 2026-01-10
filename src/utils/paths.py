@@ -31,4 +31,5 @@ def replica_dir(result_dir: Path, i: int) -> Path:
 def top_dir(result_dir: Path) -> Path:
     # get method name from result_dir
     system_name = str(result_dir).split("/")[1]
-    return result_dir / system_name/ "top"
+    # return result_dir / system_name / "top"
+    return Path(result_dir.parts[0]) / system_name / "top"

@@ -38,12 +38,15 @@ def run_hmr(
     Path
         Path to the HMR-modified prmtop.
     """
-    setup_dir.mkdir(parents=True, exist_ok=True)
+    # setup_dir.mkdir(parents=True, exist_ok=True)
 
     if not in_prmtop.exists():
         raise FileNotFoundError(f"Input prmtop not found: {in_prmtop}")
 
     parmed_in = setup_dir / "HMR.parmed"
+
+    print("parmed_in: " + str(parmed_in))
+    print("setup dir: " + str(setup_dir))
 
     # Adjust the ParmEd input file
     adjust_template_file(
