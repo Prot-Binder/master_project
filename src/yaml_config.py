@@ -62,6 +62,11 @@ class RestraintsCfg:
 class MethodCfg:
     name: str  # "rs_remd" | "us" | ...
 
+@dataclass(frozen=True)
+class ReplicaScaling:
+    n_rep: int
+    distances: list[float]
+    epsilons: list[float]
 
 # -------------------------
 # Method-specific configs
@@ -163,6 +168,14 @@ def load_config(path: str | Path) -> Config:
     # method
     m_raw = _ensure_mapping(_require(raw, "method", "top-level"), "method")
     method = MethodCfg(name=str(_require(m_raw, "name", "method")))
+
+    # replica scaling
+    rs_raw = _ensure_mapping(_require(raw, "replica_scaling", "top-level"), "replica_scaling")
+    replica_scaling = ReplicaScaling(
+        n_rep=int(_require(rs_raw, "n_rep", "replica_scaling")),
+        distances=[float(x) for x in _ensure_list(_require(rs_raw, "distances", "replica_scaling"), "replica_scaling.distances")],
+        epsilons=[float(x) for x in _ensure_list(_require(rs_raw, "epsilons", "replica_scaling"), "replica_scaling.epsilons")],
+    )
 
     # method-specific sections
     rs_remd = None
