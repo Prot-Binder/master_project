@@ -1,0 +1,33 @@
+tag: res0
+system:
+  pdb: ~/cluster/master_project/input/pdb_files/5h5s/5h5s_cleaned.pdb
+  name: 5h5s
+  ligand_residues: 164-177
+  protein_residues: 1-163
+  # bond: "377.N-390.C"
+
+restraints:
+  k: 4.0
+  step_size: 1
+  min: 5
+  max: 35
+
+method:
+  name: rs_remd
+
+rs_remd:
+  n_rep: 8
+  replicas: [0,2,4,6,8,10,12,16]
+
+# method:
+#   name: us
+# 
+# us:
+#   start: 5
+#   end: 35
+
+
+
+
+# maybe change nsteps, temperature, dt etc. also via yaml, if necessary
+# analysis still missing

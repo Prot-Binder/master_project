@@ -16,6 +16,7 @@ copy_input_files()
 	cp -v $INPDIR/pre_pull_r.in mdin4	# Run to equilibrate Density with adv. Barostat
 	cp -v $INPDIR/pull_hreus.in mdin5	# Pull + equilibration for every umbrella Window
 	cp -v $INPDIR/prod_uslj.in mdin6		# Production Run for every Umbrells Window
+	cp -v $INPDIR/prod_usre.in mdin_usre
 	cp -v $INPDIR/pull.r ./	
 	cp -v $INPDIR/_lroa.r ./_lroa.r
 	cp -v $INPDIR/_lroaus.r ./_lroaus.r
@@ -35,6 +36,7 @@ generate_run_files()
 	do
 		sed "s/WINDOW/$i/g" mdin5 > mdin5.rep$i
 		sed "s/WINDOW/$i/g" mdin6 > mdin6.rep$i
+		sed "s/WINDOW/$i/g" mdin_usre > mdin_usre.rep$i
 		sed "s/WINDOW/$i/g" pull.r > pull$i.r
 		sed "s/WINDOW/$i/g" _lroaus.r > _lroaus$i.r
 		sed -i "s/= 2.0, 2.0,/= 4.0, 4.0,/g" _lroaus$i.r
