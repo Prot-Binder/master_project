@@ -127,7 +127,7 @@ def write_topology(parm, output_file, n=None):
         f.write(str(t.printLJMatrix(parm, "*")))
 
 def generate_scaled_top_files(topology_file: Path, num_replicas: int, distances: list[float],
-                         epsilons: list[float], coordinate_file: Path, output_file_basename: str,
+                         epsilons: list[float], coordinate_file: Path, output_file_basename: Path,
                          protein_mask: str, ligand_mask: str, d_fixed: bool = False,
                          e_fixed: bool = False, hMassRepartitioning: bool = True) -> None:
 
@@ -159,7 +159,7 @@ def generate_scaled_top_files(topology_file: Path, num_replicas: int, distances:
     # parm = pmd.amber.AmberParm(topology_file, xyz=coordinate_file)
     print(topology_file)
     print(coordinate_file)
-    parm = pmd.amber.AmberParm(topology_file, xyz=coordinate_file)
+    parm = pmd.amber.AmberParm(str(topology_file), xyz=str(coordinate_file))
 
     # change the lj types
     protein_groups = group_by_ljtype(parm, protein_mask)
@@ -183,4 +183,4 @@ def generate_scaled_top_files(topology_file: Path, num_replicas: int, distances:
         change_lj_pairs(parm, protein_groups, ligand_groups, interpolator)
         if hMassRepartitioning is not None:
             HMassRepartition(parm)
-        write_topology(parm, output_file_basename, n)
+        write_topology(parm, str(output_file_basename), n)

@@ -6,6 +6,8 @@
 *.rst
 *.restrt
 
+# topology files
+**/top/
 # Temporary files
 *~
 *.tmp
