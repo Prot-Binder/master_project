@@ -6,9 +6,9 @@ from src.setup.generate_input_files import generate_inputs
 from pathlib import Path
 
 
-def setup_simulation(cfg, setup_dir, top_dir):
+def setup_simulation(cfg):
 
-    """
+
     # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
     tleap_paths = TLeapPaths(
         template_tleap=Path("templates/tleap.in.tpl"),
@@ -17,7 +17,7 @@ def setup_simulation(cfg, setup_dir, top_dir):
     )
 
     prmtop, rst, n_ions_each = run_tleap(
-        setup_dir=setup_dir,
+        setup_dir=cfg.paths.setup_dir,
         pdb_path=cfg.system.pdb,
         bond=cfg.system.bond,  # may be None
         paths=tleap_paths,
@@ -30,9 +30,9 @@ def setup_simulation(cfg, setup_dir, top_dir):
         template=Path("templates/HMR.parmed.tpl"),
     )
 
-    hmr_prmtop = setup_dir / "prmtop"
+    hmr_prmtop = cfg.paths.setup_dir / "prmtop"
     run_hmr(
-        setup_dir=setup_dir,
+        setup_dir=cfg.paths.setup_dir,
         in_prmtop=prmtop,
         out_prmtop=hmr_prmtop,
         paths=parmed_paths,
@@ -40,30 +40,19 @@ def setup_simulation(cfg, setup_dir, top_dir):
 
     print(f"[setup] HMR done: {hmr_prmtop.name}")
     # ---- 3) Generate Restraints ----
-    system_pdb = setup_dir / "system.pdb"
-    create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
+    system_pdb = cfg.paths.setup_dir / "system.pdb"
+    create_restraints(cfg.paths.setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
     
     print(f"[setup] Restraints generated")
 
     # ---- 4) Generate Topology Files with different LJ parameters ----
-    top_file = setup_dir / "prmtop"
-    coord_file = setup_dir / "system.rst"
-    scaled_topologies_dir = top_dir / "prmtop"
+    top_file = cfg.paths.setup_dir / "prmtop"
+    coord_file = cfg.paths.setup_dir / "system.rst"
+    scaled_topologies_dir = cfg.paths.top_dir / "prmtop"
     generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
                               cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
                               ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
-    """
+
 
     # ---- 5) Generate Input Files ----
-    # gnerate dict
-
-    _dict = {}
-    _dict["paths"] = {}
-    _dict["paths"]["templates_root"] = Path("templates")
-    _dict["paths"]["results_root"] = Path("results")
-    _dict["system"] = cfg.system.name
-    _dict["tag"] = cfg.tag
-    _dict["min"] = cfg.restraints.min
-    _dict["max"] = cfg.restraints.max
-    # generate_inputs("eq", _dict)
-    generate_inputs("us", _dict)
+    generate_inputs("us", cfg)

@@ -33,14 +33,13 @@ def generate_eq(method: str, cfg: dict) -> None:
 
 def generate_us(method: str, cfg: dict):
     # copy files from templates to results
-    templates_root: Path = cfg["paths"]["templates_root"].resolve()
-    print(str(templates_root))
-    results_root: Path = cfg["paths"]["results_root"].resolve()
-    system: str = cfg["system"]
-    tag: str = cfg["tag"]
+    templates_root: Path = cfg.paths.templates_root.resolve()
+    results_root: Path = cfg.paths.results_root.resolve()
+    system: str = cfg.system.name
+    tag: str = cfg.tag
 
     template_dir = templates_root / method
-    dest_dir = results_root / system / "rs_remd" / tag / "input"
+    dest_dir = results_root / "input"
 
     copy_files(template_dir, dest_dir)
 
@@ -50,7 +49,7 @@ def generate_us(method: str, cfg: dict):
     # TODO: adjust the restrint file path and the output file path!
     mdin_file = dest_dir/"mdin5"
     # windows_interval = cfg["windows"]
-    w_start = cfg["min"]
+    w_start = cfg.us
     w_end = cfg["max"]
     # w_end = windows_interval.split("-")[1]
     # for window in cfg["windows"]:
@@ -78,7 +77,7 @@ def generate_inputs(method: str, cfg: dict) -> None:
     if method == "eq":
         generate_eq(method, cfg)
     elif method == "us":
-        generate_us("us", cfg)
+        generate_us(method, cfg)
     elif method == "rs_remd":
         generate_rs_remd(cfg)
     elif method == "us_remd":

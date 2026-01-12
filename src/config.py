@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from re import template
+
+# from src.utils.paths import make_result_dir, setup_dir, top_dir
+from src.utils.paths import *
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -82,15 +86,17 @@ class RSREMDCfg:
 class USCfg:
     start: float
     end: float
+    use_restraints: bool
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class Config:
     tag: str
     system: SystemCfg
     restraints: RestraintsCfg
     method: MethodCfg
     replica_scaling: ReplicaScaling
+    paths: dict
     rs_remd: Optional[RSREMDCfg] = None
     us: Optional[USCfg] = None
 
@@ -194,6 +200,8 @@ def load_config(path: str | Path) -> Config:
         us = USCfg(
             start=float(_require(us_raw, "start", "us")),
             end=float(_require(us_raw, "end", "us")),
+            # TODO: use this somewhere in the setup
+            use_restraints=bool(_require(us_raw, "use_restraints", "us")),
         )
 
     cfg = Config(
@@ -208,5 +216,26 @@ def load_config(path: str | Path) -> Config:
     cfg.validate()
     return cfg
 
-def build_config():
-    pass
+def inject_paths(cfg: Config) -> Config:
+    if "paths" in cfg:
+        raise RuntimeError("Paths already added to config")
+
+    result_root = make_result_dir(cfg.system.name, cfg.method.name, cfg.tag)
+    cfg.paths = {
+        # roots
+        "project_root": Path.cwd(), #TODO: change this maybe, not sure about it
+        "results_root": result_root,
+        "templates_root": template_dir(),
+        # method-level
+        "eq_dir": eq_dir(result_root),
+        "top_dir": top_dir(result_root),
+        "setup_dir": setup_dir(result_root),
+    }
+    return cfg
+
+def prepare_directores(cfg: Config) -> None:
+    # create necessary directories
+    for key, path in cfg.paths.items():
+        if "dir" in key:
+            # TODO: maybe make exist_ok=False later
+            path.mkdir(parents=True, exist_ok=True)

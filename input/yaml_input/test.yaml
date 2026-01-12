@@ -30,6 +30,7 @@ rs_remd:
 # us:
 #   start: 5
 #   end: 35
+#   use_restraints_range: true
 
 
 
