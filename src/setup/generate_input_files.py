@@ -49,8 +49,10 @@ def generate_us(method: str, cfg: dict):
     # TODO: adjust the restrint file path and the output file path!
     mdin_file = dest_dir/"mdin5"
     # windows_interval = cfg["windows"]
-    w_start = cfg.us
-    w_end = cfg["max"]
+    # w_start = cfg.us
+    # w_end = cfg["max"]
+    w_start = 5
+    w_end = 10
     # w_end = windows_interval.split("-")[1]
     # for window in cfg["windows"]:
     for window in range(int(w_start), int(w_end)+1):

@@ -86,7 +86,7 @@ class RSREMDCfg:
 class USCfg:
     start: float
     end: float
-    use_restraints: bool
+    use_restraints_range: bool
 
 
 @dataclass(frozen=False)
@@ -201,7 +201,7 @@ def load_config(path: str | Path) -> Config:
             start=float(_require(us_raw, "start", "us")),
             end=float(_require(us_raw, "end", "us")),
             # TODO: use this somewhere in the setup
-            use_restraints=bool(_require(us_raw, "use_restraints", "us")),
+            use_restraints_range=bool(_require(us_raw, "use_restraints_range", "us")),
         )
 
     cfg = Config(
@@ -210,6 +210,7 @@ def load_config(path: str | Path) -> Config:
         restraints=restraints,
         method=method,
         replica_scaling=replica_scaling,
+        paths={},
         rs_remd=rs_remd,
         us=us,
     )
@@ -217,8 +218,8 @@ def load_config(path: str | Path) -> Config:
     return cfg
 
 def inject_paths(cfg: Config) -> Config:
-    if "paths" in cfg:
-        raise RuntimeError("Paths already added to config")
+    #if "paths" in cfg:
+    #    raise RuntimeError("Paths already added to config")
 
     result_root = make_result_dir(cfg.system.name, cfg.method.name, cfg.tag)
     cfg.paths = {
