@@ -24,9 +24,9 @@ def copy_files(root_dir: Path, dest_dir: Path) -> None:
 
 def generate_eq(method: str, cfg: dict) -> None:
     # copy files from templates to results
-    templates_root: Path = cfg["paths"]["templates_root"]
-    results_root: Path = cfg["paths"]["results_root"]
-    system: str = cfg["system"]
+    templates_root: Path = cfg.paths["templates_root"].resolve()
+    results_root: Path = cfg.paths["results_root"].resolve()
+    # system: str = cfg["system"]
 
     template_dir = templates_root / method
     dest_dir = results_root / "input"
