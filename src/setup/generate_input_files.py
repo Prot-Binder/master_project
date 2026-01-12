@@ -48,16 +48,20 @@ def generate_us(method: str, cfg: dict):
     # adjust mdin5 and mdin6 files: adjust the restraints and the path for the output files
     # TODO: adjust the restrint file path and the output file path!
     mdin_file = dest_dir/"mdin5"
-    for window in cfg.windows:
+    windows_interval = cfg["windows"]
+    w_start = windows_interval.split("-")[0]
+    w_end = windows_interval.split("-")[1]
+    # for window in cfg["windows"]:
+    for window in range(int(w_start), int(w_end)+1):
         text = mdin_file.read_text().replace("{WINDOW}", str(window))
         output_file = dest_dir/f"mdin5.rep{window}"
         output_file.write_text(text)
 
-    mdin_file = dest_dir / "mdin6"
-    for window in cfg.windows:
-        text = mdin_file.read_text().replace("{WINDOW}", str(window))
-        output_file = dest_dir / f"mdin6.rep{window}"
-        output_file.write_text(text)
+    # mdin_file = dest_dir / "mdin6"
+    # for window in cfg.windows:
+    #    text = mdin_file.read_text().replace("{WINDOW}", str(window))
+    #    output_file = dest_dir / f"mdin6.rep{window}"
+    #    output_file.write_text(text)
 
 
 def generate_rs_remd(cfg: dict):

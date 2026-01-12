@@ -2,11 +2,13 @@ from src.setup.tleap import TLeapPaths, run_tleap
 from src.setup.hmr2 import ParmEdPaths, run_hmr
 from src.setup.restraints import create_restraints
 from src.setup.generate_topology import generate_scaled_top_files
+from src.setup.generate_input_files import generate_inputs
 from pathlib import Path
 
 
 def setup_simulation(cfg, setup_dir, top_dir):
 
+    """
     # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
     tleap_paths = TLeapPaths(
         template_tleap=Path("templates/tleap.in.tpl"),
@@ -50,3 +52,15 @@ def setup_simulation(cfg, setup_dir, top_dir):
     generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
                               cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
                               ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
+    """
+
+    # ---- 5) Generate Input Files ----
+    # gnerate dict
+
+    _dict = {}
+    _dict["paths"]["template_root"] = Path("/templates")
+    _dict["paths"]["results_root"] = Path("/results")
+    _dict["system"] = cfg.system.name
+    _dict["tag"] = cfg.tag
+    # generate_inputs("eq", _dict)
+    generate_inputs("us", _dict)
