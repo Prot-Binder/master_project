@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path
 
-from src.setup.calc_ions import output_file
+# from src.setup.calc_ions import output_file
 
 
 def copy_files(root_dir: Path, dest_dir: Path) -> None:
@@ -33,13 +33,14 @@ def generate_eq(method: str, cfg: dict) -> None:
 
 def generate_us(method: str, cfg: dict):
     # copy files from templates to results
-    templates_root: Path = cfg["paths"]["templates_root"]
-    results_root: Path = cfg["paths"]["results_root"]
+    templates_root: Path = cfg["paths"]["templates_root"].resolve()
+    print(str(templates_root))
+    results_root: Path = cfg["paths"]["results_root"].resolve()
     system: str = cfg["system"]
     tag: str = cfg["tag"]
 
     template_dir = templates_root / method
-    dest_dir = results_root / system / method / tag / "input"
+    dest_dir = results_root / system / "rs_remd" / tag / "input"
 
     copy_files(template_dir, dest_dir)
 
@@ -48,20 +49,21 @@ def generate_us(method: str, cfg: dict):
     # adjust mdin5 and mdin6 files: adjust the restraints and the path for the output files
     # TODO: adjust the restrint file path and the output file path!
     mdin_file = dest_dir/"mdin5"
-    windows_interval = cfg["windows"]
-    w_start = windows_interval.split("-")[0]
-    w_end = windows_interval.split("-")[1]
+    # windows_interval = cfg["windows"]
+    w_start = cfg["min"]
+    w_end = cfg["max"]
+    # w_end = windows_interval.split("-")[1]
     # for window in cfg["windows"]:
     for window in range(int(w_start), int(w_end)+1):
         text = mdin_file.read_text().replace("{WINDOW}", str(window))
         output_file = dest_dir/f"mdin5.rep{window}"
         output_file.write_text(text)
 
-    # mdin_file = dest_dir / "mdin6"
-    # for window in cfg.windows:
-    #    text = mdin_file.read_text().replace("{WINDOW}", str(window))
-    #    output_file = dest_dir / f"mdin6.rep{window}"
-    #    output_file.write_text(text)
+    mdin_file = dest_dir / "mdin6"
+    for window in range(int(w_start), int(w_end)+1):
+        text = mdin_file.read_text().replace("{WINDOW}", str(window))
+        output_file = dest_dir / f"mdin6.rep{window}"
+        output_file.write_text(text)
 
 
 def generate_rs_remd(cfg: dict):
@@ -74,9 +76,9 @@ def generate_us_remd(cfg: dict):
 
 def generate_inputs(method: str, cfg: dict) -> None:
     if method == "eq":
-        generate_eq(cfg)
+        generate_eq(method, cfg)
     elif method == "us":
-        generate_us(cfg)
+        generate_us("us", cfg)
     elif method == "rs_remd":
         generate_rs_remd(cfg)
     elif method == "us_remd":

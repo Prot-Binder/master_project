@@ -39,10 +39,11 @@ def main(cfg_path: str):
     _del_check_yaml_parsing(cfg)
     # get result path
     _result_dir = make_result_dir(cfg.system.name, cfg.method.name, cfg.tag)
-
+    print(str(_result_dir))
     # TODO: change exist_ok to False
     # 2. setup prmtop, restraints, replica topologies and create mdin files
     _setup_dir = setup_dir(_result_dir)
+    print(str(_setup_dir))
     _setup_dir.mkdir(parents=True, exist_ok=True)
     _top_dir = top_dir(_result_dir)
     _top_dir.mkdir(parents=True, exist_ok=True)

@@ -58,9 +58,12 @@ def setup_simulation(cfg, setup_dir, top_dir):
     # gnerate dict
 
     _dict = {}
-    _dict["paths"]["template_root"] = Path("/templates")
-    _dict["paths"]["results_root"] = Path("/results")
+    _dict["paths"] = {}
+    _dict["paths"]["templates_root"] = Path("templates")
+    _dict["paths"]["results_root"] = Path("results")
     _dict["system"] = cfg.system.name
     _dict["tag"] = cfg.tag
+    _dict["min"] = cfg.restraints.min
+    _dict["max"] = cfg.restraints.max
     # generate_inputs("eq", _dict)
     generate_inputs("us", _dict)
