@@ -7,7 +7,7 @@ JOBID="mhc"
 
 run_US()
 {
-	# run the em and equilibration
+	# run the eq and equilibration
 	sbatch --job-name=${JOBID}_eq run_rmd-seq_alex.sh 0 1 4
 	
 	# Run the Pull equilibration for first range (5-20, step 0.5) in parallel

@@ -1,4 +1,4 @@
-from src.yaml_config import load_config
+from src.config import load_config
 # from src.methods import method_factory
 from src.utils.paths import make_result_dir, setup_dir, top_dir
 from src.setup.system import setup_simulation
@@ -40,6 +40,7 @@ def main(cfg_path: str):
     # get result path
     _result_dir = make_result_dir(cfg.system.name, cfg.method.name, cfg.tag)
 
+    # TODO: change exist_ok to False
     # 2. setup prmtop, restraints, replica topologies and create mdin files
     _setup_dir = setup_dir(_result_dir)
     _setup_dir.mkdir(parents=True, exist_ok=True)

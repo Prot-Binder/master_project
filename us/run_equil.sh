@@ -60,7 +60,7 @@ generate_run_files()
 
 run_HREUS()
 {
-	# run the em and equilibration
+	# run the eq and equilibration
 	eq_jobid=$(sbatch \
 		--job-name=${JOBID}_eq \
 		--gres=gpu:1 \

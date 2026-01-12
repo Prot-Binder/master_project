@@ -207,3 +207,6 @@ def load_config(path: str | Path) -> Config:
     )
     cfg.validate()
     return cfg
+
+def build_config():
+    pass

@@ -17,7 +17,7 @@ MDINDIR="./${JOBID}"
 exclude_ranks=t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042
 run_US()
 {
-	# run the em and equilibration
+	# run the eq and equilibration
 #	eq_jobid=$(sbatch \
 #		--job-name=${JOBID}_eq \
 #		--gres=gpu:1 \
