@@ -228,7 +228,7 @@ def inject_paths(cfg: Config) -> Config:
         "results_root": result_root,
         "templates_root": template_dir(),
         # method-level
-        "eq_dir": eq_dir(result_root),
+        "eq_dir": eq_dir(result_root, cfg.tag),
         "top_dir": top_dir(result_root),
         "setup_dir": setup_dir(result_root),
     }

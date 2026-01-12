@@ -25,11 +25,10 @@ def copy_files(root_dir: Path, dest_dir: Path) -> None:
 def generate_eq(method: str, cfg: dict) -> None:
     # copy files from templates to results
     templates_root: Path = cfg.paths["templates_root"].resolve()
-    results_root: Path = cfg.paths["results_root"].resolve()
-    # system: str = cfg["system"]
+    eq_root: Path = cfg.paths["eq_dir"].resolve()
 
     template_dir = templates_root / method
-    dest_dir = results_root / "input"
+    dest_dir = eq_root / "input"
     copy_files(template_dir, dest_dir)
 
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
@@ -56,9 +55,9 @@ def generate_us(method: str, cfg: dict):
     # define output path for run files like pmd_prod_us or com_pull
     output_path = "./run_output/"
 
-    w_start = float(f"{cfg.us.start:.2f}")
-    w_end = float(f"{cfg.us.end:.2f}")
-    step = float(f"{cfg.restraints.step_size:.2f}")
+    w_start = float(f"{float(cfg.us.start):.2f}")
+    w_end = float(f"{float(cfg.us.end):.2f}")
+    step = float(f"{float(cfg.restraints.step_size):.2f}")
 
     # adjust input files for pull simulation
     mdin_file = dest_dir / "mdin5"

@@ -1,6 +1,9 @@
 # src/paths.py
 from pathlib import Path
 
+from src.setup.calc_ions import result
+
+
 def make_result_dir(system_name: str, method_name: str, tag: str) -> Path:
     """
     results/<system_name>/<method_name>/<tag>/
@@ -13,8 +16,9 @@ def make_result_dir(system_name: str, method_name: str, tag: str) -> Path:
 def setup_dir(result_dir: Path) -> Path:
     return result_dir / "setup"
 
-def eq_dir(result_dir: Path) -> Path:
-    return result_dir / "eq"
+def eq_dir(result_dir: Path, tag: str) -> Path:
+    # return result_dir / "eq"
+    return result_dir.parent.parent / "eq" / tag
 
 def prod_dir(result_dir: Path) -> Path:
     return result_dir / "prod"
