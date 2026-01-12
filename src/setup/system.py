@@ -8,7 +8,6 @@ from pathlib import Path
 
 def setup_simulation(cfg):
 
-
     # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
     tleap_paths = TLeapPaths(
         template_tleap=Path("templates/tleap.in.tpl"),
@@ -23,7 +22,7 @@ def setup_simulation(cfg):
         paths=tleap_paths,
     )
 
-    print(f"[setup] tleap done: {prmtop.name}, {rst.name} (ions each: {n_ions_each})")
+    print(f"\033[92m[setup] tleap done: {prmtop.name}, {rst.name} (ions each: {n_ions_each})\033[0m")
 
     # ---- 2) ParmEd HMR ----
     parmed_paths = ParmEdPaths(
@@ -38,12 +37,13 @@ def setup_simulation(cfg):
         paths=parmed_paths,
     )
 
-    print(f"[setup] HMR done: {hmr_prmtop.name}")
+    print(f"\033[92m[setup] HMR done: {hmr_prmtop.name}\033[0m")
+
     # ---- 3) Generate Restraints ----
     system_pdb = cfg.paths["setup_dir"] / "system.pdb"
     create_restraints(cfg.paths["setup_dir"], system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
     
-    print(f"[setup] Restraints generated")
+    print(f"\033[92m[setup] Restraints generated\033[0m")
 
     # ---- 4) Generate Topology Files with different LJ parameters ----
     top_file = cfg.paths["setup_dir"] / "prmtop"
@@ -53,6 +53,8 @@ def setup_simulation(cfg):
                               cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
                               ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
 
+    print(f"\033[92m[setup] Restraints generated\033[0m")
 
     # ---- 5) Generate Input Files ----
     generate_inputs("us", cfg)
+    print(f"\033[92m[setup] Input files copied and adjusted\033[0m")

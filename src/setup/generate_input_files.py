@@ -20,21 +20,23 @@ def copy_files(root_dir: Path, dest_dir: Path) -> None:
 
 def generate_eq(method: str, cfg: dict) -> None:
     # copy files from templates to results
-    templates_root: Path = cfg["paths"]["templates_root"]
-    results_root: Path = cfg["paths"]["results_root"]
-    system: str = cfg["system"]
+    # templates_root: Path = cfg["paths"]["templates_root"]
+    # results_root: Path = cfg["paths"]["results_root"]
+    # system: str = cfg["system"]
 
-    template_dir = templates_root / method
-    dest_dir = results_root / system / method / "input"
+    # template_dir = templates_root / method
+    # template_dir = templates_root / method
+    # dest_dir = results_root / system / method / "input"
 
-    copy_files(template_dir, dest_dir)
+    # copy_files(template_dir, dest_dir)
 
-    print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
+    # print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
+    pass
 
 def generate_us(method: str, cfg: dict):
     # copy files from templates to results
-    templates_root: Path = cfg.paths.templates_root.resolve()
-    results_root: Path = cfg.paths.results_root.resolve()
+    templates_root: Path = cfg.paths["templates_root"].resolve()
+    results_root: Path = cfg.paths["results_root"].resolve()
     system: str = cfg.system.name
     tag: str = cfg.tag
 
@@ -55,6 +57,7 @@ def generate_us(method: str, cfg: dict):
     w_end = 10
     # w_end = windows_interval.split("-")[1]
     # for window in cfg["windows"]:
+    # adjust pull simulation input files
     for window in range(int(w_start), int(w_end)+1):
         text = mdin_file.read_text().replace("{WINDOW}", str(window))
         output_file = dest_dir/f"mdin5.rep{window}"

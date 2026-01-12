@@ -294,8 +294,11 @@ class ARW_setup(mda.core.universe.Universe):
         file.write("\tcv_type = 'COM_DISTANCE'\n")
         file.write('\tcv_ni = {},\n'.format(com_ni))
         file.write('\tcv_i = {},0,{},0\n'.format(com_i0, com_i1))
-        file.write('\tanchor_position = {}, {}, {}, {},\n'.format(0, 'WINDOW', 'WINDOW', 99))
-        file.write('\tanchor_strength = {}, {},/\n'.format(k_dist, k_dist))
+        # file.write('\tanchor_position = {}, {}, {}, {},\n'.format(0, 'WINDOW', 'WINDOW', 99))
+        # file.write('\tanchor_strength = {}, {},/\n'.format(k_dist, k_dist))
+        file.write('\tanchor_position = {}, {}, {}, {},\n'.format(0, '{WINDOW}', '{WINDOW}', 99))
+        file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA"))
+
 
     def write_pull_file(self, filename, initial_distance=8.0, final_distance=None, 
                    pull_steps=100000, equilibration_steps=150000, 
@@ -328,7 +331,8 @@ class ARW_setup(mda.core.universe.Universe):
         lig_ids = ','.join(self.lig_anchor['0'].ids.astype(str))
         
         # Set final distance - use WINDOW placeholder if not specified
-        final_dist_str = str(final_distance) if final_distance is not None else 'WINDOW'
+        # final_dist_str = str(final_distance) if final_distance is not None else 'WINDOW'
+        final_dist_str = str(final_distance) if final_distance is not None else '{WINDOW}'
         
         # Calculate number of increments
         ninc = pull_steps // increment_freq
