@@ -51,6 +51,6 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
  &wt type = 'REST', istep1 = 0, istep2 = 1, value1 = 1.0, value2 = 1.0,/
  &wt type='DUMPFREQ', istep1=50,/
  &wt type = 'END',/
- DUMPAVE=com_pull_{WINDOW}.txt
- DISANG=pull{WINDOW}.r
+ DUMPAVE={OUT_PATH}com_pull_{WINDOW}.txt
+ DISANG={IN_PATH}pull{WINDOW}.r
 eof

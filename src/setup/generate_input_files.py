@@ -1,6 +1,9 @@
 import shutil
 from pathlib import Path
 
+import numpy as np
+
+
 # from src.setup.calc_ions import output_file
 
 
@@ -12,6 +15,7 @@ def copy_files(root_dir: Path, dest_dir: Path) -> None:
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
 
+    # TODO: check if creating directory here is useful
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     for item in root_dir.iterdir():
@@ -20,25 +24,20 @@ def copy_files(root_dir: Path, dest_dir: Path) -> None:
 
 def generate_eq(method: str, cfg: dict) -> None:
     # copy files from templates to results
-    # templates_root: Path = cfg["paths"]["templates_root"]
-    # results_root: Path = cfg["paths"]["results_root"]
-    # system: str = cfg["system"]
+    templates_root: Path = cfg["paths"]["templates_root"]
+    results_root: Path = cfg["paths"]["results_root"]
+    system: str = cfg["system"]
 
-    # template_dir = templates_root / method
-    # template_dir = templates_root / method
-    # dest_dir = results_root / system / method / "input"
+    template_dir = templates_root / method
+    dest_dir = results_root / "input"
+    copy_files(template_dir, dest_dir)
 
-    # copy_files(template_dir, dest_dir)
-
-    # print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
-    pass
+    print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
 
 def generate_us(method: str, cfg: dict):
-    # copy files from templates to results
+    # copy template files from template folder to results/input
     templates_root: Path = cfg.paths["templates_root"].resolve()
     results_root: Path = cfg.paths["results_root"].resolve()
-    system: str = cfg.system.name
-    tag: str = cfg.tag
 
     template_dir = templates_root / method
     dest_dir = results_root / "input"
@@ -47,34 +46,61 @@ def generate_us(method: str, cfg: dict):
 
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
 
-    # adjust mdin5 and mdin6 files: adjust the restraints and the path for the output files
-    # TODO: adjust the restrint file path and the output file path!
-    mdin_file = dest_dir/"mdin5"
-    # windows_interval = cfg["windows"]
-    # w_start = cfg.us
-    # w_end = cfg["max"]
-    w_start = 5
-    w_end = 10
-    # w_end = windows_interval.split("-")[1]
-    # for window in cfg["windows"]:
-    # adjust pull simulation input files
-    for window in range(int(w_start), int(w_end)+1):
-        text = mdin_file.read_text().replace("{WINDOW}", str(window))
-        output_file = dest_dir/f"mdin5.rep{window}"
-        output_file.write_text(text)
+    # copy restraint files from results/setup to results/input
+    setup_dir = cfg.paths["setup_dir"].resolve()
+    shutil.copy2(setup_dir / "pull.r", dest_dir)
+    shutil.copy2(setup_dir / "_lroaus.r", dest_dir)
 
+    # define input path for restraints file
+    input_path = "../input/"
+    # define output path for run files like pmd_prod_us or com_pull
+    output_path = "./run_output/"
+
+    w_start = float(f"{cfg.us.start:.2f}")
+    w_end = float(f"{cfg.us.end:.2f}")
+    step = float(f"{cfg.restraints.step_size:.2f}")
+
+    # adjust input files for pull simulation
+    mdin_file = dest_dir / "mdin5"
+    restraint_file = dest_dir / "pull.r"
+    for window in np.arange(w_start, w_end + step, step):
+
+        mdin_text = (mdin_file.read_text()
+                     .replace("{WINDOW}", str(window))
+                     .replace("{IN_PATH}", input_path)
+                     .replace("{OUT_PATH}", output_path))
+        mdin_output_file = dest_dir/f"mdin5.rep{window}"
+        mdin_output_file.write_text(mdin_text)
+
+        restraint_text = (restraint_file.read_text()
+                          .replace("{WINDOW}", str(window)))
+        restraint_output_file = dest_dir/f"pull{window}.r"
+        restraint_output_file.write_text(restraint_text)
+
+    # adjust input files for us simulation
     mdin_file = dest_dir / "mdin6"
-    for window in range(int(w_start), int(w_end)+1):
-        text = mdin_file.read_text().replace("{WINDOW}", str(window))
-        output_file = dest_dir / f"mdin6.rep{window}"
-        output_file.write_text(text)
+    restraint_file = dest_dir / "pull.r"
+    for window in np.arange(w_start, w_end + step, step):
+
+        mdin_text = (mdin_file.read_text()
+                .replace("{WINDOW}", str(window))
+                .replace("{IN_PATH}", input_path)
+                .replace("{OUT_PATH}", output_path))
+        mdin_output_file = dest_dir / f"mdin6.rep{window}"
+        mdin_output_file.write_text(mdin_text)
+
+        restraint_text = (restraint_file.read_text()
+                          .replace("{WINDOW}", str(window))
+                          .replace("{KAPPA}", str(cfg.restraints.k)))
+        restraint_output_file = dest_dir / f"_lroaus{window}.r"
+        restraint_output_file.write_text(restraint_text)
 
 
-def generate_rs_remd(cfg: dict):
+def generate_rs_remd(method: str, cfg: dict):
     pass
 
 
-def generate_us_remd(cfg: dict):
+def generate_us_remd(method: str, cfg: dict):
     pass
 
 
@@ -84,8 +110,8 @@ def generate_inputs(method: str, cfg: dict) -> None:
     elif method == "us":
         generate_us(method, cfg)
     elif method == "rs_remd":
-        generate_rs_remd(cfg)
+        generate_rs_remd(method, cfg)
     elif method == "us_remd":
-        generate_us_remd(cfg)
+        generate_us_remd(method, cfg)
     else:
         raise ValueError(f"Unknown method: {method}")

@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def setup_simulation(cfg):
-
+    """
     # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
     tleap_paths = TLeapPaths(
         template_tleap=Path("templates/tleap.in.tpl"),
@@ -53,8 +53,11 @@ def setup_simulation(cfg):
                               cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
                               ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
 
-    print(f"\033[92m[setup] Restraints generated\033[0m")
-
+    print(f"\033[92m[setup] Topology files generated\033[0m")
+    """
     # ---- 5) Generate Input Files ----
     generate_inputs("us", cfg)
+    print(f"\033[92m[setup] Input files copied and adjusted for us\033[0m")
+    generate_inputs("eq", cfg)
+    print(f"\033[92m[setup] Input files copied and adjusted for eq\033[0m")
     print(f"\033[92m[setup] Input files copied and adjusted\033[0m")
