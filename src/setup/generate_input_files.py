@@ -78,7 +78,7 @@ def generate_us(method: str, cfg: dict):
 
     # adjust input files for us simulation
     mdin_file = dest_dir / "mdin6"
-    restraint_file = dest_dir / "pull.r"
+    restraint_file = dest_dir / "_lroaus.r"
     for window in np.arange(w_start, w_end + step, step):
 
         mdin_text = (mdin_file.read_text()

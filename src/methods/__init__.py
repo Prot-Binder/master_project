@@ -1,6 +1,6 @@
 # src/methods/__init__.py
 from .rs_remd import RSREMDMethod
-from .us import USMethod
+from src.methods.us.us import USMethod
 
 def method_factory(cfg):
     if cfg.method == "rs_remd":
