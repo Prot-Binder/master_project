@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from re import template
+# from re import template
 
 # from src.utils.paths import make_result_dir, setup_dir, top_dir
 from src.utils.paths import *
@@ -65,12 +65,18 @@ class RestraintsCfg:
 @dataclass(frozen=True)
 class MethodCfg:
     name: str  # "rs_remd" | "us" | ...
+    setup: bool
+    eq: bool
 
 @dataclass(frozen=True)
-class ReplicaScaling:
+class ReplicaScalingCfg:
     n_rep: int
     d_scaling: list[float]
     e_scaling: list[float]
+
+@dataclass(frozen=True)
+class ClusterCfg:
+    exclude_ranks: list[str]
 
 # -------------------------
 # Method-specific configs
@@ -86,16 +92,19 @@ class RSREMDCfg:
 class USCfg:
     start: float
     end: float
+    step: float
     use_restraints_range: bool
+    replica_scaling: int
 
 
 @dataclass(frozen=False)
 class Config:
     tag: str
+    cluster: ClusterCfg
     system: SystemCfg
     restraints: RestraintsCfg
     method: MethodCfg
-    replica_scaling: ReplicaScaling
+    replica_scaling: ReplicaScalingCfg
     paths: dict
     rs_remd: Optional[RSREMDCfg] = None
     us: Optional[USCfg] = None
@@ -153,6 +162,13 @@ def load_config(path: str | Path) -> Config:
 
     tag = str(_require(raw, "tag", "top-level"))
 
+    # cluster
+    cluster_raw = _ensure_mapping(_require(raw, "cluster", "top-level"), "cluster")
+    cluster = ClusterCfg(
+        exclude_ranks=[str(x) for x in _ensure_list(_require(cluster_raw, "exclude_ranks", "cluster"), "cluster.exclude_ranks")],
+
+    )
+
     # system
     sys_raw = _ensure_mapping(_require(raw, "system", "top-level"), "system")
     system = SystemCfg(
@@ -174,11 +190,15 @@ def load_config(path: str | Path) -> Config:
 
     # method
     m_raw = _ensure_mapping(_require(raw, "method", "top-level"), "method")
-    method = MethodCfg(name=str(_require(m_raw, "name", "method")))
+    method = MethodCfg(
+        name=str(_require(m_raw, "name", "method")),
+        eq=bool(_require(m_raw, "eq", "method")),
+        setup=bool(_require(m_raw, "setup", "method")),
+    )
 
     # replica scaling
     rs_raw = _ensure_mapping(_require(raw, "replica_scaling", "top-level"), "replica_scaling")
-    replica_scaling = ReplicaScaling(
+    replica_scaling = ReplicaScalingCfg(
         n_rep=int(_require(rs_raw, "n_rep", "replica_scaling")),
         d_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "d_scaling", "replica_scaling"), "replica_scaling.d_scaling")],
         e_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "e_scaling", "replica_scaling"), "replica_scaling.e_scaling")],
@@ -200,12 +220,15 @@ def load_config(path: str | Path) -> Config:
         us = USCfg(
             start=float(_require(us_raw, "start", "us")),
             end=float(_require(us_raw, "end", "us")),
+            step=float(_require(us_raw, "step", "us")),
             # TODO: use this somewhere in the setup
             use_restraints_range=bool(_require(us_raw, "use_restraints_range", "us")),
+            replica_scaling=int(_require(us_raw, "replica_scaling", "us")),
         )
 
     cfg = Config(
         tag=tag,
+        cluster=cluster,
         system=system,
         restraints=restraints,
         method=method,
@@ -227,10 +250,13 @@ def inject_paths(cfg: Config) -> Config:
         "project_root": Path.cwd(), #TODO: change this maybe, not sure about it
         "results_root": result_root,
         "templates_root": template_dir(),
+        "script_root": script_dir(cfg.method.name),
+
         # method-level
         "eq_dir": eq_dir(result_root, cfg.tag),
         "top_dir": top_dir(result_root),
         "setup_dir": setup_dir(result_root),
+        "output_dir": output_dir(result_root),
     }
     return cfg
 
@@ -240,3 +266,32 @@ def prepare_directores(cfg: Config) -> None:
         if "dir" in key:
             # TODO: maybe make exist_ok=False later
             path.mkdir(parents=True, exist_ok=True)
+
+def validate_equilibration_settings(cfg: Config):
+    """
+    this method checks if an equilibration already occured or not. The results of this step/method are shared among multiple methods, hence
+    results may exist from a previous run that can be reused.
+    This method needs to be invoked before creating all the directories and the setup step.
+    """
+    eq_dir: Path = cfg.paths["eq_dir"]
+
+    # TODO: Think more of this logic, as files are problably already copied due to setup, without anything else being run
+
+    if cfg.method.eq:
+        # Equilibration IS specified in the .yaml file → directory must not exist or must be empty
+        if eq_dir.is_dir() and any(eq_dir.iterdir()):
+            raise FileExistsError(
+                f"Equilibration directory already exists and is not empty: {eq_dir}"
+            )
+
+    else:
+        # Equilibration NOT specified → directory must exist and be non-empty
+        if not eq_dir.is_dir():
+            raise FileNotFoundError(
+                f"Equilibration directory does not exist: {eq_dir}"
+            )
+
+        if not any(eq_dir.iterdir()):
+            raise FileExistsError(
+                f"Equilibration directory exists but is empty: {eq_dir}"
+            )

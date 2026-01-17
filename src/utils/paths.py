@@ -1,9 +1,6 @@
 # src/paths.py
 from pathlib import Path
 
-from src.setup.calc_ions import result
-
-
 def make_result_dir(system_name: str, method_name: str, tag: str) -> Path:
     """
     results/<system_name>/<method_name>/<tag>/
@@ -35,8 +32,13 @@ def replica_dir(result_dir: Path, i: int) -> Path:
 def top_dir(result_dir: Path) -> Path:
     # get method name from result_dir
     system_name = str(result_dir).split("/")[1]
-    # return result_dir / system_name / "top"
     return Path(result_dir.parts[0]) / system_name / "top"
 
 def template_dir() -> Path:
     return Path("templates")
+
+def output_dir(result_dir: Path) -> Path:
+    return result_dir / "run_output"
+
+def script_dir(method_name: str):
+    return Path("src") / "methods" / method_name

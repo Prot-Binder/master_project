@@ -3,10 +3,6 @@ from pathlib import Path
 
 import numpy as np
 
-
-# from src.setup.calc_ions import output_file
-
-
 def copy_files(root_dir: Path, dest_dir: Path) -> None:
     if not root_dir.is_dir():
         raise FileNotFoundError(f"Source dir not found: {root_dir}")
@@ -49,11 +45,12 @@ def generate_us(method: str, cfg: dict):
     setup_dir = cfg.paths["setup_dir"].resolve()
     shutil.copy2(setup_dir / "pull.r", dest_dir)
     shutil.copy2(setup_dir / "_lroaus.r", dest_dir)
+    shutil.copy2(setup_dir / "_lroa.r", dest_dir)
 
     # define input path for restraints file
     input_path = "../input/"
     # define output path for run files like pmd_prod_us or com_pull
-    output_path = "./run_output/"
+    output_path = "./pmd/"
 
     w_start = float(f"{float(cfg.us.start):.2f}")
     w_end = float(f"{float(cfg.us.end):.2f}")

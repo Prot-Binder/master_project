@@ -1,34 +1,23 @@
 #!/bin/bash
 
-export LC_NUMERIC=C  # Ensures decimal numbers use a dot instead of a comma
+module load pmemd
 
-set -euo pipefail
+window=$1
+MDINDIR=$2
+OUTDIR=$3
+TOPDIR=$4
+REPLICA_SCALING=$5
 
-# save location of the bash scripts
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "Job ID: $SLURM_JOB_ID"
+echo "SLURM local node: $SLURMD_NODENAME"
+echo "Node list: $SLURM_JOB_NODELIST"
+echo "Running on node: $(hostname)"
 
-# execution context
-RUN_DIR="$(pwd)"
+printf "Running Umbrella Sampling for Replica $REPLICA_SCALING: Window $window... "
 
-WIN=$1
-INPUT_DIR=$2
-SETUP_DIR=$3
+pmemd.cuda -O -i $MDINDIR/mdin6.rep$window -o $OUTDIR/mdout6.rep$window -p $TOPDIR/prmtop$REPLICA_SCALING -c $OUTDIR/restrt5.rep$window -r $OUTDIR/restrt6.rep$window -x $OUTDIR/traj6.rep$window.nc -inf $OUTDIR/mdinfo6.rep$window
 
-TEMPLATE="${INPUT_DIR}/mdin_templates/us.mdin.in"
-RST_SOURCE="${INPUT_DIR}/restraints/window_${WIN}.RST"
+echo "done"
 
-MDIN="us_${WIN}.mdin"
-RST_LOCAL="disang_${WIN}.RST"
 
-cp "$RST_SOURCE" "$RST_LOCAL"
 
-sed -e "s#__DISANG__#${RST_LOCAL}#g" "$TEMPLATE" > "$MDIN"
-
-pmemd.cuda -O \
-  -i "$MDIN" \
-  -p "${SETUP_DIR}/system.prmtop" \
-  -c "${SETUP_DIR}/system.rst" \
-  -ref "${SETUP_DIR}/system.rst" \
-  -o "us_${WIN}.out" \
-  -r "us_${WIN}.rst" \
-  -x "us_${WIN}.nc"
