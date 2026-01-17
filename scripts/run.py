@@ -1,9 +1,12 @@
-from src.config import load_config, inject_paths, prepare_directores
+from src.config import load_config, inject_paths, prepare_directores, validate_equilibration_settings
 # from src.methods import method_factory
 from src.utils.paths import make_result_dir, setup_dir, top_dir
 from src.setup.system import setup_simulation
 
 from src.setup import *
+
+# from src.methods.us import USMethod
+from src.methods.method_selector import select_method
 # delete module later
 from dataclasses import is_dataclass, fields
 
@@ -33,11 +36,16 @@ def _del_check_yaml_parsing(cfg):
         print(f"{key} = {value}")
 
 
+
+
 def main(cfg_path: str):
+    
     # 1. load configuration from yaml file
     cfg = load_config(cfg_path)
     cfg = inject_paths(cfg)
+    validate_equilibration_settings(cfg)
     prepare_directores(cfg)
+    
     # TODO: delete this later
     _del_check_yaml_parsing(cfg)
 
@@ -45,13 +53,28 @@ def main(cfg_path: str):
     # get result path
     # _result_dir = make_result_dir(cfg.system.name, cfg.method.name, cfg.tag)
     # print(str(_result_dir))
+
     # TODO: change exist_ok to False
     # 2. setup prmtop, restraints, replica topologies and create mdin files
-    # _setup_dir = setup_dir(_result_dir)
-    # _setup_dir.mkdir(parents=True, exist_ok=True)
-    # _top_dir = top_dir(_result_dir)
-    # _top_dir.mkdir(parents=True, exist_ok=True)
-    setup_simulation(cfg)
+    if cfg.method.setup:
+        # _setup_dir = setup_dir(_result_dir)
+        # _setup_dir.mkdir(parents=True, exist_ok=True)
+        # _top_dir = top_dir(_result_dir)
+        # _top_dir.mkdir(parents=True, exist_ok=True)
+        setup_simulation(cfg)
+
+    # 3. select and execute the desired method
+    if cfg.method.eq:
+        # execute eq methodology and pass job id for future simulations
+        pass
+        
+    method = select_method(cfg)
+    if method is None:
+        print("selected equilibration only. Program terminating as expected")
+        # method.launch(cfg)
+    else:
+        print(f"method is {cfg.method.name}")
+        method.launch(cfg)
 
     # also copy the .yaml input file somewhere (do not forget)
     # in run.py, after load_config
