@@ -36,7 +36,7 @@ def generate_eq(method: str, cfg: dict) -> None:
     shutil.copy2(setup_dir / "system.rst", eq_root / "refc")
 
     # define input path for restraints file
-    input_path = "../input/"
+    input_path = "./input/"
     # define output path for run files like pmd_prod_us or com_pull
     output_path = "./"
 
