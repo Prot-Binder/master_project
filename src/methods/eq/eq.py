@@ -1,4 +1,5 @@
 # src/methods/rs_remd.py
+from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
 from src.config import Config
 import subprocess
@@ -11,7 +12,7 @@ class EqMethod(BaseMethod):
         # generate replicas, mdin, restraints
         pass
 
-    def launch(self, cfg: Config) -> str:
+    def launch(self, cfg: Config, ctx: JobContext) -> str:
 
         job_id : str = str(cfg.us.replica_scaling) + "_" + str(cfg.system.name)
         script_dir = cfg.paths["eq_script_root"].resolve()
@@ -53,9 +54,10 @@ class EqMethod(BaseMethod):
         )
 
         if eq_result.returncode != 0:
-            print("STDOUT:\n", res.stdout)
-            print("STDERR:\n", res.stderr)
+            print("STDOUT:\n", eq_result.stdout)
+            print("STDERR:\n", eq_result.stderr)
             raise RuntimeError("sbatch failed")
 
         eq_job_id = eq_result.stdout.strip().split()[-1]
+        ctx.eq_job_id = eq_job_id
         return eq_job_id

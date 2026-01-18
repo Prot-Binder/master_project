@@ -1,4 +1,5 @@
 from src.config import load_config, inject_paths, prepare_directores, validate_equilibration_settings
+from src.methods.JobContext import JobContext
 # from src.methods import method_factory
 from src.utils.paths import make_result_dir, setup_dir, top_dir
 from src.setup.system import setup_simulation
@@ -62,21 +63,20 @@ def main(cfg_path: str):
         # _top_dir = top_dir(_result_dir)
         # _top_dir.mkdir(parents=True, exist_ok=True)
         setup_simulation(cfg)
-# 
+#
+    ctx = JobContext()
     # # 3. select and execute the desired method
     if cfg.method.eq:
         print("running equilibration")
-        # execute eq methodology pass job id for future simulations
         eq_method = create_eq(cfg)
-        cfg.method.eq_id = int(eq_method.launch(cfg))
-        
+        eq_method.launch(cfg, ctx)
+
     method = select_method(cfg)
     if method is None:
-        print("selected equilibration only. Program terminating as expected")
-        # method.launch(cfg)
+        print("Method specified in yaml file is not valid. Program terminates unexpectedly.")
     else:
         print(f"method is {cfg.method.name}")
-        method.launch(cfg)
+        method.launch(cfg, ctx)
 
     # also copy the .yaml input file somewhere (do not forget)
     # in run.py, after load_config
