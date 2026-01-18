@@ -8,7 +8,7 @@ class BaseMethod:
     def prepare(self, run_dir):
         raise NotImplementedError
 
-    def launch(self, run_dir, cfg: Config):
+    def launch(self, cfg: Config) -> str:
         raise NotImplementedError
 
     def analyze(self, run_dir):

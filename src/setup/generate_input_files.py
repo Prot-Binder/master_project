@@ -29,6 +29,27 @@ def generate_eq(method: str, cfg: dict) -> None:
 
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
 
+    setup_dir = cfg.paths["setup_dir"].resolve()
+    shutil.copy2(setup_dir / "_lroa.r", dest_dir)
+    shutil.copy2(setup_dir / "system.rst", eq_root / "inpcrd0")
+
+    shutil.copy2(setup_dir / "system.rst", eq_root / "refc")
+
+    # define input path for restraints file
+    input_path = "../input/"
+    # define output path for run files like pmd_prod_us or com_pull
+    output_path = "./"
+
+    # adjust input files for pull simulation
+    mdin_file = dest_dir / "mdin4"
+    mdin_text = (mdin_file.read_text()
+                    .replace("{IN_PATH}", input_path)
+                    .replace("{OUT_PATH}", output_path))
+    mdin_output_file = dest_dir/f"mdin4"
+    mdin_output_file.write_text(mdin_text)
+
+        
+
 def generate_us(method: str, cfg: dict):
     # copy template files from template folder to results/input
     templates_root: Path = cfg.paths["templates_root"].resolve()

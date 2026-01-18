@@ -10,20 +10,15 @@ class USMethod(BaseMethod):
     def prepare(self, run_dir):
         # generate replicas, mdin, restraints
         pass
-
-    def launch(self, cfg: Config):
-        print("executing launch function of USMethod")
-        self.launch2(cfg)
-
     
-    def launch2(self, cfg: Config):
+    def launch(self, cfg: Config) -> str:
         print(f"\033[92m[US] setting up parameters\033[0m")
         job_id : str = str(cfg.us.replica_scaling) + "_" + str(cfg.system.name)
         
         input_dir = cfg.paths["results_root"] / "input"
         script_dir = cfg.paths["script_root"].resolve()
 
-        eq_job_id = None
+        eq_job_id = cfg.method.eq_id
 
         # define output dirs and create them
         # slurm, amber output, pmd
@@ -59,7 +54,7 @@ class USMethod(BaseMethod):
                 f"--ntasks=1",
                 f"--cpus-per-task=1",
                 exclude_arg,
-                f"--output={slurm_dir}/slurm-%j_pull{window}.out",
+                f"--output={slurm_dir.resolve()}/slurm-%j_pull{window}.out",
                 f"{script_dir}/run_pull.sh",
                 "4",
                 f"{window}",
@@ -100,7 +95,7 @@ class USMethod(BaseMethod):
                 "--ntasks=1",
                 "--cpus-per-task=1",
                 exclude_arg,
-                f"--output={slurm_dir}/slurm-%j_us{window}.out",
+                f"--output={slurm_dir.resolve()}/slurm-%j_us{window}.out",
                 f"{script_dir}/run_us.sh",
                 f"{window}",
                 str(input_dir.resolve()),
@@ -124,4 +119,5 @@ class USMethod(BaseMethod):
                 raise RuntimeError("sbatch failed")
 
             us_job_id = us_result.stdout.strip().split()[-1]
+            return us_job_id
 

@@ -297,7 +297,7 @@ class ARW_setup(mda.core.universe.Universe):
         # file.write('\tanchor_position = {}, {}, {}, {},\n'.format(0, 'WINDOW', 'WINDOW', 99))
         # file.write('\tanchor_strength = {}, {},/\n'.format(k_dist, k_dist))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(0, '{WINDOW}', '{WINDOW}', 99))
-        file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA"))
+        file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
 
 
     def write_pull_file(self, filename, initial_distance=8.0, final_distance=None, 

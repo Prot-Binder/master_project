@@ -251,6 +251,7 @@ def inject_paths(cfg: Config) -> Config:
         "results_root": result_root,
         "templates_root": template_dir(),
         "script_root": script_dir(cfg.method.name),
+        "eq_script_root": eq_script_dir(),
 
         # method-level
         "eq_dir": eq_dir(result_root, cfg.tag),

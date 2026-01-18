@@ -3,8 +3,8 @@
 module load pmemd
 
 MIN=$1
-STEP=$2
-MAX=$3
+MAX=$2
+STEP=$3
 
 MDINDIR=$4
 OUTDIR=$5
@@ -20,12 +20,12 @@ do
 	if (( n < 1 ))
 	then
 		printf "sander minimization started... "
-		pmemd -O -i $MDINDIR/mdin$n -ref refc$n -c inpcrd$n -p $TOPDIR/prmtop$REPLICA_SCALING -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -inf $OUTDIR/mdinfo$n
+		pmemd -O -i $MDINDIR/mdin$n -ref refc -c inpcrd$n -p $TOPDIR/prmtop$REPLICA_SCALING -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -inf $OUTDIR/mdinfo$n
 		echo "done"
 	else
 		# all files are id'ed by the d-variables (except prmtop)
 		printf "Running for $n... "
-		pmemd.cuda -O -i $MDINDIR/mdin$n -ref refc$n -c inpcrd$n -p $TOPDIR/prmtop$REPLICA_SCALING -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -x $OUTDIR/traj$n.nc -inf $OUTDIR/mdinfo$n
+		pmemd.cuda -O -i $MDINDIR/mdin$n -ref refc -c inpcrd$n -p $TOPDIR/prmtop$REPLICA_SCALING -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -x $OUTDIR/traj$n.nc -inf $OUTDIR/mdinfo$n
 		echo "done"
 	fi
 

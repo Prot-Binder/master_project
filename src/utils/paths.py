@@ -42,3 +42,6 @@ def output_dir(result_dir: Path) -> Path:
 
 def script_dir(method_name: str):
     return Path("src") / "methods" / method_name
+
+def eq_script_dir():
+    return Path("src") / "methods" / "eq"
