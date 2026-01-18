@@ -8,7 +8,7 @@ Minimisation AdvFECalculations
 	ntpr=500,	! Num of Timesteps to Print Readable energy informatio
 
 	! ENERGY MINIMIZATION
-	maxcyc=2000,	! The maximum number of cycles of minimization 
+	maxcyc=70,	! The maximum number of cycles of minimization 
 	ntmin=2,	! Steepest descent method is used
 
 	! POTENTIAL FUNCTION PARAMETERS

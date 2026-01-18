@@ -1,0 +1,20 @@
+Minimisation AdvFECalculations 
+ &cntrl
+	! GENERAL FLAGS DESCRIBING THE CALCULATION
+	imin=1,		! Run Energy Minimization (No MD)
+
+	! NATURE AND FORMAT OF THE OUTPUT
+	ntxo=2,		! Format of restrt file; 1 is ASCII format
+	ntpr=500,	! Num of Timesteps to Print Readable energy informatio
+
+	! ENERGY MINIMIZATION
+	maxcyc=2000,	! The maximum number of cycles of minimization 
+	ntmin=2,	! Steepest descent method is used
+
+	! POTENTIAL FUNCTION PARAMETERS
+	dielc=1.0,	! dielectric constant
+	cut=9.0,	! nonbonded cut-off in Angstrom
+	nsnb=20,	! Frequency of non-bonded list updates
+	igb=0,		! explicit solvent is used (no Poisson/Boltzmann)
+ &end
+eof

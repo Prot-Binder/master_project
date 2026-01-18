@@ -18,7 +18,7 @@ Prod HREUS-Run for Adv-FE-Calculation
 	ntr=0,
 
 	! MOLECULAR DYNAMICS
-	nstlim=2500000,
+	nstlim=25000,
 	dt=0.004,
 
 	! TEMPERATURE REGULATION
