@@ -1,0 +1,50 @@
+tag: test
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042]
+
+system:
+  # pdb: ~/cluster/master_project/input/pdb_files/5h5s/5h5s_cleaned.pdb
+  pdb: ~/master_project/input/pdb_files/5h5s/5h5s_cleaned.pdb
+  # pdb: input/pdb_files/5h5s/5h5s_cleaned.pdb
+  name: 5h5s
+  ligand_residues: 164-177
+  protein_residues: 1-163
+  # bond: "377.N-390.C"
+
+replica_scaling:
+  n_rep: 16
+  d_scaling: [0.00, 0.01, 0.02, 0.04, 0.08, 0.12, 0.16, 0.20, 0.24, 0.28, 0.32, 0.38, 0.44, 0.50, 0.58, 0.68]
+  e_scaling: [1.00, 0.99, 0.98, 0.97, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.74]
+
+restraints:
+  k: 4.0
+  step_size: 1
+  min: 5
+  max: 7
+
+# method:
+#   name: rs_remd
+
+# rs_remd:
+#   n_rep: 8
+#   replicas: [0,2,4,6,8,10,12,16]
+
+method:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. on the cluster, tleap is not available
+  setup_path: ~/cluster/master_project/results/5h5s/us/test/setup # path to an already existing setup directory of the same
+  eq: True
+  name: us
+
+us:
+  start: 5
+  end: 7
+  step: 1
+  use_restraints_range: true
+  replica_scaling: 1
+
+
+
+
+# maybe change nsteps, temperature, dt etc. also via yaml, if necessary
+# analysis still missing

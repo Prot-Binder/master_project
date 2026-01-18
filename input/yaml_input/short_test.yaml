@@ -30,9 +30,10 @@ restraints:
 #   replicas: [0,2,4,6,8,10,12,16]
 
 method:
-  setup: False
+  setup: False # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. on the cluster, tleap is not available
+  # setup_path: ~/cluster/master_project/results/5h5s/us/test/setup # path to an already existing setup directory of the same
   eq: True
-  eq_id: None
   name: us
 
 us:

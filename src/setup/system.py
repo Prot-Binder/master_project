@@ -1,3 +1,5 @@
+import shutil
+
 from src.setup.tleap import TLeapPaths, run_tleap
 from src.setup.hmr2 import ParmEdPaths, run_hmr
 from src.setup.restraints import create_restraints
@@ -7,57 +9,65 @@ from pathlib import Path
 
 
 def setup_simulation(cfg):
-    
-    # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
-    tleap_paths = TLeapPaths(
-        template_tleap=Path("templates/tleap.in.tpl"),
-        # template_final=Path("templates/tleap/tleap_final.in.tpl"),
-        ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
-    )
 
-    prmtop, rst, n_ions_each = run_tleap(
-        setup_dir=cfg.paths["setup_dir"],
-        pdb_path=cfg.system.pdb,
-        bond=cfg.system.bond,  # may be None
-        paths=tleap_paths,
-    )
+    # only run tleap and generate topology files on local machine
+    if cfg.method.setup_type == "local":
+        # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
+        tleap_paths = TLeapPaths(
+            template_tleap=Path("templates/tleap.in.tpl"),
+            # template_final=Path("templates/tleap/tleap_final.in.tpl"),
+            ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
+        )
 
-    print(f"\033[92m[setup] tleap done: {prmtop.name}, {rst.name} (ions each: {n_ions_each})\033[0m")
+        prmtop, rst, n_ions_each = run_tleap(
+            setup_dir=cfg.paths["setup_dir"],
+            pdb_path=cfg.system.pdb,
+            bond=cfg.system.bond,  # may be None
+            paths=tleap_paths,
+        )
 
-    # ---- 2) ParmEd HMR ----
-    parmed_paths = ParmEdPaths(
-        template=Path("templates/HMR.parmed.tpl"),
-    )
+        print(f"\033[92m[setup] tleap done: {prmtop.name}, {rst.name} (ions each: {n_ions_each})\033[0m")
 
-    hmr_prmtop = cfg.paths["setup_dir"] / "prmtop"
-    run_hmr(
-        setup_dir=cfg.paths["setup_dir"],
-        in_prmtop=prmtop,
-        out_prmtop=hmr_prmtop,
-        paths=parmed_paths,
-    )
+        # ---- 2) ParmEd HMR ----
+        parmed_paths = ParmEdPaths(
+            template=Path("templates/HMR.parmed.tpl"),
+        )
 
-    print(f"\033[92m[setup] HMR done: {hmr_prmtop.name}\033[0m")
+        hmr_prmtop = cfg.paths["setup_dir"] / "prmtop"
+        run_hmr(
+            setup_dir=cfg.paths["setup_dir"],
+            in_prmtop=prmtop,
+            out_prmtop=hmr_prmtop,
+            paths=parmed_paths,
+        )
 
-    # ---- 3) Generate Restraints ----
-    system_pdb = cfg.paths["setup_dir"] / "system.pdb"
-    create_restraints(cfg.paths["setup_dir"], system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
-    
-    print(f"\033[92m[setup] Restraints generated\033[0m")
+        print(f"\033[92m[setup] HMR done: {hmr_prmtop.name}\033[0m")
 
-    # ---- 4) Generate Topology Files with different LJ parameters ----
-    top_file = cfg.paths["setup_dir"] / "prmtop"
-    coord_file = cfg.paths["setup_dir"] / "system.rst"
-    scaled_topologies_dir =cfg.paths["top_dir"] / "prmtop"
-    generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
-                              cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
-                              ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
+        # ---- 3) Generate Restraints ----
+        system_pdb = cfg.paths["setup_dir"] / "system.pdb"
+        create_restraints(cfg.paths["setup_dir"], system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
 
-    print(f"\033[92m[setup] Topology files generated\033[0m")
-    
+        print(f"\033[92m[setup] Restraints generated\033[0m")
+
+        # ---- 4) Generate Topology Files with different LJ parameters ----
+        top_file = cfg.paths["setup_dir"] / "prmtop"
+        coord_file = cfg.paths["setup_dir"] / "system.rst"
+        scaled_topologies_dir =cfg.paths["top_dir"] / "prmtop"
+        generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
+                                  cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
+                                  ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
+
+        print(f"\033[92m[setup] Topology files generated\033[0m")
+
+    if cfg.method.setup_path is not None and cfg.method.setup_type == "cluster":
+        # copy the setup directory from the specified path to local setup path
+        for item in cfg.method.setup_path.resolve().iterdir():
+            if item.is_file():
+                shutil.copy2(item, cfg.paths["setup_dir"])
+
     # ---- 5) Generate Input Files ----
-    generate_inputs("us", cfg)
-    print(f"\033[92m[setup] Input files copied and adjusted for us\033[0m")
-    generate_inputs("eq", cfg)
-    print(f"\033[92m[setup] Input files copied and adjusted for eq\033[0m")
-    print(f"\033[92m[setup] Input files copied and adjusted\033[0m")
+    generate_inputs(cfg.method.name, cfg)
+    print(f"\033[92m[setup] Input files copied and adjusted for {cfg.method.name}\033[0m")
+    if cfg.method.eq:
+        generate_inputs("eq", cfg)
+        print(f"\033[92m[setup] Input files copied and adjusted for eq\033[0m")

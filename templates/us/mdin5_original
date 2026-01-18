@@ -44,7 +44,7 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
 	infe = 1,
  /
  &pmd
- 	output_file = 'pmd_pull_us{WINDOW}.txt'
+ 	output_file = '{IN_PATH}pmd_pull_us{WINDOW}.txt'
  	output_freq = 50
  	cv_file = '{IN_PATH}_lroa.r'
  /

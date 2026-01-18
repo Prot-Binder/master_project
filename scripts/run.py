@@ -57,12 +57,13 @@ def main(cfg_path: str):
 
     # TODO: change exist_ok to False
     # 2. setup prmtop, restraints, replica topologies and create mdin files
-    if cfg.method.setup:
+    # if cfg.method.:
         # _setup_dir = setup_dir(_result_dir)
         # _setup_dir.mkdir(parents=True, exist_ok=True)
         # _top_dir = top_dir(_result_dir)
         # _top_dir.mkdir(parents=True, exist_ok=True)
-        setup_simulation(cfg)
+    setup_simulation(cfg)
+    return
 #
     ctx = JobContext()
     # # 3. select and execute the desired method

@@ -66,7 +66,9 @@ class RestraintsCfg:
 class MethodCfg:
     name: str  # "rs_remd" | "us" | ...
     setup: bool
+    setup_type: str # cluster or local
     eq: bool
+    setup_dir: Optional[Path] = None
 
 @dataclass(frozen=True)
 class ReplicaScalingCfg:
@@ -193,7 +195,9 @@ def load_config(path: str | Path) -> Config:
     method = MethodCfg(
         name=str(_require(m_raw, "name", "method")),
         eq=bool(_require(m_raw, "eq", "method")),
-        setup=bool(_require(m_raw, "setup", "method")),
+        setup=bool(_require(m_raw, "setup", "method")), # TODO: think of deleting this filed, may be redundant
+        setup_dir=Path(m_raw["setup_dir"]) if "setup_dir" in m_raw and m_raw["setup_dir"] is not None else None,
+        setup_type=str(_require(m_raw, "setup_type", "method")),
     )
 
     # replica scaling
