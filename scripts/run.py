@@ -6,8 +6,9 @@ from src.setup.system import setup_simulation
 from src.setup import *
 
 # from src.methods.us import USMethod
-from src.methods.method_selector import select_method
+from src.methods.method_selector import select_method, create_eq
 # delete module later
+
 from dataclasses import is_dataclass, fields
 
 def walk(obj, prefix=""):
@@ -43,12 +44,11 @@ def main(cfg_path: str):
     # 1. load configuration from yaml file
     cfg = load_config(cfg_path)
     cfg = inject_paths(cfg)
-    validate_equilibration_settings(cfg)
+    # validate_equilibration_settings(cfg)
     prepare_directores(cfg)
-    
+  
     # TODO: delete this later
     _del_check_yaml_parsing(cfg)
-
 
     # get result path
     # _result_dir = make_result_dir(cfg.system.name, cfg.method.name, cfg.tag)
@@ -62,11 +62,13 @@ def main(cfg_path: str):
         # _top_dir = top_dir(_result_dir)
         # _top_dir.mkdir(parents=True, exist_ok=True)
         setup_simulation(cfg)
-
-    # 3. select and execute the desired method
+# 
+    # # 3. select and execute the desired method
     if cfg.method.eq:
-        # execute eq methodology and pass job id for future simulations
-        pass
+        print("running equilibration")
+        # execute eq methodology pass job id for future simulations
+        eq_method = create_eq(cfg)
+        cfg.method.eq_id = int(eq_method.launch(cfg))
         
     method = select_method(cfg)
     if method is None:
@@ -86,8 +88,6 @@ def main(cfg_path: str):
     # method.prepare(run_dir)
     # method.launch(run_dir)
     # method.analyze(run_dir)
-
-    
 
 
 if __name__ == "__main__":
