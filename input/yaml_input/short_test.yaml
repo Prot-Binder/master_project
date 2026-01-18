@@ -5,6 +5,7 @@ cluster:
 system:
   # pdb: ~/cluster/master_project/input/pdb_files/5h5s/5h5s_cleaned.pdb
   pdb: ~/master_project/input/pdb_files/5h5s/5h5s_cleaned.pdb
+  # pdb: input/pdb_files/5h5s/5h5s_cleaned.pdb
   name: 5h5s
   ligand_residues: 164-177
   protein_residues: 1-163
@@ -30,7 +31,7 @@ restraints:
 
 method:
   setup: False
-  eq: False
+  eq: True
   eq_id: None
   name: us
 
