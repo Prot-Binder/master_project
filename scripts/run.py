@@ -69,7 +69,8 @@ def main(cfg_path: str):
     if cfg.method.eq:
         print("running equilibration")
         eq_method = create_eq(cfg)
-        eq_method.launch(cfg, ctx)
+        id = eq_method.launch(cfg, ctx)
+        print("the id of the equilibration is: " + str(id))
 
     method = select_method(cfg)
     if method is None:
