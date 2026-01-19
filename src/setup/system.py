@@ -62,9 +62,9 @@ def setup_simulation(cfg):
     # if setup_type is local, the setup dir was already created above
     if cfg.method.setup_path is not None and cfg.method.setup_type == "cluster":
         # copy the setup directory from the specified path to local setup path
-        for item in cfg.method.setup_path.resolve().iterdir():
+        for item in cfg.method.setup_dir.resolve().iterdir():
             if item.is_file():
-                shutil.copy2(item, cfg.paths["setup_dir"])
+                shutil.copy2(item, cfg.paths["setup_dir"].resolve())
 
     # ---- 5) Generate Input Files ----
     generate_inputs(cfg.method.name, cfg)

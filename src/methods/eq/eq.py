@@ -35,7 +35,7 @@ class EqMethod(BaseMethod):
                     exclude_arg,
                     f"--output={slurm_dir.resolve()}/slurm-%j_eq.out",
                     f"{script_dir}/run_eq.sh",
-                    "3",
+                    "0",
                     "4",
                     "1",
                     str(input_dir.resolve()),
