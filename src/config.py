@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import shutil
+
 # from re import template
 
 # from src.utils.paths import make_result_dir, setup_dir, top_dir
@@ -244,6 +246,7 @@ def load_config(path: str | Path) -> Config:
     cfg.validate()
     return cfg
 
+# TODO: possibly delete thsi
 def inject_paths(cfg: Config) -> Config:
     #if "paths" in cfg:
     #    raise RuntimeError("Paths already added to config")
@@ -265,6 +268,47 @@ def inject_paths(cfg: Config) -> Config:
     }
     return cfg
 
+def make_result_dir(cfg: Config) -> Path:
+    """
+    results/<system_name>/<method_name>/<tag>/
+    Tag must be unique for this (system, method) combination.
+    """
+    result_dir = Path("results") / cfg.system.name / cfg.method.name / cfg.tag
+    result_dir.mkdir(parents=True, exist_ok=False)  # fail if already exists
+    return result_dir
+
+def compute_paths(cfg: Config) -> dict:
+    # make a dict out of all paths that are necessary in the future
+    result_dir = make_result_dir(cfg)
+    method = cfg.method.name
+    system_name : str = cfg.system.name
+
+    paths = {}
+    paths["top"] = Path("results") / system_name / "top"
+    paths["templates"] = Path("templates")
+
+    # define paths for equilibration
+    paths["eq"] = {}
+    paths["eq"]["script"] = Path("src") / "methods" / "eq"
+    paths["eq"]["root"] = Path("results") / "system" / "eq" / cfg.tag
+    paths["eq"]["input"] = paths["eq"]["root"] / "input"
+    paths["eq"]["amber"] = paths["eq"]["root"] / "run_output" / "amber"
+    paths["eq"]["pmd"] = paths["eq"]["root"] / "run_output" / "pmd"
+    paths["eq"]["slurm"] = paths["eq"]["root"] / "run_output" / "slurm"
+
+    # define paths for method
+    paths[method] = {}
+    paths[method]["script"] = Path("src") / "methods" / method
+    paths[method]["setup"] = result_dir / "setup"
+    paths[method]["root"] = result_dir
+    paths[method]["input"] = result_dir/ "input"
+
+    paths[method]["amber"] = paths[method]["root"] / "run_output" / "amber"
+    paths[method]["pmd"] = paths[method]["root"] / "run_output" / "pmd"
+    paths[method]["slurm"] = paths[method]["root"] / "run_output" / "slurm"
+
+    return paths
+
 def prepare_directores(cfg: Config) -> None:
     # create necessary directories
     for key, path in cfg.paths.items():
@@ -272,9 +316,13 @@ def prepare_directores(cfg: Config) -> None:
             # TODO: maybe make exist_ok=False later
             path.mkdir(parents=True, exist_ok=True)
 
+def copy_yaml_input(cfg: Config, cfg_path: str | Path):
+    # copy the .yaml input file to results directory
+    shutil.copy2(cfg_path, cfg.paths["setup_dir"])
+
 def validate_equilibration_settings(cfg: Config):
     """
-    this method checks if an equilibration already occured or not. The results of this step/method are shared among multiple methods, hence
+    this method checks if an equilibration already occured or not. The results of this method are shared among multiple methods, hence
     results may exist from a previous run that can be reused.
     This method needs to be invoked before creating all the directories and the setup step.
     """
@@ -290,13 +338,15 @@ def validate_equilibration_settings(cfg: Config):
             )
 
     else:
-        # Equilibration NOT specified → directory must exist and be non-empty
+        # Equilibration NOT specified → directory must exist and files like inpcrd0-4 and refc must be present
         if not eq_dir.is_dir():
             raise FileNotFoundError(
                 f"Equilibration directory does not exist: {eq_dir}"
             )
 
-        if not any(eq_dir.iterdir()):
-            raise FileExistsError(
-                f"Equilibration directory exists but is empty: {eq_dir}"
+        required_files = ["inpcrd0", "inpcrd1", "inpcrd2", "inpcrd3", "inpcrd4", "refc"]
+        missing_files = [f for f in required_files if not (eq_dir / f).is_file()]
+        if len(missing_files) > 0:
+            raise FileNotFoundError(
+                f"Equilibration directory is missing required files: {missing_files}"
             )

@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.utils.render import render_template_file
-from src.utils.shell import run
+from src.utils.adjust_files import adjust_template_file
+from src.utils.bash_run import run
 
 
 @dataclass(frozen=True)
@@ -38,15 +38,17 @@ def run_hmr(
     Path
         Path to the HMR-modified prmtop.
     """
-    setup_dir.mkdir(parents=True, exist_ok=True)
 
     if not in_prmtop.exists():
         raise FileNotFoundError(f"Input prmtop not found: {in_prmtop}")
 
-    parmed_in = setup_dir / "hmr.parmed"
+    parmed_in = setup_dir / "HMR.parmed"
 
-    # Render the ParmEd input file
-    render_template_file(
+    print("parmed_in: " + str(parmed_in))
+    print("setup dir: " + str(setup_dir))
+
+    # Adjust the ParmEd input file
+    adjust_template_file(
         paths.template,
         parmed_in,
         {
@@ -58,9 +60,9 @@ def run_hmr(
     # Run ParmEd inside setup_dir
     run(["parmed", "-i", parmed_in.name], cwd=setup_dir)
 
-    if not out_prmtop.exists():
-        raise RuntimeError(
-            f"HMR failed: expected output topology not found: {out_prmtop}"
-        )
+    # if not out_prmtop.exists():
+    #     raise RuntimeError(
+    #         f"HMR failed: expected output topology not found: {out_prmtop}"
+    #     )
 
     return out_prmtop

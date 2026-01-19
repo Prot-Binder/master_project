@@ -1,7 +1,7 @@
 import shutil
 
 from src.setup.tleap import TLeapPaths, run_tleap
-from src.setup.hmr2 import ParmEdPaths, run_hmr
+from src.setup.hmr import ParmEdPaths, run_hmr
 from src.setup.restraints import create_restraints
 from src.setup.generate_topology import generate_scaled_top_files
 from src.setup.generate_input_files import generate_inputs
@@ -10,12 +10,11 @@ from pathlib import Path
 
 def setup_simulation(cfg):
 
-    # only run tleap and generate topology files on local machine
+    # only run tleap and generate topology files on local machine, not on cluster
     if cfg.method.setup_type == "local":
         # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
         tleap_paths = TLeapPaths(
             template_tleap=Path("templates/tleap.in.tpl"),
-            # template_final=Path("templates/tleap/tleap_final.in.tpl"),
             ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
         )
 
@@ -59,6 +58,8 @@ def setup_simulation(cfg):
 
         print(f"\033[92m[setup] Topology files generated\033[0m")
 
+    # if on cluster and a setup path is provided, copy files from an already existing directory.
+    # if setup_type is local, the setup dir was already created above
     if cfg.method.setup_path is not None and cfg.method.setup_type == "cluster":
         # copy the setup directory from the specified path to local setup path
         for item in cfg.method.setup_path.resolve().iterdir():
