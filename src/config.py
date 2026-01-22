@@ -316,9 +316,9 @@ def prepare_directores(cfg: Config) -> None:
             # TODO: maybe make exist_ok=False later
             path.mkdir(parents=True, exist_ok=True)
 
-def copy_yaml_input(cfg: Config, cfg_path: str | Path):
+def copy_yaml_input(setup_dir: str | Path, cfg_path: str | Path):
     # copy the .yaml input file to results directory
-    shutil.copy2(cfg_path, cfg.paths["setup_dir"])
+    shutil.copy2(cfg_path, setup_dir)
 
 def validate_equilibration_settings(cfg: Config):
     """

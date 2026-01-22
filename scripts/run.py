@@ -67,7 +67,7 @@ def main(cfg_path: str):
     ctx = JobContext()
     ctx.paths = paths
     setup_simulation(cfg, ctx)
-    copy_yaml_input(cfg, cfg_path)
+    copy_yaml_input(ctx.paths[cfg.method.name]["setup"], cfg_path)
 
     # 3. select and execute the desired method
     # if equilibration is requested, perform equilibration first
