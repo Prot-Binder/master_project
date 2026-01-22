@@ -68,8 +68,8 @@ def setup_simulation(cfg, ctx):
                 shutil.copy2(item, ctx.paths[cfg.method.name]["setup"].resolve())
 
     # ---- 5) Generate Input Files ----
-    generate_inputs(cfg.method.name, cfg)
+    generate_inputs(cfg.method.name, cfg, ctx)
     print(f"\033[92m[setup] Input files copied and adjusted for {cfg.method.name}\033[0m")
     if cfg.method.eq:
-        generate_inputs("eq", cfg)
+        generate_inputs("eq", cfg, ctx)
         print(f"\033[92m[setup] Input files copied and adjusted for eq\033[0m")

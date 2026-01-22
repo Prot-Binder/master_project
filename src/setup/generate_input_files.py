@@ -122,11 +122,11 @@ def generate_us_remd(method: str, cfg: dict):
     pass
 
 
-def generate_inputs(method: str, cfg: dict) -> None:
+def generate_inputs(method: str, cfg: dict, ctx) -> None:
     if method == "eq":
-        generate_eq(method, cfg)
+        generate_eq(method, cfg, ctx)
     elif method == "us":
-        generate_us(method, cfg)
+        generate_us(method, cfg, ctx)
     elif method == "rs_remd":
         generate_rs_remd(method, cfg)
     elif method == "us_remd":

@@ -56,7 +56,7 @@ def main(cfg_path: str):
     
     # 1. load configuration from yaml file and copy yaml input file into setup dir
     cfg = load_config(cfg_path)
-    cfg = inject_paths(cfg)
+    # cfg = inject_paths(cfg)
     validate_equilibration_settings(cfg)
     prepare_directores(cfg)
     copy_yaml_input(cfg, cfg_path)
@@ -65,11 +65,11 @@ def main(cfg_path: str):
     # 2. perform setup step depending on setup_type and if setup for similar system was already performed
     paths = compute_paths(cfg)
     create_directories(paths)
-    setup_simulation(cfg)
-
-    # 3. select and execute the desired method
     ctx = JobContext()
     ctx.paths = paths
+    setup_simulation(cfg, ctx)
+
+    # 3. select and execute the desired method
     # if equilibration is requested, perform equilibration first
     if cfg.method.eq:
         print("running equilibration")
