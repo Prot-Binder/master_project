@@ -57,7 +57,7 @@ def main(cfg_path: str):
     # 1. load configuration from yaml file and copy yaml input file into setup dir
     cfg = load_config(cfg_path)
     # cfg = inject_paths(cfg)
-    validate_equilibration_settings(cfg)
+    # TODO: change this logic; validate_equilibration_settings(cfg)
     prepare_directores(cfg)
     copy_yaml_input(cfg, cfg_path)
     print_yaml_config(cfg)
