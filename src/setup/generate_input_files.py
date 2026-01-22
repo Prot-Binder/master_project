@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 import numpy as np
+# TODO: change the way the directory paths are passed / created in this file
 
 def copy_files(root_dir: Path, dest_dir: Path) -> None:
     if not root_dir.is_dir():
@@ -18,18 +19,18 @@ def copy_files(root_dir: Path, dest_dir: Path) -> None:
         if item.is_file():
             shutil.copy2(item, dest_dir)
 
-def generate_eq(method: str, cfg: dict) -> None:
+def generate_eq(method: str, cfg, ctx) -> None:
     # copy files from templates to results
-    templates_root: Path = cfg.paths["templates_root"].resolve()
-    eq_root: Path = cfg.paths["eq_dir"].resolve()
+    templates_root: Path = ctx.paths["templates"].resolve()
+    eq_root: Path = ctx.paths["eq"]["root"].resolve()
 
     template_dir = templates_root / method
-    dest_dir = eq_root / "input"
+    dest_dir = ctx.paths["eq"]["input"]
     copy_files(template_dir, dest_dir)
 
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
 
-    setup_dir = cfg.paths["setup_dir"].resolve()
+    setup_dir = ctx.paths[method]["setup"].resolve()
     shutil.copy2(setup_dir / "_lroa.r", dest_dir)
     shutil.copy2(setup_dir / "system.rst", eq_root / "inpcrd0")
 
@@ -50,20 +51,20 @@ def generate_eq(method: str, cfg: dict) -> None:
 
         
 
-def generate_us(method: str, cfg: dict):
+def generate_us(method: str, cfg, ctx):
     # copy template files from template folder to results/input
-    templates_root: Path = cfg.paths["templates_root"].resolve()
-    results_root: Path = cfg.paths["results_root"].resolve()
+    templates_root: Path = ctx.paths["templates"].resolve()
+    results_root: Path = ctx.paths[method]["root"].resolve()
 
     template_dir = templates_root / method
-    dest_dir = results_root / "input"
+    dest_dir = ctx.paths[method]["input"]
 
     copy_files(template_dir, dest_dir)
 
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
 
     # copy restraint files from results/setup to results/input
-    setup_dir = cfg.paths["setup_dir"].resolve()
+    setup_dir = ctx.paths[method]["setup"].resolve()
     shutil.copy2(setup_dir / "pull.r", dest_dir)
     shutil.copy2(setup_dir / "_lroaus.r", dest_dir)
     shutil.copy2(setup_dir / "_lroa.r", dest_dir)

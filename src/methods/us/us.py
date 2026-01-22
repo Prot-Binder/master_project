@@ -15,31 +15,20 @@ class USMethod(BaseMethod):
     def launch(self, cfg: Config, ctx: JobContext) -> str:
         print(f"\033[92m[US] setting up parameters\033[0m")
         job_id : str = str(cfg.us.replica_scaling) + "_" + str(cfg.system.name)
-        
-        input_dir = cfg.paths["results_root"] / "input"
-        script_dir = cfg.paths["script_root"].resolve()
 
-        # define output dirs and create them
-        # slurm, amber output, pmd
-        pmd_dir = cfg.paths["output_dir"] / "pmd"
-        pmd_dir.mkdir(parents=True, exist_ok=True)
-        slurm_dir = cfg.paths["output_dir"] / "slurm"
-        slurm_dir.mkdir(parents=True, exist_ok=True)
-        amber_dir = cfg.paths["output_dir"] / "amber"
-        amber_dir.mkdir(parents=True, exist_ok=True)
-
-        result_dir = cfg.paths["output_dir"]
+        input_dir = ctx.paths["us"]["input"]
+        script_dir = ctx.paths["us"]["script"] # .resolve()
+        slurm_dir = ctx.paths["us"]["slurm"]
+        amber_dir = ctx.paths["us"]["amber"]
+        result_dir = ctx.paths["us"]["root"]
+        # TODO: adjust handling of eq dir: where exactly is the input stored in general?; or remove here
+        eq_dir = cfg.paths["eq_dir"].resolve()
 
         w_start = cfg.us.start
         w_end = cfg.us.end
         step = cfg.us.step
 
         exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
-
-        # TODO: adjust handling of eq dir: where exactly is the input stored in general?
-        eq_dir = cfg.paths["eq_dir"].resolve()
-        print(eq_dir)
-        print("slurm_dir:" + str(slurm_dir))
 
         last_us_job_id = None
         ctx.job_ids.setdefault("pull", [])
@@ -65,14 +54,14 @@ class USMethod(BaseMethod):
                 f"--cpus-per-task=1",
                 exclude_arg,
                 f"--output={slurm_dir.resolve()}/slurm-%j_pull{window}.out",
-                f"{script_dir}/run_pull.sh",
+                f"{script_dir.resolve()}/run_pull.sh",
                 "4",
                 f"{window}",
                 str(input_dir.resolve()),
                 str(amber_dir.resolve()),
-                str(cfg.paths["top_dir"].resolve()),
+                str(ctx.paths["top"].resolve()),
                 str(cfg.us.replica_scaling),
-                str(cfg.paths["eq_dir"].resolve()),
+                str(cfg.paths["eq"]["root"].resolve()),
             ]
 
             # TODO: execute this from result directory
@@ -104,11 +93,11 @@ class USMethod(BaseMethod):
                 "--cpus-per-task=1",
                 exclude_arg,
                 f"--output={slurm_dir.resolve()}/slurm-%j_us{window}.out",
-                f"{script_dir}/run_us.sh",
+                f"{script_dir.resolve()}/run_us.sh",
                 f"{window}",
                 str(input_dir.resolve()),
                 str(amber_dir.resolve()),
-                str(cfg.paths["top_dir"].resolve()),
+                str(ctx.paths["top"].resolve()),
                 str(cfg.us.replica_scaling),
             ]
 
@@ -131,4 +120,3 @@ class USMethod(BaseMethod):
             last_us_job_id = us_job_id
 
         return last_us_job_id
-

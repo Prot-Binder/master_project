@@ -22,9 +22,6 @@ restraints:
   min: 5
   max: 7
 
-# method:
-#   name: rs_remd
-
 # rs_remd:
 #   n_rep: 8
 #   replicas: [0,2,4,6,8,10,12,16]
@@ -32,7 +29,7 @@ restraints:
 method:
   setup: True # TODO: think of deleting this filed as it may be redundant
   setup_type: cluster # cluster or local; i.e. on the cluster, tleap is not available
-  setup_path: ~/cluster/master_project/results/5h5s/us/test/setup # path to an already existing setup directory of the same
+  setup_path: ~/cluster/master_project/results/5h5s/us/test/setup # path to an already existing setup directory of the same system, hence no new setup needs to be done
   eq: True
   name: us
 

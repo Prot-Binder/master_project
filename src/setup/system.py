@@ -8,7 +8,7 @@ from src.setup.generate_input_files import generate_inputs
 from pathlib import Path
 
 
-def setup_simulation(cfg):
+def setup_simulation(cfg, ctx):
 
     # only run tleap and generate topology files on local machine, not on cluster
     if cfg.method.setup_type == "local":
@@ -42,16 +42,17 @@ def setup_simulation(cfg):
 
         print(f"\033[92m[setup] HMR done: {hmr_prmtop.name}\033[0m")
 
+        setup_dir = ctx.paths[cfg.method.name]["setup"]
         # ---- 3) Generate Restraints ----
-        system_pdb = cfg.paths["setup_dir"] / "system.pdb"
-        create_restraints(cfg.paths["setup_dir"], system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
+        system_pdb = setup_dir / "system.pdb"
+        create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
 
         print(f"\033[92m[setup] Restraints generated\033[0m")
 
         # ---- 4) Generate Topology Files with different LJ parameters ----
-        top_file = cfg.paths["setup_dir"] / "prmtop"
-        coord_file = cfg.paths["setup_dir"] / "system.rst"
-        scaled_topologies_dir =cfg.paths["top_dir"] / "prmtop"
+        top_file = setup_dir / "prmtop"
+        coord_file = setup_dir / "system.rst"
+        scaled_topologies_dir = ctx.paths["top_dir"] / "prmtop"
         generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
                                   cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
                                   ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
@@ -64,7 +65,7 @@ def setup_simulation(cfg):
         # copy the setup directory from the specified path to local setup path
         for item in cfg.method.setup_dir.resolve().iterdir():
             if item.is_file():
-                shutil.copy2(item, cfg.paths["setup_dir"].resolve())
+                shutil.copy2(item, ctx.paths[cfg.method.name]["setup"].resolve())
 
     # ---- 5) Generate Input Files ----
     generate_inputs(cfg.method.name, cfg)

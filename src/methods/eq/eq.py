@@ -15,12 +15,12 @@ class EqMethod(BaseMethod):
     def launch(self, cfg: Config, ctx: JobContext) -> str:
 
         job_id : str = str(cfg.us.replica_scaling) + "_" + str(cfg.system.name)
-        script_dir = cfg.paths["eq_script_root"].resolve()
+
+        script_dir = ctx.paths["eq"]["script"]
         eq_dir = cfg.paths["eq_dir"]
-        slurm_dir = eq_dir
-        output_dir = eq_dir / "run_output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        input_dir = cfg.paths["eq_dir"] / "input"
+        slurm_dir = ctx.paths["eq"]["slurm"]
+        output_dir = ctx.paths["eq"]["amber"]
+        input_dir = ctx.paths["eq"]["input"]
         exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
         
 
@@ -34,13 +34,13 @@ class EqMethod(BaseMethod):
                     f"--cpus-per-task=1",
                     exclude_arg,
                     f"--output={slurm_dir.resolve()}/slurm-%j_eq.out",
-                    f"{script_dir}/run_eq.sh",
+                    f"{script_dir.resolve()}/run_eq.sh",
                     "0",
                     "4",
                     "1",
                     str(input_dir.resolve()),
                     str(output_dir.resolve()),
-                    str(cfg.paths["top_dir"].resolve()),
+                    str(ctx.paths["top"].resolve()),
                     str(cfg.us.replica_scaling),
                 ]
 

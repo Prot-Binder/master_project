@@ -9,29 +9,29 @@ from pathlib import Path
 from src.methods.method_selector import select_method, create_eq
 from dataclasses import is_dataclass, fields
 
-def iterate_strucutre(obj, prefix=""):
+def iterate_structure(obj, prefix=""):
     if is_dataclass(obj):
         for f in fields(obj):
             val = getattr(obj, f.name)
             new_prefix = f"{prefix}.{f.name}" if prefix else f.name
-            yield from iterate_strucutre(val, new_prefix)
+            yield from iterate_structure(val, new_prefix)
 
     elif isinstance(obj, dict):
         for k, v in obj.items():
             new_prefix = f"{prefix}.{k}" if prefix else str(k)
-            yield from iterate_strucutre(v, new_prefix)
+            yield from iterate_structure(v, new_prefix)
 
     elif isinstance(obj, list):
         for i, v in enumerate(obj):
             new_prefix = f"{prefix}[{i}]"
-            yield from iterate_strucutre(v, new_prefix)
+            yield from iterate_structure(v, new_prefix)
 
     else:
         yield prefix, obj
 
 
 def print_yaml_config(cfg):
-    for key, value in iterate_strucutre(cfg):
+    for key, value in iterate_structure(cfg):
         print(f"{key} = {value}")
 
 def create_directories(paths: dict) -> None:
