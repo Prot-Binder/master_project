@@ -53,13 +53,12 @@ def create_directories(paths: dict) -> None:
 
 
 def main(cfg_path: str):
-    
+
     # 1. load configuration from yaml file and copy yaml input file into setup dir
     cfg = load_config(cfg_path)
     # cfg = inject_paths(cfg)
     # TODO: change this logic; validate_equilibration_settings(cfg)
     prepare_directores(cfg)
-    copy_yaml_input(cfg, cfg_path)
     print_yaml_config(cfg)
 
     # 2. perform setup step depending on setup_type and if setup for similar system was already performed
@@ -68,6 +67,7 @@ def main(cfg_path: str):
     ctx = JobContext()
     ctx.paths = paths
     setup_simulation(cfg, ctx)
+    copy_yaml_input(cfg, cfg_path)
 
     # 3. select and execute the desired method
     # if equilibration is requested, perform equilibration first
