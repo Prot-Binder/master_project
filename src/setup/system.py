@@ -12,6 +12,7 @@ def setup_simulation(cfg, ctx):
 
     # only run tleap and generate topology files on local machine, not on cluster
     if cfg.method.setup_type == "local":
+        setup_dir = ctx.paths[cfg.method.name]["setup"]
         # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
         tleap_paths = TLeapPaths(
             template_tleap=Path("templates/tleap.in.tpl"),
@@ -19,7 +20,7 @@ def setup_simulation(cfg, ctx):
         )
 
         prmtop, rst, n_ions_each = run_tleap(
-            setup_dir=cfg.paths["setup_dir"],
+            setup_dir=setup_dir,
             pdb_path=cfg.system.pdb,
             bond=cfg.system.bond,  # may be None
             paths=tleap_paths,
@@ -32,9 +33,9 @@ def setup_simulation(cfg, ctx):
             template=Path("templates/HMR.parmed.tpl"),
         )
 
-        hmr_prmtop = cfg.paths["setup_dir"] / "prmtop"
+        hmr_prmtop = setup_dir / "prmtop"
         run_hmr(
-            setup_dir=cfg.paths["setup_dir"],
+            setup_dir=setup_dir,
             in_prmtop=prmtop,
             out_prmtop=hmr_prmtop,
             paths=parmed_paths,
@@ -42,7 +43,7 @@ def setup_simulation(cfg, ctx):
 
         print(f"\033[92m[setup] HMR done: {hmr_prmtop.name}\033[0m")
 
-        setup_dir = ctx.paths[cfg.method.name]["setup"]
+        # setup_dir = ctx.paths[cfg.method.name]["setup"]
         # ---- 3) Generate Restraints ----
         system_pdb = setup_dir / "system.pdb"
         create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
@@ -52,7 +53,7 @@ def setup_simulation(cfg, ctx):
         # ---- 4) Generate Topology Files with different LJ parameters ----
         top_file = setup_dir / "prmtop"
         coord_file = setup_dir / "system.rst"
-        scaled_topologies_dir = ctx.paths["top_dir"] / "prmtop"
+        scaled_topologies_dir = ctx.paths["top"] / "prmtop"
         generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
                                   cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
                                   ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
@@ -61,7 +62,7 @@ def setup_simulation(cfg, ctx):
 
     # if on cluster and a setup path is provided, copy files from an already existing directory.
     # if setup_type is local, the setup dir was already created above
-    if cfg.method.setup_path is not None and cfg.method.setup_type == "cluster":
+    if cfg.method.setup_dir is not None and cfg.method.setup_type == "cluster":
         # copy the setup directory from the specified path to local setup path
         for item in cfg.method.setup_dir.resolve().iterdir():
             if item.is_file():

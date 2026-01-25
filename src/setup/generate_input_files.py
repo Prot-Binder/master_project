@@ -30,7 +30,7 @@ def generate_eq(method: str, cfg, ctx) -> None:
 
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
 
-    setup_dir = ctx.paths[method]["setup"].resolve()
+    setup_dir = ctx.paths[cfg.method.name]["setup"].resolve()
     shutil.copy2(setup_dir / "_lroa.r", dest_dir)
     shutil.copy2(setup_dir / "system.rst", eq_root / "inpcrd0")
 
@@ -70,9 +70,9 @@ def generate_us(method: str, cfg, ctx):
     shutil.copy2(setup_dir / "_lroa.r", dest_dir)
 
     # define input path for restraints file
-    input_path = "../input/"
+    input_path = "./input/"
     # define output path for run files like pmd_prod_us or com_pull
-    output_path = "./pmd/"
+    output_path = "./run_output/pmd/"
 
     w_start = float(f"{float(cfg.us.start):.2f}")
     w_end = float(f"{float(cfg.us.end):.2f}")

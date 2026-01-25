@@ -274,7 +274,7 @@ def make_result_dir(cfg: Config) -> Path:
     Tag must be unique for this (system, method) combination.
     """
     result_dir = Path("results") / cfg.system.name / cfg.method.name / cfg.tag
-    result_dir.mkdir(parents=True, exist_ok=False)  # fail if already exists
+    result_dir.mkdir(parents=True, exist_ok=True)  # fail if already exists
     return result_dir
 
 def compute_paths(cfg: Config) -> dict:
@@ -290,7 +290,7 @@ def compute_paths(cfg: Config) -> dict:
     # define paths for equilibration
     paths["eq"] = {}
     paths["eq"]["script"] = Path("src") / "methods" / "eq"
-    paths["eq"]["root"] = Path("results") / "system" / "eq" / cfg.tag
+    paths["eq"]["root"] = Path("results") / system_name / "eq" / cfg.tag
     paths["eq"]["input"] = paths["eq"]["root"] / "input"
     paths["eq"]["amber"] = paths["eq"]["root"] / "run_output" / "amber"
     paths["eq"]["pmd"] = paths["eq"]["root"] / "run_output" / "pmd"

@@ -17,7 +17,7 @@ class EqMethod(BaseMethod):
         job_id : str = str(cfg.us.replica_scaling) + "_" + str(cfg.system.name)
 
         script_dir = ctx.paths["eq"]["script"]
-        eq_dir = cfg.paths["eq_dir"]
+        eq_dir = ctx.paths["eq"]["root"]
         slurm_dir = ctx.paths["eq"]["slurm"]
         output_dir = ctx.paths["eq"]["amber"]
         input_dir = ctx.paths["eq"]["input"]

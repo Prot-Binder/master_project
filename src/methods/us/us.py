@@ -22,7 +22,7 @@ class USMethod(BaseMethod):
         amber_dir = ctx.paths["us"]["amber"]
         result_dir = ctx.paths["us"]["root"]
         # TODO: adjust handling of eq dir: where exactly is the input stored in general?; or remove here
-        eq_dir = cfg.paths["eq_dir"].resolve()
+        # eq_dir = cfg.paths["eq_dir"].resolve()
 
         w_start = cfg.us.start
         w_end = cfg.us.end
@@ -61,7 +61,7 @@ class USMethod(BaseMethod):
                 str(amber_dir.resolve()),
                 str(ctx.paths["top"].resolve()),
                 str(cfg.us.replica_scaling),
-                str(cfg.paths["eq"]["root"].resolve()),
+                str(ctx.paths["eq"]["root"].resolve()),
             ]
 
             # TODO: execute this from result directory
