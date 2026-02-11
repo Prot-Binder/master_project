@@ -135,7 +135,7 @@ class Config:
             for idx, r in enumerate(self.us):
                 if r.k <= 0:
                     raise ValueError(f"us[{idx}].k must be > 0")
-                if r.step_size <= 0:
+                if r.step <= 0:
                     raise ValueError(f"us[{idx}].step_size must be > 0")
                 if r.start >= r.end:
                     raise ValueError(f"us[{idx}].start must be < us[{idx}].end")
