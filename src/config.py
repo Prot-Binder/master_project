@@ -130,15 +130,15 @@ class Config:
         elif m == "us":
             if self.us is None:
                 raise ValueError("method.name is 'us' but no 'us:' section was found.")
-            if not isinstance(self.restraints, list) or len(self.restraints) == 0:
-                raise ValueError("restraints must be a non-empty list.")
+            if not isinstance(self.us, list) or len(self.us) == 0:
+                raise ValueError("us must be a non-empty list.")
             for idx, r in enumerate(self.us):
                 if r.k <= 0:
                     raise ValueError(f"us[{idx}].k must be > 0")
                 if r.step_size <= 0:
                     raise ValueError(f"us[{idx}].step_size must be > 0")
                 if r.start >= r.end:
-                    raise ValueError(f"us[{idx}].start must be < restraints[{idx}].end")
+                    raise ValueError(f"us[{idx}].start must be < us[{idx}].end")
                 if r.replica_scaling <= 0:
                     raise ValueError(f"us[{idx}].replica_scaling must be > 0")
         else:
