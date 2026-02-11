@@ -75,7 +75,5 @@ methods:
     e: [1.00, 0.99, 0.98, 0.97, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.74]
     k: 8.0
 
-
-
 # maybe change nsteps, temperature, dt etc. also via yaml, if necessary
 # analysis still missing
