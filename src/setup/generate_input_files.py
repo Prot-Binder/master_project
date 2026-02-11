@@ -74,44 +74,45 @@ def generate_us(method: str, cfg, ctx):
     # define output path for run files like pmd_prod_us or com_pull
     output_path = "./run_output/pmd/"
 
-    w_start = float(f"{float(cfg.us.start):.2f}")
-    w_end = float(f"{float(cfg.us.end):.2f}")
-    step = float(f"{float(cfg.restraints.step_size):.2f}")
+    for interval in cfg.us:
+        w_start = float(f"{float(interval.start):.2f}")
+        w_end = float(f"{float(interval.end):.2f}")
+        step = float(f"{float(interval.step_size):.2f}")
 
-    # adjust input files for pull simulation
-    mdin_file = dest_dir / "mdin5"
-    restraint_file = dest_dir / "pull.r"
-    for window in np.arange(w_start, w_end + step, step):
+        # adjust input files for pull simulation
+        mdin_file = dest_dir / "mdin5"
+        restraint_file = dest_dir / "pull.r"
+        for window in np.arange(w_start, w_end + step, step):
 
-        mdin_text = (mdin_file.read_text()
-                     .replace("{WINDOW}", str(window))
-                     .replace("{IN_PATH}", input_path)
-                     .replace("{OUT_PATH}", output_path))
-        mdin_output_file = dest_dir/f"mdin5.rep{window}"
-        mdin_output_file.write_text(mdin_text)
+            mdin_text = (mdin_file.read_text()
+                         .replace("{WINDOW}", str(window))
+                         .replace("{IN_PATH}", input_path)
+                         .replace("{OUT_PATH}", output_path))
+            mdin_output_file = dest_dir/f"mdin5.rep{window}"
+            mdin_output_file.write_text(mdin_text)
 
-        restraint_text = (restraint_file.read_text()
-                          .replace("{WINDOW}", str(window)))
-        restraint_output_file = dest_dir/f"pull{window}.r"
-        restraint_output_file.write_text(restraint_text)
+            restraint_text = (restraint_file.read_text()
+                              .replace("{WINDOW}", str(window)))
+            restraint_output_file = dest_dir/f"pull{window}.r"
+            restraint_output_file.write_text(restraint_text)
 
-    # adjust input files for us simulation
-    mdin_file = dest_dir / "mdin6"
-    restraint_file = dest_dir / "_lroaus.r"
-    for window in np.arange(w_start, w_end + step, step):
+        # adjust input files for us simulation
+        mdin_file = dest_dir / "mdin6"
+        restraint_file = dest_dir / "_lroaus.r"
+        for window in np.arange(w_start, w_end + step, step):
 
-        mdin_text = (mdin_file.read_text()
-                .replace("{WINDOW}", str(window))
-                .replace("{IN_PATH}", input_path)
-                .replace("{OUT_PATH}", output_path))
-        mdin_output_file = dest_dir / f"mdin6.rep{window}"
-        mdin_output_file.write_text(mdin_text)
+            mdin_text = (mdin_file.read_text()
+                    .replace("{WINDOW}", str(window))
+                    .replace("{IN_PATH}", input_path)
+                    .replace("{OUT_PATH}", output_path))
+            mdin_output_file = dest_dir / f"mdin6.rep{window}"
+            mdin_output_file.write_text(mdin_text)
 
-        restraint_text = (restraint_file.read_text()
-                          .replace("{WINDOW}", str(window))
-                          .replace("{KAPPA}", str(cfg.restraints.k)))
-        restraint_output_file = dest_dir / f"_lroaus{window}.r"
-        restraint_output_file.write_text(restraint_text)
+            restraint_text = (restraint_file.read_text()
+                              .replace("{WINDOW}", str(window))
+                              .replace("{KAPPA}", str(interval.k)))
+            restraint_output_file = dest_dir / f"_lroaus{window}.r"
+            restraint_output_file.write_text(restraint_text)
 
 
 def generate_rs_remd(method: str, cfg: dict):

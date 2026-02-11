@@ -55,15 +55,6 @@ class SystemCfg:
     protein_residues: str
     bond: Optional[str] = None
 
-
-@dataclass(frozen=True)
-class RestraintsCfg:
-    k: float
-    step_size: float
-    min: float
-    max: float
-
-
 @dataclass(frozen=True)
 class MethodCfg:
     name: str  # "rs_remd" | "us" | ...
@@ -97,8 +88,8 @@ class USCfg:
     start: float
     end: float
     step: float
-    use_restraints_range: bool
     replica_scaling: int
+    k: float
 
 
 @dataclass(frozen=False)
@@ -106,12 +97,11 @@ class Config:
     tag: str
     cluster: ClusterCfg
     system: SystemCfg
-    restraints: RestraintsCfg
     method: MethodCfg
     replica_scaling: ReplicaScalingCfg
     paths: dict
     rs_remd: Optional[RSREMDCfg] = None
-    us: Optional[USCfg] = None
+    us: list[Optional[USCfg]] = None
 
     def validate(self) -> None:
         if not self.tag or not self.tag.strip():
@@ -119,13 +109,6 @@ class Config:
 
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
-
-        if self.restraints.k <= 0:
-            raise ValueError("restraints.k must be > 0")
-        if self.restraints.step_size <= 0:
-            raise ValueError("restraints.step_size must be > 0")
-        if self.restraints.min >= self.restraints.max:
-            raise ValueError("restraints.min must be < restraints.max")
 
         m = self.method.name
 
@@ -147,9 +130,17 @@ class Config:
         elif m == "us":
             if self.us is None:
                 raise ValueError("method.name is 'us' but no 'us:' section was found.")
-            if self.us.start >= self.us.end:
-                raise ValueError("us.start must be < us.end")
-
+            if not isinstance(self.restraints, list) or len(self.restraints) == 0:
+                raise ValueError("restraints must be a non-empty list.")
+            for idx, r in enumerate(self.us):
+                if r.k <= 0:
+                    raise ValueError(f"us[{idx}].k must be > 0")
+                if r.step_size <= 0:
+                    raise ValueError(f"us[{idx}].step_size must be > 0")
+                if r.start >= r.end:
+                    raise ValueError(f"us[{idx}].start must be < restraints[{idx}].end")
+                if r.replica_scaling <= 0:
+                    raise ValueError(f"us[{idx}].replica_scaling must be > 0")
         else:
             raise ValueError(f"Unknown method name: {m}")
 
@@ -183,15 +174,6 @@ def load_config(path: str | Path) -> Config:
         bond=sys_raw.get("bond"),
     )
 
-    # restraints (NO typo support; step_size is required)
-    r_raw = _ensure_mapping(_require(raw, "restraints", "top-level"), "restraints")
-    restraints = RestraintsCfg(
-        k=float(_require(r_raw, "k", "restraints")),
-        step_size=float(_require(r_raw, "step_size", "restraints")),
-        min=float(_require(r_raw, "min", "restraints")),
-        max=float(_require(r_raw, "max", "restraints")),
-    )
-
     # method
     m_raw = _ensure_mapping(_require(raw, "method", "top-level"), "method")
     method = MethodCfg(
@@ -222,21 +204,22 @@ def load_config(path: str | Path) -> Config:
 
     us = None
     if "us" in raw and raw["us"] is not None:
-        us_raw = _ensure_mapping(raw["us"], "us")
-        us = USCfg(
-            start=float(_require(us_raw, "start", "us")),
-            end=float(_require(us_raw, "end", "us")),
-            step=float(_require(us_raw, "step", "us")),
-            # TODO: use this somewhere in the setup
-            use_restraints_range=bool(_require(us_raw, "use_restraints_range", "us")),
-            replica_scaling=int(_require(us_raw, "replica_scaling", "us")),
-        )
+        us_list_raw = _ensure_list(raw["us"], "us")
+        us = []
+        for i, item in enumerate(us_list_raw):
+            item_map = _ensure_mapping(item, f"us[{i}]")
+            us.append(USCfg(
+                start=float(_require(item_map, "start", f"us[{i}]")),
+                end=float(_require(item_map, "end", f"us[{i}]")),
+                step=float(_require(item_map, "step", f"us[{i}]")),
+                replica_scaling=int(_require(item_map, "replica_scaling", f"us[{i}]")),
+                k=float(_require(item_map, "k", f"us[{i}]")),
+            ))
 
     cfg = Config(
         tag=tag,
         cluster=cluster,
         system=system,
-        restraints=restraints,
         method=method,
         replica_scaling=replica_scaling,
         paths={},

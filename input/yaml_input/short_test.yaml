@@ -16,12 +16,6 @@ replica_scaling:
   d_scaling: [0.00, 0.01, 0.02, 0.04, 0.08, 0.12, 0.16, 0.20, 0.24, 0.28, 0.32, 0.38, 0.44, 0.50, 0.58, 0.68]
   e_scaling: [1.00, 0.99, 0.98, 0.97, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.74]
 
-restraints:
-  k: 4.0
-  step_size: 1
-  min: 5
-  max: 7
-
 # method:
 #   name: rs_remd
 
@@ -30,19 +24,24 @@ restraints:
 #   replicas: [0,2,4,6,8,10,12,16]
 
 method:
-  setup: False # TODO: think of deleting this filed as it may be redundant
-  setup_type: cluster # cluster or local; i.e. on the cluster, tleap is not available
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: local # cluster or local; i.e. tleap may not be available on the cluster
   # setup_path: ~/cluster/master_project/results/5h5s/us/test/setup # path to an already existing setup directory of the same
   eq: True
   name: us
 
 us:
-  start: 5
-  end: 7
-  step: 1
-  use_restraints_range: true
-  replica_scaling: 1
+  - start: 5
+    end: 7
+    step: 1
+    replica_scaling: 1
+    k: 4.0
 
+  - start: 8
+    end: 10
+    step: 0.5
+    replica_scaling: 1
+    k: 8.0
 
 
 
