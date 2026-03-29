@@ -19,28 +19,17 @@ system:
   protein_residues: 1-163
   # bond: "377.N-390.C"
 
-replica_scaling:
-  n_rep: 16
-  d_scaling: [0.00, 0.01, 0.02, 0.04, 0.08, 0.12, 0.16, 0.20, 0.24, 0.28, 0.32, 0.38, 0.44, 0.50, 0.58, 0.68]
-  e_scaling: [1.00, 0.99, 0.98, 0.97, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.74]
 
-# method:
-#   name: rs_remd
-
-# rs_remd:
-#   n_rep: 8
-#   replicas: [0,2,4,6,8,10,12,16]
-
-method:
+setup:
   setup: True # TODO: think of deleting this filed as it may be redundant
   setup_type: local # cluster or local; i.e. tleap may not be available on the cluster
-  # setup_path: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to an already existing setup directory of the same
-  eq: True
-  name: us
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
 
 eq:
   execute: True
   use_cpu: True
+  d: 0.9
+  e: 0.9
 
 pull:
   d: 0.9

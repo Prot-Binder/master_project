@@ -67,18 +67,11 @@ class SetupCfg:
 
 
 @dataclass(frozen=True)
-class MethodCfg:
-    name: str
-    setup: bool
-    setup_type: str
-    eq: bool
-    setup_dir: Optional[Path] = None
-
-
-@dataclass(frozen=True)
 class EqCfg:
     execute: bool
     use_cpu: bool
+    d: float
+    e: float
 
 
 @dataclass(frozen=True)
@@ -139,7 +132,8 @@ class Config:
     cluster: ClusterCfg
     eq: EqCfg
     system: SystemCfg
-    method: MethodCfg
+    setup: SetupCfg
+    pull: Optional[PullCfg]
     paths: dict
     methods: MethodsCfg
 
@@ -192,6 +186,17 @@ def _load_cluster(raw: dict) -> ClusterCfg:
         exclude_ranks=[str(x) for x in _ensure_list(exclude_ranks, "cluster.exclude_ranks")]
     )
 
+def _load_setup(raw: dict) -> SetupCfg:
+    setup_raw = raw.get("setup", {})
+    if setup_raw is None:
+        setup_raw = {}
+    setup_raw = _ensure_mapping(setup_raw, "setup")
+    return SetupCfg(
+        setup=_as_bool(setup_raw["setup"], "setup.setup") if "setup" in setup_raw else False,
+        setup_type=str(setup_raw["setup_type"]) if "setup_type" in setup_raw else "cluster",
+        setup_dir=_as_path(setup_raw["setup_dir"]) if "setup_dir" in setup_raw else None,
+    )
+
 
 def _load_system(raw: dict) -> SystemCfg:
     sys_raw = _ensure_mapping(_require(raw, "system", "top-level"), "system")
@@ -213,6 +218,8 @@ def _load_eq(raw: dict) -> EqCfg:
     return EqCfg(
         execute=_as_bool(eq_raw["execute"], "eq.execute") if "execute" in eq_raw else False,
         use_cpu=_as_bool(eq_raw["use_cpu"], "eq.use_cpu") if "use_cpu" in eq_raw else False,
+        d=float(_require(eq_raw, "d", "eq")),
+        e=float(_require(eq_raw, "e", "eq")),
     )
 
 
@@ -241,17 +248,6 @@ def _load_pull(raw: dict) -> Optional[PullCfg]:
         stride=float(_require(pull_raw, "stride", "pull")),
         mode=str(_require(pull_raw, "mode", "pull")),
         pull_intervals=pull_intervals,
-    )
-
-
-def _load_method(raw: dict, eq: EqCfg) -> MethodCfg:
-    method_raw = _ensure_mapping(_require(raw, "method", "top-level"), "method")
-    return MethodCfg(
-        name=str(_require(method_raw, "name", "method")),
-        eq=_as_bool(method_raw["eq"], "method.eq") if "eq" in method_raw else eq.execute,
-        setup=_as_bool(method_raw["setup"], "method.setup") if "setup" in method_raw else False,
-        setup_dir=_as_path(method_raw["setup_dir"]) if method_raw.get("setup_dir") is not None else None,
-        setup_type=str(method_raw.get("setup_type", "local")),
     )
 
 
@@ -351,7 +347,7 @@ def load_config(path: str | Path) -> Config:
     system = _load_system(raw)
     eq = _load_eq(raw)
     pull = _load_pull(raw)
-    method = _load_method(raw, eq)
+    setup = _load_setup(raw)
     methods = MethodsCfg(
         us=_load_us(raw, pull),
         rs_remd=_load_rs_remd(raw),
@@ -363,7 +359,8 @@ def load_config(path: str | Path) -> Config:
         cluster=cluster,
         eq=eq,
         system=system,
-        method=method,
+        pull=pull,
+        setup=setup,
         paths={},
         methods=methods,
     )
