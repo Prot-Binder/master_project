@@ -69,20 +69,20 @@ def main(cfg_path: str):
     setup_simulation(cfg, ctx)
     copy_yaml_input(ctx.paths[cfg.method.name]["setup"], cfg_path)
 
-    # 3. select and execute the desired method
-    # if equilibration is requested, perform equilibration first
+    # # 3. select and execute the desired method
+    # # if equilibration is requested, perform equilibration first
     if cfg.method.eq:
         print("running equilibration")
         eq_method = create_eq(cfg)
         eq_method.launch(cfg, ctx)
-
-    method = select_method(cfg)
-    if method is not None:
-        method.launch(cfg, ctx)
-    else:
-        raise ValueError(f"Method {cfg.method.name} not recognized.")
-
-    # 4. analysis
+# 
+    # method = select_method(cfg)
+    # if method is not None:
+    #     method.launch(cfg, ctx)
+    # else:
+    #     raise ValueError(f"Method {cfg.method.name} not recognized.")
+# 
+    # # 4. analysis
 
 
 if __name__ == "__main__":

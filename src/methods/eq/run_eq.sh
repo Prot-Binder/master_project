@@ -10,14 +10,14 @@ MDINDIR=$4
 OUTDIR=$5
 TOPDIR=$6
 REPLICA_SCALING=$7
+CPU_USAGE=$8
 
-# start for loop over distances (d) as specified in the GLOBAL VARIABLES in main_script.sh
 for n in $(seq $MIN $STEP $MAX)
 do
 	# initialize N as the next step
 	N=$((n+$STEP))
 
-	if (( n < 1 ))
+	if (( n < CPU_USAGE ))
 	then
 		printf "sander minimization started... "
 		pmemd -O -i $MDINDIR/mdin$n -ref refc -c inpcrd$n -p $TOPDIR/prmtop$REPLICA_SCALING -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -inf $OUTDIR/mdinfo$n

@@ -1,0 +1,49 @@
+NVT Eq. /w Cmplx Rstrnts
+ &cntrl
+	! GENERAL FLAGS DESCRIBING THE CALCULATION
+	imin=0,
+
+	! NATURE AND FORMAT OF THE INPUT
+	irest=0,
+	ntx=1,
+
+	! NATURE AND FORMAT OF THE OUTPUT
+	ntxo=2,
+	ntpr=500,
+	iwrap=0,
+	ntwx=1000
+
+	! FROZEN OR RESTRAINT ATOMS
+	ntr=1,
+	restraint_wt=1.0,
+	restraintmask='(!:WAT & !@H=)',
+
+	! MOLECULAR DYNAMICS
+	nstlim=80000,
+	dt=0.001,
+
+	! TEMPERATURE REGULATION
+	ntt=3,
+	gamma_ln=1.0,
+	temp0=300.0,
+
+	! PRESSURE REGULATION
+	ntp=0,
+
+	! SHAKE BOND LENGTH CONSTRAINTS
+	ntc=2,
+	
+	! POTENTIAL FUNCTION PARAMETERS
+	ntf=2,
+	ntb=1,
+	cut=8.5,
+ &end
+&wt
+    type='TEMP0',
+    istep1=0,
+    istep2=80000,    ! == nstlim
+    value1=0,
+    value2=300,
+&end
+&wt type='END', &end
+eof

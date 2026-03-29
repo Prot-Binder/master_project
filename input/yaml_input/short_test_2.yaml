@@ -1,4 +1,5 @@
-tag: test
+tag: test2
+test: True
 cluster:
   exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042,t38cn056]
 
@@ -27,18 +28,18 @@ restraints:
 #   replicas: [0,2,4,6,8,10,12,16]
 
 method:
-  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup: True # TODO: think of deleting this field as it may be redundant
   setup_type: cluster # cluster or local; i.e. on the cluster, tleap is not available
   #  setup_dir: ~/cluster/master_project/results/5h5s/us/test/setup # path to an already existing setup directory of the same system, hence no new setup needs to be done
   eq: False
   name: us
 
 us:
-  start: 5
-  end: 7
-  step: 1
-  use_restraints_range: true
-  replica_scaling: 1
+  - start: 5
+    end: 7
+    step: 1
+    replica_scaling: 1
+    k: 4.0
 
 
 

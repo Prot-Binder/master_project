@@ -50,24 +50,38 @@ def _ensure_list(x: Any, ctx: str) -> list:
 @dataclass(frozen=True)
 class SystemCfg:
     pdb: Path
+    output_prefix: Path
     name: str
     ligand_residues: str
     protein_residues: str
     bond: Optional[str] = None
 
 @dataclass(frozen=True)
-class MethodCfg:
-    name: str  # "rs_remd" | "us" | ...
+class SetupCfg:
     setup: bool
     setup_type: str # cluster or local
-    eq: bool
     setup_dir: Optional[Path] = None
 
 @dataclass(frozen=True)
-class ReplicaScalingCfg:
-    n_rep: int
-    d_scaling: list[float]
-    e_scaling: list[float]
+class EqCfg:
+    execute: bool
+    use_cpu: bool
+
+
+@dataclass(frozen=True)
+class PullIntervalCfg:
+    start: float
+    end: float
+    step: float
+    k: float
+
+@dataclass(frozen=True)
+class PullCfg:
+    d: float
+    e: float
+    stride: float
+    mode: str
+    pull_intervals: list[PullIntervalCfg]
 
 @dataclass(frozen=True)
 class ClusterCfg:
@@ -76,36 +90,50 @@ class ClusterCfg:
 # -------------------------
 # Method-specific configs
 # -------------------------
+@dataclass(frozen=True)
+class USIntervalCfg:
+    start: float
+    end: float
+    step: float
+    k: float
+
+@dataclass(frozen=True)
+class USCfg:
+    d: float
+    e: float
+    us_intervals: list[USCfgInterval]
+
 
 @dataclass(frozen=True)
 class RSREMDCfg:
     n_rep: int
-    replicas: list[int]
-
+    d_scaling: list[float]
+    e_scaling: list[float]
+    k: float
 
 @dataclass(frozen=True)
-class USCfg:
-    start: float
-    end: float
-    step: float
-    replica_scaling: int
-    k: float
+class MethodsCfg:
+    us: Optional[USCfg]
+    rs_remd: Optional[RSREMDCfg]
 
 
 @dataclass(frozen=False)
 class Config:
     tag: str
+    test: bool
     cluster: ClusterCfg
+    eq: EqCfg
     system: SystemCfg
     method: MethodCfg
-    replica_scaling: ReplicaScalingCfg
     paths: dict
-    rs_remd: Optional[RSREMDCfg] = None
-    us: list[Optional[USCfg]] = None
+    methods: MethodsCfg
 
     def validate(self) -> None:
         if not self.tag or not self.tag.strip():
             raise ValueError("tag must be a non-empty string.")
+
+        if not self.test or not self.test.strip():
+            raise ValueError("test must be a non-empty string.")
 
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
@@ -145,6 +173,7 @@ class Config:
             raise ValueError(f"Unknown method name: {m}")
 
 
+
 # -------------------------
 # Parsing
 # -------------------------
@@ -157,6 +186,8 @@ def load_config(path: str | Path) -> Config:
 
     tag = str(_require(raw, "tag", "top-level"))
 
+    test = str(_require(raw, "test", "top-level"))
+
     # cluster
     cluster_raw = _ensure_mapping(_require(raw, "cluster", "top-level"), "cluster")
     cluster = ClusterCfg(
@@ -168,11 +199,30 @@ def load_config(path: str | Path) -> Config:
     sys_raw = _ensure_mapping(_require(raw, "system", "top-level"), "system")
     system = SystemCfg(
         pdb=_as_path(_require(sys_raw, "pdb", "system")),
+        output_prefix=_as_path(_require(sys_raw, "output_prefix", "system")),
         name=str(_require(sys_raw, "name", "system")),
         ligand_residues=str(_require(sys_raw, "ligand_residues", "system")),
         protein_residues=str(_require(sys_raw, "protein_residues", "system")),
         bond=sys_raw.get("bond"),
     )
+
+    eq_raw = _ensure_mapping(_require(raw, "eq", "top-level"), "eq")
+    eq = EqCfg(
+        execute=bool(_require(eq_raw, "execute", "eq")),
+        use_cpu=bool(_require(eq_raw, "use_cpu", "eq")),
+    )
+
+    pull = None
+    if "pull" in raw and raw["pull"] is not None:
+        pull_raw = _ensure_list(raw["us"], "us")
+        pull = PullCfg(
+            d=float((_require(pull_raw, "d", "pull"))),
+            e=float((_require(pull_raw, "e", "pull"))),
+            stride=float((_require(pull_raw, "stride", "pull"))),
+            mode=str((_require(pull_raw, "mode", "pull"))),
+            pull_intervals=_ensure_list(_require(pull_raw, "pull_intervals", "pull"), "pull.pull_intervals")
+
+        )
 
     # method
     m_raw = _ensure_mapping(_require(raw, "method", "top-level"), "method")
@@ -182,14 +232,6 @@ def load_config(path: str | Path) -> Config:
         setup=bool(_require(m_raw, "setup", "method")), # TODO: think of deleting this filed, may be redundant
         setup_dir=Path(m_raw["setup_dir"]) if "setup_dir" in m_raw and m_raw["setup_dir"] is not None else None,
         setup_type=str(_require(m_raw, "setup_type", "method")),
-    )
-
-    # replica scaling
-    rs_raw = _ensure_mapping(_require(raw, "replica_scaling", "top-level"), "replica_scaling")
-    replica_scaling = ReplicaScalingCfg(
-        n_rep=int(_require(rs_raw, "n_rep", "replica_scaling")),
-        d_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "d_scaling", "replica_scaling"), "replica_scaling.d_scaling")],
-        e_scaling=[float(x) for x in _ensure_list(_require(rs_raw, "e_scaling", "replica_scaling"), "replica_scaling.e_scaling")],
     )
 
     # method-specific sections
@@ -218,10 +260,11 @@ def load_config(path: str | Path) -> Config:
 
     cfg = Config(
         tag=tag,
+        test=test,
         cluster=cluster,
+        eq=eq,
         system=system,
         method=method,
-        replica_scaling=replica_scaling,
         paths={},
         rs_remd=rs_remd,
         us=us,
@@ -254,10 +297,12 @@ def inject_paths(cfg: Config) -> Config:
 def make_result_dir(cfg: Config) -> Path:
     """
     results/<system_name>/<method_name>/<tag>/
-    Tag must be unique for this (system, method) combination.
+    tag must be unique for this (system, method) combination.
     """
-    result_dir = Path("results") / cfg.system.name / cfg.method.name / cfg.tag
-    result_dir.mkdir(parents=True, exist_ok=True)  # fail if already exists
+    # TODO: iterate over all possible methods
+    result_dir = Path(cfg.system.output_prefix) "results" / cfg.system.name / cfg.method.name / cfg.tag
+    result_dir.mkdir(parents=True, exist_ok=False)  
+
     return result_dir
 
 def compute_paths(cfg: Config) -> dict:
@@ -268,7 +313,10 @@ def compute_paths(cfg: Config) -> dict:
 
     paths = {}
     paths["top"] = Path("results") / system_name / "top"
-    paths["templates"] = Path("templates")
+    if cfg.test:
+        paths["templates"] = Path("test_templates")
+    else:
+        paths["templates"] = Path("templates")
 
     # define paths for equilibration
     paths["eq"] = {}

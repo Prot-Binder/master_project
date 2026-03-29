@@ -77,7 +77,7 @@ def generate_us(method: str, cfg, ctx):
     for interval in cfg.us:
         w_start = float(f"{float(interval.start):.2f}")
         w_end = float(f"{float(interval.end):.2f}")
-        step = float(f"{float(interval.step_size):.2f}")
+        step = float(f"{float(interval.step):.2f}")
 
         # adjust input files for pull simulation
         mdin_file = dest_dir / "mdin5"

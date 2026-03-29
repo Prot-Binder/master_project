@@ -1,14 +1,13 @@
-Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
+Prod HREUS-Run for Adv-FE-Calculation
  &cntrl
 	! GENERAL FLAGS DESCRIBING THE CALCULATION
 	imin=0,
-	nmropt=1,
 
 	! NATURE AND FORMAT OF THE INPUT
 	irest=1,
 	ntx=5,
-	ntwr=1000,    ! Number of timesteps to write out a backup restrt file
-	ntwx=1000,
+	ntwr=25000,    ! Number of timesteps to write out a backup restrt file
+	ntwx=25000,
 
 	! NATURE AND FORMAT OF THE OUTPUT
 	ntxo=2,
@@ -19,7 +18,7 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
 	ntr=0,
 
 	! MOLECULAR DYNAMICS
-	nstlim=250000,
+	nstlim=25000,
 	dt=0.004,
 
 	! TEMPERATURE REGULATION
@@ -44,13 +43,8 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
 	infe = 1,
  /
  &pmd
- 	output_file = '{OUT_PATH}pmd_pull_us{WINDOW}.txt'
+ 	output_file = '{OUT_PATH}pmd_prod_us{WINDOW}.txt'
  	output_freq = 50
- 	cv_file = '{IN_PATH}_lroa.r'
+ 	cv_file = '{IN_PATH}_lroaus{WINDOW}.r'
  /
- &wt type = 'REST', istep1 = 0, istep2 = 1, value1 = 1.0, value2 = 1.0,/
- &wt type='DUMPFREQ', istep1=50,/
- &wt type = 'END',/
- DUMPAVE={OUT_PATH}com_pull_{WINDOW}.txt
- DISANG={IN_PATH}pull{WINDOW}.r
 eof
