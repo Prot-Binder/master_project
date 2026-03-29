@@ -1,21 +1,15 @@
 from __future__ import annotations
 
+import os
 import shutil
-
-# from re import template
-
-# from src.utils.paths import make_result_dir, setup_dir, top_dir
-from src.utils.paths import *
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
-import os
+
 import yaml
 
+from src.utils.paths import *
 
-# -------------------------
-# Helpers
-# -------------------------
 
 def _require(d: dict, key: str, ctx: str) -> Any:
     if key not in d:
@@ -43,9 +37,17 @@ def _ensure_list(x: Any, ctx: str) -> list:
     return x
 
 
-# -------------------------
-# Global config sections
-# -------------------------
+def _as_bool(value: Any, ctx: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "1", "on"}:
+            return True
+        if normalized in {"false", "no", "0", "off"}:
+            return False
+    raise ValueError(f"'{ctx}' must be a boolean.")
+
 
 @dataclass(frozen=True)
 class SystemCfg:
@@ -56,11 +58,22 @@ class SystemCfg:
     protein_residues: str
     bond: Optional[str] = None
 
+
 @dataclass(frozen=True)
 class SetupCfg:
     setup: bool
-    setup_type: str # cluster or local
+    setup_type: str
     setup_dir: Optional[Path] = None
+
+
+@dataclass(frozen=True)
+class MethodCfg:
+    name: str
+    setup: bool
+    setup_type: str
+    eq: bool
+    setup_dir: Optional[Path] = None
+
 
 @dataclass(frozen=True)
 class EqCfg:
@@ -75,6 +88,7 @@ class PullIntervalCfg:
     step: float
     k: float
 
+
 @dataclass(frozen=True)
 class PullCfg:
     d: float
@@ -83,13 +97,12 @@ class PullCfg:
     mode: str
     pull_intervals: list[PullIntervalCfg]
 
+
 @dataclass(frozen=True)
 class ClusterCfg:
     exclude_ranks: list[str]
 
-# -------------------------
-# Method-specific configs
-# -------------------------
+
 @dataclass(frozen=True)
 class USIntervalCfg:
     start: float
@@ -97,11 +110,12 @@ class USIntervalCfg:
     step: float
     k: float
 
+
 @dataclass(frozen=True)
 class USCfg:
     d: float
     e: float
-    us_intervals: list[USCfgInterval]
+    us_intervals: list[USIntervalCfg]
 
 
 @dataclass(frozen=True)
@@ -110,6 +124,7 @@ class RSREMDCfg:
     d_scaling: list[float]
     e_scaling: list[float]
     k: float
+
 
 @dataclass(frozen=True)
 class MethodsCfg:
@@ -132,51 +147,196 @@ class Config:
         if not self.tag or not self.tag.strip():
             raise ValueError("tag must be a non-empty string.")
 
-        if not self.test or not self.test.strip():
-            raise ValueError("test must be a non-empty string.")
+        if not isinstance(self.test, bool):
+            raise ValueError("test must be a boolean.")
 
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
 
-        m = self.method.name
+        method_name = self.method.name
 
-        if m == "rs_remd":
-            if self.rs_remd is None:
-                raise ValueError("method.name is 'rs_remd' but no 'rs_remd:' section was found.")
-            if self.rs_remd.n_rep <= 0:
-                raise ValueError("rs_remd.n_rep must be > 0")
-            if len(self.rs_remd.replicas) != self.rs_remd.n_rep:
-                raise ValueError(
-                    f"rs_remd.replicas length ({len(self.rs_remd.replicas)}) "
-                    f"must equal rs_remd.n_rep ({self.rs_remd.n_rep})."
-                )
-            if len(set(self.rs_remd.replicas)) != len(self.rs_remd.replicas):
-                raise ValueError("rs_remd.replicas contains duplicates (should be unique).")
-            if any(x < 0 for x in self.rs_remd.replicas):
-                raise ValueError("rs_remd.replicas must be non-negative integers.")
-
-        elif m == "us":
-            if self.us is None:
-                raise ValueError("method.name is 'us' but no 'us:' section was found.")
-            if not isinstance(self.us, list) or len(self.us) == 0:
-                raise ValueError("us must be a non-empty list.")
-            for idx, r in enumerate(self.us):
-                if r.k <= 0:
-                    raise ValueError(f"us[{idx}].k must be > 0")
-                if r.step <= 0:
-                    raise ValueError(f"us[{idx}].step_size must be > 0")
-                if r.start >= r.end:
-                    raise ValueError(f"us[{idx}].start must be < us[{idx}].end")
-                if r.replica_scaling <= 0:
-                    raise ValueError(f"us[{idx}].replica_scaling must be > 0")
-        else:
-            raise ValueError(f"Unknown method name: {m}")
+        if method_name == "rs_remd":
+            if self.methods.rs_remd is None:
+                raise ValueError("method.name is 'rs_remd' but no 'methods.rs_remd' section was found.")
+            if self.methods.rs_remd.n_rep <= 0:
+                raise ValueError("methods.rs_remd.n_rep must be > 0")
+            if len(self.methods.rs_remd.d_scaling) != self.methods.rs_remd.n_rep:
+                raise ValueError("methods.rs_remd.d_scaling length must equal methods.rs_remd.n_rep")
+            if len(self.methods.rs_remd.e_scaling) != self.methods.rs_remd.n_rep:
+                raise ValueError("methods.rs_remd.e_scaling length must equal methods.rs_remd.n_rep")
+            if self.methods.rs_remd.k <= 0:
+                raise ValueError("methods.rs_remd.k must be > 0")
+        elif method_name == "us":
+            if self.methods.us is None:
+                raise ValueError("method.name is 'us' but no 'methods.us' section was found.")
+            if len(self.methods.us.us_intervals) == 0:
+                raise ValueError("methods.us.us_intervals must be a non-empty list.")
+            for idx, interval in enumerate(self.methods.us.us_intervals):
+                if interval.k <= 0:
+                    raise ValueError(f"methods.us.us_intervals[{idx}].k must be > 0")
+                if interval.step <= 0:
+                    raise ValueError(f"methods.us.us_intervals[{idx}].step must be > 0")
+                if interval.start >= interval.end:
+                    raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
+        elif method_name not in {"eq", "us_remd"}:
+            raise ValueError(f"Unknown method name: {method_name}")
 
 
+def _load_cluster(raw: dict) -> ClusterCfg:
+    cluster_raw = raw.get("cluster", {})
+    if cluster_raw is None:
+        cluster_raw = {}
+    cluster_raw = _ensure_mapping(cluster_raw, "cluster")
+    exclude_ranks = cluster_raw.get("exclude_ranks", [])
+    return ClusterCfg(
+        exclude_ranks=[str(x) for x in _ensure_list(exclude_ranks, "cluster.exclude_ranks")]
+    )
 
-# -------------------------
-# Parsing
-# -------------------------
+
+def _load_system(raw: dict) -> SystemCfg:
+    sys_raw = _ensure_mapping(_require(raw, "system", "top-level"), "system")
+    return SystemCfg(
+        pdb=_as_path(_require(sys_raw, "pdb", "system")),
+        output_prefix=_as_path(sys_raw.get("output_prefix", ".")),
+        name=str(_require(sys_raw, "name", "system")),
+        ligand_residues=str(_require(sys_raw, "ligand_residues", "system")),
+        protein_residues=str(_require(sys_raw, "protein_residues", "system")),
+        bond=str(sys_raw["bond"]) if sys_raw.get("bond") is not None else None,
+    )
+
+
+def _load_eq(raw: dict) -> EqCfg:
+    eq_raw = raw.get("eq", {})
+    if eq_raw is None:
+        eq_raw = {}
+    eq_raw = _ensure_mapping(eq_raw, "eq")
+    return EqCfg(
+        execute=_as_bool(eq_raw["execute"], "eq.execute") if "execute" in eq_raw else False,
+        use_cpu=_as_bool(eq_raw["use_cpu"], "eq.use_cpu") if "use_cpu" in eq_raw else False,
+    )
+
+
+def _load_pull(raw: dict) -> Optional[PullCfg]:
+    pull_raw = raw.get("pull")
+    if pull_raw is None:
+        return None
+
+    pull_raw = _ensure_mapping(pull_raw, "pull")
+    interval_items = _ensure_list(_require(pull_raw, "pull_intervals", "pull"), "pull.pull_intervals")
+    pull_intervals = []
+    for index, item in enumerate(interval_items):
+        item = _ensure_mapping(item, f"pull.pull_intervals[{index}]")
+        pull_intervals.append(
+            PullIntervalCfg(
+                start=float(_require(item, "start", f"pull.pull_intervals[{index}]")),
+                end=float(_require(item, "end", f"pull.pull_intervals[{index}]")),
+                step=float(_require(item, "step", f"pull.pull_intervals[{index}]")),
+                k=float(_require(item, "k", f"pull.pull_intervals[{index}]")),
+            )
+        )
+
+    return PullCfg(
+        d=float(_require(pull_raw, "d", "pull")),
+        e=float(_require(pull_raw, "e", "pull")),
+        stride=float(_require(pull_raw, "stride", "pull")),
+        mode=str(_require(pull_raw, "mode", "pull")),
+        pull_intervals=pull_intervals,
+    )
+
+
+def _load_method(raw: dict, eq: EqCfg) -> MethodCfg:
+    method_raw = _ensure_mapping(_require(raw, "method", "top-level"), "method")
+    return MethodCfg(
+        name=str(_require(method_raw, "name", "method")),
+        eq=_as_bool(method_raw["eq"], "method.eq") if "eq" in method_raw else eq.execute,
+        setup=_as_bool(method_raw["setup"], "method.setup") if "setup" in method_raw else False,
+        setup_dir=_as_path(method_raw["setup_dir"]) if method_raw.get("setup_dir") is not None else None,
+        setup_type=str(method_raw.get("setup_type", "local")),
+    )
+
+
+def _load_us(raw: dict, pull: Optional[PullCfg]) -> Optional[USCfg]:
+    methods_raw = raw.get("methods", {})
+    if methods_raw is None:
+        methods_raw = {}
+    methods_raw = _ensure_mapping(methods_raw, "methods")
+
+    us_raw = methods_raw.get("us", raw.get("us"))
+    if us_raw is None:
+        return None
+
+    d_value = None
+    e_value = None
+
+    if isinstance(us_raw, dict):
+        us_raw = _ensure_mapping(us_raw, "methods.us")
+        d_value = us_raw.get("d")
+        e_value = us_raw.get("e")
+        interval_source = us_raw.get("us_intervals")
+        if interval_source is None and {"start", "end", "step", "k"}.issubset(us_raw):
+            interval_source = [us_raw]
+        if interval_source is None:
+            raise ValueError("methods.us must contain 'us_intervals'.")
+    else:
+        interval_source = _ensure_list(us_raw, "methods.us")
+
+    if d_value is None and pull is not None:
+        d_value = pull.d
+    if e_value is None and pull is not None:
+        e_value = pull.e
+    if d_value is None or e_value is None:
+        raise ValueError("methods.us requires 'd' and 'e' values, directly or via pull.")
+
+    us_intervals = []
+    for index, item in enumerate(_ensure_list(interval_source, "methods.us.us_intervals")):
+        item = _ensure_mapping(item, f"methods.us.us_intervals[{index}]")
+        us_intervals.append(
+            USIntervalCfg(
+                start=float(_require(item, "start", f"methods.us.us_intervals[{index}]")),
+                end=float(_require(item, "end", f"methods.us.us_intervals[{index}]")),
+                step=float(_require(item, "step", f"methods.us.us_intervals[{index}]")),
+                k=float(_require(item, "k", f"methods.us.us_intervals[{index}]")),
+            )
+        )
+
+    return USCfg(
+        d=float(d_value),
+        e=float(e_value),
+        us_intervals=us_intervals,
+    )
+
+
+def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
+    methods_raw = raw.get("methods", {})
+    if methods_raw is None:
+        methods_raw = {}
+    methods_raw = _ensure_mapping(methods_raw, "methods")
+
+    rs_raw = methods_raw.get("rs_remd")
+    if rs_raw is None:
+        return None
+
+    rs_raw = _ensure_mapping(rs_raw, "methods.rs_remd")
+
+    return RSREMDCfg(
+        n_rep=int(_require(rs_raw, "n_rep", "methods.rs_remd")),
+        d_scaling=[
+            float(x)
+            for x in _ensure_list(
+                _require(rs_raw, "d_scaling", "methods.rs_remd"),
+                "methods.rs_remd.d_scaling",
+            )
+        ],
+        e_scaling=[
+            float(x)
+            for x in _ensure_list(
+                _require(rs_raw, "e_scaling", "methods.rs_remd"),
+                "methods.rs_remd.e_scaling",
+            )
+        ],
+        k=float(_require(rs_raw, "k", "methods.rs_remd")),
+    )
+
 
 def load_config(path: str | Path) -> Config:
     path = Path(path)
@@ -185,78 +345,17 @@ def load_config(path: str | Path) -> Config:
         raise ValueError("Top-level YAML must be a mapping (key: value).")
 
     tag = str(_require(raw, "tag", "top-level"))
+    test = _as_bool(raw["test"], "test") if "test" in raw else False
 
-    test = str(_require(raw, "test", "top-level"))
-
-    # cluster
-    cluster_raw = _ensure_mapping(_require(raw, "cluster", "top-level"), "cluster")
-    cluster = ClusterCfg(
-        exclude_ranks=[str(x) for x in _ensure_list(_require(cluster_raw, "exclude_ranks", "cluster"), "cluster.exclude_ranks")],
-
+    cluster = _load_cluster(raw)
+    system = _load_system(raw)
+    eq = _load_eq(raw)
+    pull = _load_pull(raw)
+    method = _load_method(raw, eq)
+    methods = MethodsCfg(
+        us=_load_us(raw, pull),
+        rs_remd=_load_rs_remd(raw),
     )
-
-    # system
-    sys_raw = _ensure_mapping(_require(raw, "system", "top-level"), "system")
-    system = SystemCfg(
-        pdb=_as_path(_require(sys_raw, "pdb", "system")),
-        output_prefix=_as_path(_require(sys_raw, "output_prefix", "system")),
-        name=str(_require(sys_raw, "name", "system")),
-        ligand_residues=str(_require(sys_raw, "ligand_residues", "system")),
-        protein_residues=str(_require(sys_raw, "protein_residues", "system")),
-        bond=sys_raw.get("bond"),
-    )
-
-    eq_raw = _ensure_mapping(_require(raw, "eq", "top-level"), "eq")
-    eq = EqCfg(
-        execute=bool(_require(eq_raw, "execute", "eq")),
-        use_cpu=bool(_require(eq_raw, "use_cpu", "eq")),
-    )
-
-    pull = None
-    if "pull" in raw and raw["pull"] is not None:
-        pull_raw = _ensure_list(raw["us"], "us")
-        pull = PullCfg(
-            d=float((_require(pull_raw, "d", "pull"))),
-            e=float((_require(pull_raw, "e", "pull"))),
-            stride=float((_require(pull_raw, "stride", "pull"))),
-            mode=str((_require(pull_raw, "mode", "pull"))),
-            pull_intervals=_ensure_list(_require(pull_raw, "pull_intervals", "pull"), "pull.pull_intervals")
-
-        )
-
-    # method
-    m_raw = _ensure_mapping(_require(raw, "method", "top-level"), "method")
-    method = MethodCfg(
-        name=str(_require(m_raw, "name", "method")),
-        eq=bool(_require(m_raw, "eq", "method")),
-        setup=bool(_require(m_raw, "setup", "method")), # TODO: think of deleting this filed, may be redundant
-        setup_dir=Path(m_raw["setup_dir"]) if "setup_dir" in m_raw and m_raw["setup_dir"] is not None else None,
-        setup_type=str(_require(m_raw, "setup_type", "method")),
-    )
-
-    # method-specific sections
-    rs_remd = None
-    if "rs_remd" in raw and raw["rs_remd"] is not None:
-        rs_raw = _ensure_mapping(raw["rs_remd"], "rs_remd")
-        replicas = _ensure_list(_require(rs_raw, "replicas", "rs_remd"), "rs_remd.replicas")
-        rs_remd = RSREMDCfg(
-            n_rep=int(_require(rs_raw, "n_rep", "rs_remd")),
-            replicas=[int(x) for x in replicas],
-        )
-
-    us = None
-    if "us" in raw and raw["us"] is not None:
-        us_list_raw = _ensure_list(raw["us"], "us")
-        us = []
-        for i, item in enumerate(us_list_raw):
-            item_map = _ensure_mapping(item, f"us[{i}]")
-            us.append(USCfg(
-                start=float(_require(item_map, "start", f"us[{i}]")),
-                end=float(_require(item_map, "end", f"us[{i}]")),
-                step=float(_require(item_map, "step", f"us[{i}]")),
-                replica_scaling=int(_require(item_map, "replica_scaling", f"us[{i}]")),
-                k=float(_require(item_map, "k", f"us[{i}]")),
-            ))
 
     cfg = Config(
         tag=tag,
@@ -266,8 +365,7 @@ def load_config(path: str | Path) -> Config:
         system=system,
         method=method,
         paths={},
-        rs_remd=rs_remd,
-        us=us,
+        methods=methods,
     )
     cfg.validate()
     return cfg
@@ -294,6 +392,7 @@ def inject_paths(cfg: Config) -> Config:
     }
     return cfg
 
+
 def make_result_dir(cfg: Config) -> Path:
     """
     results/<system_name>/<method_name>/<tag>/
@@ -305,18 +404,16 @@ def make_result_dir(cfg: Config) -> Path:
 
     return result_dir
 
+
 def compute_paths(cfg: Config) -> dict:
     # make a dict out of all paths that are necessary in the future
     result_dir = make_result_dir(cfg)
     method = cfg.method.name
-    system_name : str = cfg.system.name
+    system_name = cfg.system.name
 
     paths = {}
     paths["top"] = Path("results") / system_name / "top"
-    if cfg.test:
-        paths["templates"] = Path("test_templates")
-    else:
-        paths["templates"] = Path("templates")
+    paths["templates"] = Path("test_templates") if cfg.test else Path("templates")
 
     # define paths for equilibration
     paths["eq"] = {}
@@ -328,28 +425,29 @@ def compute_paths(cfg: Config) -> dict:
     paths["eq"]["slurm"] = paths["eq"]["root"] / "run_output" / "slurm"
 
     # define paths for method
+    # TODO: iterate over all the methods specified in the yaml input file
     paths[method] = {}
     paths[method]["script"] = Path("src") / "methods" / method
     paths[method]["setup"] = result_dir / "setup"
     paths[method]["root"] = result_dir
-    paths[method]["input"] = result_dir/ "input"
-
+    paths[method]["input"] = result_dir / "input"
     paths[method]["amber"] = paths[method]["root"] / "run_output" / "amber"
     paths[method]["pmd"] = paths[method]["root"] / "run_output" / "pmd"
     paths[method]["slurm"] = paths[method]["root"] / "run_output" / "slurm"
 
     return paths
 
+
 def prepare_directores(cfg: Config) -> None:
-    # create necessary directories
     for key, path in cfg.paths.items():
         if "dir" in key:
             # TODO: maybe make exist_ok=False later
             path.mkdir(parents=True, exist_ok=True)
 
+
 def copy_yaml_input(setup_dir: str | Path, cfg_path: str | Path):
-    # copy the .yaml input file to results directory
     shutil.copy2(cfg_path, setup_dir)
+
 
 def validate_equilibration_settings(cfg: Config):
     """
