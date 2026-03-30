@@ -1,4 +1,4 @@
-from src.config import load_config, inject_paths, prepare_directores, validate_equilibration_settings, copy_yaml_input, \
+from src.config import load_config, inject_paths, prepare_directories, validate_equilibration_settings, copy_yaml_input, \
     compute_paths
 from src.methods.JobContext import JobContext
 from src.setup.system import setup_simulation
@@ -58,7 +58,7 @@ def main(cfg_path: str):
     cfg = load_config(cfg_path)
     # cfg = inject_paths(cfg)
     # TODO: change this logic; validate_equilibration_settings(cfg)
-    prepare_directores(cfg)
+    prepare_directories(cfg)
     print_yaml_config(cfg)
 
     # 2. perform setup step depending on setup_type and if setup for similar system was already performed

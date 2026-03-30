@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any, Optional
 
@@ -106,6 +106,7 @@ class USIntervalCfg:
 
 @dataclass(frozen=True)
 class USCfg:
+    name: str
     d: float
     e: float
     us_intervals: list[USIntervalCfg]
@@ -113,6 +114,7 @@ class USCfg:
 
 @dataclass(frozen=True)
 class RSREMDCfg:
+    name: str
     n_rep: int
     d_scaling: list[float]
     e_scaling: list[float]
@@ -263,11 +265,13 @@ def _load_us(raw: dict, pull: Optional[PullCfg]) -> Optional[USCfg]:
 
     d_value = None
     e_value = None
+    name = None
 
     if isinstance(us_raw, dict):
         us_raw = _ensure_mapping(us_raw, "methods.us")
         d_value = us_raw.get("d")
         e_value = us_raw.get("e")
+        name = us_raw.get("name")
         interval_source = us_raw.get("us_intervals")
         if interval_source is None and {"start", "end", "step", "k"}.issubset(us_raw):
             interval_source = [us_raw]
@@ -298,6 +302,7 @@ def _load_us(raw: dict, pull: Optional[PullCfg]) -> Optional[USCfg]:
     return USCfg(
         d=float(d_value),
         e=float(e_value),
+        name=str(name),
         us_intervals=us_intervals,
     )
 
@@ -331,6 +336,7 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
             )
         ],
         k=float(_require(rs_raw, "k", "methods.rs_remd")),
+        name=str(_require(rs_raw, "name", "methods.rs_remd")),
     )
 
 
@@ -390,24 +396,38 @@ def inject_paths(cfg: Config) -> Config:
     return cfg
 
 
-def make_result_dir(cfg: Config) -> Path:
+def make_result_dir(cfg: Config) -> dict[str, Path]:
     """
     results/<system_name>/<method_name>/<tag>/
     tag must be unique for this (system, method) combination.
     """
     # TODO: iterate over all possible methods
-    #result_dir = Path(cfg.system.output_prefix) / "results" / cfg.system.name / cfg.method.name / cfg.tag 
-    result_dir = Path(cfg.system.output_prefix) / "results" / cfg.system.name / "us" / cfg.tag
-    result_dir.mkdir(parents=True, exist_ok=False)  
+    #result_dir = Path(cfg.system.output_prefix) / "results" / cfg.system.name / cfg.method.name / cfg.tag
+    result_dirs: dict[str, Path] = {}
 
-    return result_dir
+    for method_field in fields(cfg.methods):
+        method_cfg = getattr(cfg.methods, method_field.name)
+        if method_cfg is None:
+            continue
 
+        method_name = method_field.name
+        result_dir = (
+                Path(cfg.system.output_prefix)
+                / "results"
+                / cfg.system.name
+                / method_name
+                / cfg.tag
+        )
+        result_dir.mkdir(parents=True, exist_ok=True)
+        result_dirs[method_name] = result_dir
+
+    return result_dirs
 
 def compute_paths(cfg: Config) -> dict:
     # make a dict out of all paths that are necessary in the future
-    result_dir = make_result_dir(cfg)
+    result_dirs = make_result_dir(cfg)
     # method = cfg.method.name
-    method = "us"
+    # method = "us"
     system_name = cfg.system.name
 
     paths = {}
@@ -423,21 +443,22 @@ def compute_paths(cfg: Config) -> dict:
     paths["eq"]["pmd"] = paths["eq"]["root"] / "run_output" / "pmd"
     paths["eq"]["slurm"] = paths["eq"]["root"] / "run_output" / "slurm"
 
-    # define paths for method
-    # TODO: iterate over all the methods specified in the yaml input file
-    paths[method] = {}
-    paths[method]["script"] = Path("src") / "methods" / method
-    paths[method]["setup"] = result_dir / "setup"
-    paths[method]["root"] = result_dir
-    paths[method]["input"] = result_dir / "input"
-    paths[method]["amber"] = paths[method]["root"] / "run_output" / "amber"
-    paths[method]["pmd"] = paths[method]["root"] / "run_output" / "pmd"
-    paths[method]["slurm"] = paths[method]["root"] / "run_output" / "slurm"
+    # define paths for all specified methods
+    for result_dir in result_dirs.values():
+        method = str(result_dir).split("/")[-2]
+        paths[method] = {}
+        paths[method]["script"] = Path("src") / "methods" / method
+        paths[method]["setup"] = result_dir / "setup"
+        paths[method]["root"] = result_dir
+        paths[method]["input"] = result_dir / "input"
+        paths[method]["amber"] = paths[method]["root"] / "run_output" / "amber"
+        paths[method]["pmd"] = paths[method]["root"] / "run_output" / "pmd"
+        paths[method]["slurm"] = paths[method]["root"] / "run_output" / "slurm"
 
     return paths
 
 
-def prepare_directores(cfg: Config) -> None:
+def prepare_directories(cfg: Config) -> None:
     for key, path in cfg.paths.items():
         if "dir" in key:
             # TODO: maybe make exist_ok=False later
