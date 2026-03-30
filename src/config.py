@@ -146,7 +146,7 @@ class Config:
 
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
-
+"""
         method_name = self.method.name
 
         if method_name == "rs_remd":
@@ -174,7 +174,7 @@ class Config:
                     raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
         elif method_name not in {"eq", "us_remd"}:
             raise ValueError(f"Unknown method name: {method_name}")
-
+"""
 
 def _load_cluster(raw: dict) -> ClusterCfg:
     cluster_raw = raw.get("cluster", {})
@@ -396,7 +396,8 @@ def make_result_dir(cfg: Config) -> Path:
     tag must be unique for this (system, method) combination.
     """
     # TODO: iterate over all possible methods
-    result_dir = Path(cfg.system.output_prefix) "results" / cfg.system.name / cfg.method.name / cfg.tag
+    #result_dir = Path(cfg.system.output_prefix) / "results" / cfg.system.name / cfg.method.name / cfg.tag 
+    result_dir = Path(cfg.system.output_prefix) / "results" / cfg.system.name / "us" / cfg.tag
     result_dir.mkdir(parents=True, exist_ok=False)  
 
     return result_dir
@@ -405,7 +406,8 @@ def make_result_dir(cfg: Config) -> Path:
 def compute_paths(cfg: Config) -> dict:
     # make a dict out of all paths that are necessary in the future
     result_dir = make_result_dir(cfg)
-    method = cfg.method.name
+    # method = cfg.method.name
+    method = "us"
     system_name = cfg.system.name
 
     paths = {}

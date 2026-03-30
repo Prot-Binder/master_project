@@ -14,7 +14,7 @@ system:
   # pdb: ~/master_project/input/pdb_files/5h5s/5h5s_cleaned.pdb
   # pdb: input/pdb_files/5h5s/5h5s_cleaned.pdb
   output_prefix: ./
-  name: 5h5s_new2
+  name: 5h5s_new3
   ligand_residues: 164-177
   protein_residues: 1-163
   # bond: "377.N-390.C"
@@ -65,11 +65,11 @@ methods:
         replica_scaling: 1
         k: 8.0
 
-  rs_remd:
-    n_rep: 16
-    d_scaling: [0.00, 0.01, 0.02, 0.04, 0.08, 0.12, 0.16, 0.20, 0.24, 0.28, 0.32, 0.38, 0.44, 0.50, 0.58, 0.68]
-    e_scaling: [1.00, 0.99, 0.98, 0.97, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.74]
-    k: 8.0
+          #rs_remd:
+          #n_rep: 16
+          #d_scaling: [0.00, 0.01, 0.02, 0.04, 0.08, 0.12, 0.16, 0.20, 0.24, 0.28, 0.32, 0.38, 0.44, 0.50, 0.58, 0.68]
+          #e_scaling: [1.00, 0.99, 0.98, 0.97, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.74]
+          #k: 8.0
 
 
 
