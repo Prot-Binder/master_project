@@ -465,8 +465,15 @@ def prepare_directories(cfg: Config) -> None:
             path.mkdir(parents=True, exist_ok=True)
 
 
-def copy_yaml_input(setup_dir: str | Path, cfg_path: str | Path):
-    shutil.copy2(cfg_path, setup_dir)
+def copy_yaml_input(cfg: Config, cfg_path: str | Path):
+    for method_field in fields(cfg.methods):
+        method_cfg = getattr(cfg.methods, method_field.name)
+        if method_cfg is None:
+            continue
+
+        method_name = method_field.name
+        setup_dir = cfg.paths[method_name]["setup"]
+        shutil.copy2(cfg_path, setup_dir)
 
 
 def validate_equilibration_settings(cfg: Config):

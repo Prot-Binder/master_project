@@ -63,11 +63,11 @@ def main(cfg_path: str):
 
     # 2. perform setup step depending on setup_type and if setup for similar system was already performed
     paths = compute_paths(cfg)
-    create_directories(paths)
+    create_directories(paths) # todo:check if this is necessary; probably already in the prepare_directories step, but we can keep it here for safety
     ctx = JobContext()
     ctx.paths = paths
     setup_simulation(cfg, ctx)
-    copy_yaml_input(ctx.paths[cfg.method.name]["setup"], cfg_path)
+    copy_yaml_input(cfg, cfg_path)
 
     # # 3. select and execute the desired method
     # # if equilibration is requested, perform equilibration first

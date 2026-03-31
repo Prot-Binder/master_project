@@ -7,6 +7,51 @@ from src.setup.generate_topology import generate_scaled_top_files
 from src.setup.generate_input_files import generate_inputs
 from pathlib import Path
 
+def run_setup_steps(cfg, ctx, method_name: str) -> None:
+    setup_dir = ctx.paths[method_name]["setup"]
+
+
+    tleap_paths = TLeapPaths(
+        template_tleap=Path("templates/tleap.in.tpl"),
+        ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
+    )
+
+    prmtop, rst, n_ions_each = run_tleap(
+        setup_dir=setup_dir,
+        pdb_path=cfg.system.pdb,
+        bond=cfg.system.bond,
+        paths=tleap_paths,
+    )
+
+    parmed_paths = ParmEdPaths(template=Path("templates/HMR.parmed.tpl"))
+    run_hmr(
+        setup_dir=setup_dir,
+        in_prmtop=prmtop,
+        out_prmtop=setup_dir / "prmtop",
+        paths=parmed_paths,
+    )
+
+    system_pdb = setup_dir / "system.pdb"
+    create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
+
+    generate_scaled_top_files(
+        setup_dir / "prmtop",
+        cfg.methods.rs_remd.n_rep,
+        cfg.methods.rs_remd.d_scaling,
+        cfg.methods.rs_remd.e_scaling,
+        setup_dir / "system.rst",
+        ctx.paths["top"] / "prmtop",
+        ":" + cfg.system.protein_residues,
+        ":" + cfg.system.ligand_residues,
+    )
+
+def setup_setps(cfg, ctx):
+    # 1) TLEAP (two-stage: volume -> ions -> final topology)
+    # 2) ParmEd HMR
+    # 3) Generate Restraints
+    # 4) Generate Topology Files with different LJ parameters
+    # 5) Generate Input Files
+    pass
 
 def setup_simulation(cfg, ctx):
 
