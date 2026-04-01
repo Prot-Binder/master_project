@@ -76,6 +76,7 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
 
     return prmtop, rst, n_ions_each
 
+# TODO: delete as we do not use it anymore
 def run_setup_steps(cfg, ctx, method_name: str) -> None:
     setup_dir = ctx.paths[method_name]["setup"]
     method_cfg = _get_method_cfg(cfg, method_name)
