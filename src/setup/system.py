@@ -1,12 +1,14 @@
 import shutil
+import shlex
+import subprocess
+import sys
 from dataclasses import fields
-
+from pathlib import Path
 from src.setup.tleap import TLeapPaths, run_tleap
 from src.setup.hmr import ParmEdPaths, run_hmr
 from src.setup.restraints import create_restraints
 from src.setup.generate_topology import generate_scaled_top_files
 from src.setup.generate_input_files import generate_inputs
-from pathlib import Path
 
 
 def _configured_method_names(cfg) -> list[str]:
@@ -45,6 +47,10 @@ def _get_num_replicas(method_cfg) -> int:
         raise ValueError("Method d/e lengths are incompatible for topology generation.")
     return max(d_len, e_len)
 
+
+def _project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
 def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
     setup_dir = ctx.paths[method_name]["setup"]
 
@@ -67,6 +73,8 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
         out_prmtop=setup_dir / "prmtop",
         paths=parmed_paths,
     )
+
+    return prmtop, rst, n_ions_each
 
 def run_setup_steps(cfg, ctx, method_name: str) -> None:
     setup_dir = ctx.paths[method_name]["setup"]
@@ -107,8 +115,7 @@ def run_setup_steps(cfg, ctx, method_name: str) -> None:
         ":" + cfg.system.ligand_residues,
     )
 
-def setup_simulation(cfg, ctx):
-    # TODO maybe change so that we maybe only use eq and maybe pull stuff?
+def _run_setup_pipeline(cfg, ctx) -> None:
     method_names = _configured_method_names(cfg)
     if len(method_names) == 0:
         raise ValueError("No methods configured in cfg.methods.")
@@ -124,7 +131,6 @@ def setup_simulation(cfg, ctx):
         _replace_directory(first_setup_dir, dest_setup_dir)
         print(f"\033[92m[setup] Copied prmotp files from {first_method} to {method_name}\033[0m")
 
-    # TODO: change it so that restraints are generated
     for method_name in method_names:
         if method_name != "rs_remd":
             setup_dir = cfg.paths[method_name]["setup"]
@@ -132,7 +138,6 @@ def setup_simulation(cfg, ctx):
             create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
             print(f"\033[92m[setup] Generated scaled restraint file(s) for {method_name}\033[0m")
 
-    # TODO: change it so that top files are generated for all methods, not only rs_remd (but also eq and pull, us etc.)
     for method_name in method_names:
         setup_dir = cfg.paths[method_name]["setup"]
         method_cfg = _get_method_cfg(cfg, method_name)
@@ -142,18 +147,66 @@ def setup_simulation(cfg, ctx):
             method_cfg.d,
             method_cfg.e,
             setup_dir / "system.rst",
-            cfg.paths[method_name]["top"] / "prmtop",
+            cfg.paths["top"] / "prmtop",
             ":" + cfg.system.protein_residues,
             ":" + cfg.system.ligand_residues,
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
 
-    # TODO: change this
-    #for method_name in method_names:
-    #    generate_inputs(method_name, cfg, ctx)
-    #    print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
+    for method_name in method_names:
+        generate_inputs(method_name, cfg, ctx)
+        print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
 
-    # TODO: change it so that also pull is considered
-    #if cfg.eq.execute:
-    #    generate_inputs("eq", cfg, ctx)
-    #    print(f"\033[92m[setup] Input files copied and adjusted for eq\033[0m")
+
+def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
+    method_names = _configured_method_names(cfg)
+    if len(method_names) == 0:
+        raise ValueError("No methods configured in cfg.methods.")
+
+    first_method = method_names[0]
+    slurm_dir = ctx.paths[first_method]["slurm"].resolve()
+    # slurm_dir.mkdir(parents=True, exist_ok=True)
+
+    project_root = _project_root().resolve()
+    python_exe = Path(sys.executable).resolve()
+    wrap_cmd = "cd {root} && {python} -m src.setup.run_setup_job {cfg_path}".format(
+        root=shlex.quote(str(project_root)),
+        python=shlex.quote(str(python_exe)),
+        cfg_path=shlex.quote(str(cfg_path.resolve())),
+    )
+
+    sbatch_cmd = [
+        "sbatch",
+        "--wait",
+        "--parsable",
+        f"--job-name=setup_{cfg.system.name}_{cfg.tag}",
+        "--nodes=1",
+        "--ntasks=1",
+        "--cpus-per-task=1",
+        "--time=00:30:00",
+        f"--output={slurm_dir / 'slurm-%j_setup.out'}",
+        "--wrap",
+        wrap_cmd,
+    ]
+
+    result = subprocess.run(
+        sbatch_cmd,
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=project_root,
+    )
+    job_id = result.stdout.strip()
+    print(f"\033[92m[setup] Cluster setup finished via Slurm job {job_id}\033[0m")
+    return job_id
+
+
+def setup_simulation(cfg, ctx, cfg_path: Path):
+    setup_type = cfg.setup.setup_type.lower()
+    if setup_type == "local":
+        _run_setup_pipeline(cfg, ctx)
+        return 0
+    elif setup_type == "cluster":
+        return _submit_setup_job_and_wait(cfg, ctx, cfg_path)
+    else:
+        raise ValueError(f"Unknown setup.setup_type: {cfg.setup.setup_type}")
