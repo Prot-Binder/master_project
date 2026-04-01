@@ -22,12 +22,8 @@ system:
 
 setup:
   setup: True # TODO: think of deleting this filed as it may be redundant
-  setup_type: local # cluster or local; i.e. tleap may not be available on the cluster
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
   # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
-
-
-
-
 
 methods:
   eq:
