@@ -137,7 +137,6 @@ def setup_simulation(cfg, ctx):
             method_cfg.e,
             setup_dir / "system.rst",
             cfg.paths[method_name]["top"] / "prmtop",
-            ctx.paths["top"] / "prmtop",
             ":" + cfg.system.protein_residues,
             ":" + cfg.system.ligand_residues,
         )
