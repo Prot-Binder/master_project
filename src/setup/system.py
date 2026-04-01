@@ -27,6 +27,24 @@ def _replace_directory(src_dir: Path, dest_dir: Path) -> None:
 
     shutil.copytree(src_dir, dest_dir)
 
+
+def _get_method_cfg(cfg, method_name: str):
+    method_cfg = getattr(cfg.methods, method_name, None)
+    if method_cfg is None:
+        raise ValueError(f"Method '{method_name}' is not configured.")
+    return method_cfg
+
+
+def _get_num_replicas(method_cfg) -> int:
+    if hasattr(method_cfg, "n_rep"):
+        return int(method_cfg.n_rep)
+
+    d_len = len(method_cfg.d)
+    e_len = len(method_cfg.e)
+    if d_len != e_len and d_len != 1 and e_len != 1:
+        raise ValueError("Method d/e lengths are incompatible for topology generation.")
+    return max(d_len, e_len)
+
 def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
     setup_dir = ctx.paths[method_name]["setup"]
 
@@ -52,6 +70,7 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
 
 def run_setup_steps(cfg, ctx, method_name: str) -> None:
     setup_dir = ctx.paths[method_name]["setup"]
+    method_cfg = _get_method_cfg(cfg, method_name)
 
     tleap_paths = TLeapPaths(
         template_tleap=Path("templates/tleap.in.tpl"),
@@ -79,9 +98,9 @@ def run_setup_steps(cfg, ctx, method_name: str) -> None:
     # TODO: adjust topology file generation soon, i.e. make it for every method available (also eq and pull)
     generate_scaled_top_files(
         setup_dir / "prmtop",
-        cfg.methods.rs_remd.n_rep,
-        cfg.methods.rs_remd.d_scaling,
-        cfg.methods.rs_remd.e_scaling,
+        _get_num_replicas(method_cfg),
+        method_cfg.d,
+        method_cfg.e,
         setup_dir / "system.rst",
         ctx.paths["top"] / "prmtop",
         ":" + cfg.system.protein_residues,
@@ -108,7 +127,21 @@ def setup_simulation(cfg, ctx):
     # TODO: change it so that restraints are generated
 
     # TODO: change it so that top files are generated for all methods, not only rs_remd (but also eq and pull, us etc.)
-
+    for method_name in method_names:
+        setup_dir = cfg.paths[method_name]["setup"]
+        method_cfg = _get_method_cfg(cfg, method_name)
+        generate_scaled_top_files(
+            setup_dir / "prmtop",
+            len(method_cfg.d),
+            method_cfg.d,
+            method_cfg.e,
+            setup_dir / "system.rst",
+            cfg.paths[method_name]["top"] / "prmtop",
+            ctx.paths["top"] / "prmtop",
+            ":" + cfg.system.protein_residues,
+            ":" + cfg.system.ligand_residues,
+        )
+        print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
     # TODO: change this
     #for method_name in method_names:
     #    generate_inputs(method_name, cfg, ctx)
