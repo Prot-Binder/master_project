@@ -125,6 +125,12 @@ def setup_simulation(cfg, ctx):
         print(f"\033[92m[setup] Copied prmotp files from {first_method} to {method_name}\033[0m")
 
     # TODO: change it so that restraints are generated
+    for method_name in method_names:
+        if method_name != "rs_remd":
+            setup_dir = cfg.paths[method_name]["setup"]
+            system_pdb = setup_dir / "system.pdb"
+            create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
+            print(f"\033[92m[setup] Generated scaled restraint file(s) for {method_name}\033[0m")
 
     # TODO: change it so that top files are generated for all methods, not only rs_remd (but also eq and pull, us etc.)
     for method_name in method_names:
@@ -141,6 +147,7 @@ def setup_simulation(cfg, ctx):
             ":" + cfg.system.ligand_residues,
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
+
     # TODO: change this
     #for method_name in method_names:
     #    generate_inputs(method_name, cfg, ctx)
