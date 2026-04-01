@@ -1,4 +1,5 @@
 import shutil
+from dataclasses import fields
 
 from src.setup.tleap import TLeapPaths, run_tleap
 from src.setup.hmr import ParmEdPaths, run_hmr
@@ -7,9 +8,50 @@ from src.setup.generate_topology import generate_scaled_top_files
 from src.setup.generate_input_files import generate_inputs
 from pathlib import Path
 
-def run_setup_steps(cfg, ctx, method_name: str) -> None:
+
+def _configured_method_names(cfg) -> list[str]:
+    method_names = []
+    for method_field in fields(cfg.methods):
+        method_cfg = getattr(cfg.methods, method_field.name)
+        if method_cfg is not None:
+            method_names.append(method_field.name)
+    return method_names
+
+
+def _replace_directory(src_dir: Path, dest_dir: Path) -> None:
+    if src_dir.resolve() == dest_dir.resolve():
+        return
+
+    if dest_dir.exists():
+        shutil.rmtree(dest_dir)
+
+    shutil.copytree(src_dir, dest_dir)
+
+def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
     setup_dir = ctx.paths[method_name]["setup"]
 
+    tleap_paths = TLeapPaths(
+        template_tleap=Path("templates/tleap.in.tpl"),
+        ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
+    )
+
+    prmtop, rst, n_ions_each = run_tleap(
+        setup_dir=setup_dir,
+        pdb_path=cfg.system.pdb,
+        bond=cfg.system.bond,
+        paths=tleap_paths,
+    )
+
+    parmed_paths = ParmEdPaths(template=Path("templates/HMR.parmed.tpl"))
+    run_hmr(
+        setup_dir=setup_dir,
+        in_prmtop=prmtop,
+        out_prmtop=setup_dir / "prmtop",
+        paths=parmed_paths,
+    )
+
+def run_setup_steps(cfg, ctx, method_name: str) -> None:
+    setup_dir = ctx.paths[method_name]["setup"]
 
     tleap_paths = TLeapPaths(
         template_tleap=Path("templates/tleap.in.tpl"),
@@ -34,6 +76,7 @@ def run_setup_steps(cfg, ctx, method_name: str) -> None:
     system_pdb = setup_dir / "system.pdb"
     create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
 
+    # TODO: adjust topology file generation soon, i.e. make it for every method available (also eq and pull)
     generate_scaled_top_files(
         setup_dir / "prmtop",
         cfg.methods.rs_remd.n_rep,
@@ -45,77 +88,33 @@ def run_setup_steps(cfg, ctx, method_name: str) -> None:
         ":" + cfg.system.ligand_residues,
     )
 
-def setup_setps(cfg, ctx):
-    # 1) TLEAP (two-stage: volume -> ions -> final topology)
-    # 2) ParmEd HMR
-    # 3) Generate Restraints
-    # 4) Generate Topology Files with different LJ parameters
-    # 5) Generate Input Files
-    pass
-
 def setup_simulation(cfg, ctx):
+    # TODO maybe change so that we maybe only use eq and maybe pull stuff?
+    method_names = _configured_method_names(cfg)
+    if len(method_names) == 0:
+        raise ValueError("No methods configured in cfg.methods.")
 
-    # only run tleap and generate topology files on local machine, not on cluster
-    if cfg.method.setup_type == "local":
-        setup_dir = ctx.paths[cfg.method.name]["setup"]
-        # ---- 1) TLEAP (two-stage: volume -> ions -> final topology) ----
-        tleap_paths = TLeapPaths(
-            template_tleap=Path("templates/tleap.in.tpl"),
-            ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
-        )
+    first_method = method_names[0]
+    first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
-        prmtop, rst, n_ions_each = run_tleap(
-            setup_dir=setup_dir,
-            pdb_path=cfg.system.pdb,
-            bond=cfg.system.bond,  # may be None
-            paths=tleap_paths,
-        )
+    create_box_and_prmtop(cfg, ctx, first_method)
+    print(f"\033[92m[setup] Shared setup prepared in {first_method}\033[0m")
 
-        print(f"\033[92m[setup] tleap done: {prmtop.name}, {rst.name} (ions each: {n_ions_each})\033[0m")
+    for method_name in method_names[1:]:
+        dest_setup_dir = ctx.paths[method_name]["setup"].resolve()
+        _replace_directory(first_setup_dir, dest_setup_dir)
+        print(f"\033[92m[setup] Copied prmotp files from {first_method} to {method_name}\033[0m")
 
-        # ---- 2) ParmEd HMR ----
-        parmed_paths = ParmEdPaths(
-            template=Path("templates/HMR.parmed.tpl"),
-        )
+    # TODO: change it so that restraints are generated
 
-        hmr_prmtop = setup_dir / "prmtop"
-        run_hmr(
-            setup_dir=setup_dir,
-            in_prmtop=prmtop,
-            out_prmtop=hmr_prmtop,
-            paths=parmed_paths,
-        )
+    # TODO: change it so that top files are generated for all methods, not only rs_remd (but also eq and pull, us etc.)
 
-        print(f"\033[92m[setup] HMR done: {hmr_prmtop.name}\033[0m")
+    # TODO: change this
+    #for method_name in method_names:
+    #    generate_inputs(method_name, cfg, ctx)
+    #    print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
 
-        # setup_dir = ctx.paths[cfg.method.name]["setup"]
-        # ---- 3) Generate Restraints ----
-        system_pdb = setup_dir / "system.pdb"
-        create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
-
-        print(f"\033[92m[setup] Restraints generated\033[0m")
-
-        # ---- 4) Generate Topology Files with different LJ parameters ----
-        top_file = setup_dir / "prmtop"
-        coord_file = setup_dir / "system.rst"
-        scaled_topologies_dir = ctx.paths["top"] / "prmtop"
-        generate_scaled_top_files(top_file, cfg.replica_scaling.n_rep, cfg.replica_scaling.d_scaling,
-                                  cfg.replica_scaling.e_scaling, coord_file, scaled_topologies_dir,
-                                  ":" + cfg.system.protein_residues, ":" + cfg.system.ligand_residues)
-
-        print(f"\033[92m[setup] Topology files generated\033[0m")
-
-    # if on cluster and a setup path is provided, copy files from an already existing directory.
-    # if setup_type is local, the setup dir was already created above
-    if cfg.method.setup_dir is not None and cfg.method.setup_type == "cluster":
-        # copy the setup directory from the specified path to local setup path
-        for item in cfg.method.setup_dir.resolve().iterdir():
-            if item.is_file():
-                shutil.copy2(item, ctx.paths[cfg.method.name]["setup"].resolve())
-
-    # ---- 5) Generate Input Files ----
-    generate_inputs(cfg.method.name, cfg, ctx)
-    print(f"\033[92m[setup] Input files copied and adjusted for {cfg.method.name}\033[0m")
-    if cfg.method.eq:
-        generate_inputs("eq", cfg, ctx)
-        print(f"\033[92m[setup] Input files copied and adjusted for eq\033[0m")
+    # TODO: change it so that also pull is considered
+    #if cfg.eq.execute:
+    #    generate_inputs("eq", cfg, ctx)
+    #    print(f"\033[92m[setup] Input files copied and adjusted for eq\033[0m")

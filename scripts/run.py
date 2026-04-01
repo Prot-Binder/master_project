@@ -64,6 +64,7 @@ def main(cfg_path: str):
     # 2. perform setup step depending on setup_type and if setup for similar system was already performed
     paths = compute_paths(cfg)
     create_directories(paths) # todo:check if this is necessary; probably already in the prepare_directories step, but we can keep it here for safety
+    cfg.paths = paths
     ctx = JobContext()
     ctx.paths = paths
     setup_simulation(cfg, ctx)
