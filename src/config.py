@@ -86,18 +86,6 @@ class EqCfg(MethodCfgBase):
     execute: bool
     use_cpu: bool
 
-    @property
-    def d(self) -> list[float]:
-        return self.d
-
-    @property
-    def e(self) -> list[float]:
-        return self.e
-
-    @property
-    def name(self) -> str:
-        return self.name
-
 
 @dataclass(frozen=True)
 class PullIntervalCfg:
@@ -112,18 +100,6 @@ class PullCfg(MethodCfgBase):
     stride: float
     mode: str
     pull_intervals: list[PullIntervalCfg]
-
-    @property
-    def d(self) -> list[float]:
-        return self.d
-
-    @property
-    def e(self) -> list[float]:
-        return self.e
-
-    @property
-    def name(self) -> str:
-        return self.name
 
 
 @dataclass(frozen=True)
@@ -144,34 +120,10 @@ class RSREMDCfg(MethodCfgBase):
     n_rep: int
     k: float
 
-    @property
-    def d(self) -> list[float]:
-        return self.d
-
-    @property
-    def e(self) -> list[float]:
-        return self.e
-
-    @property
-    def name(self) -> str:
-        return self.name
-
 @dataclass(frozen=True)
 class USREMDCfg(MethodCfgBase):
     n_rep: int
     k: float
-
-    @property
-    def d(self) -> list[float]:
-        return self.d
-
-    @property
-    def e(self) -> list[float]:
-        return self.e
-
-    @property
-    def name(self) -> str:
-        return self.name
 
 
 @dataclass(frozen=True)
