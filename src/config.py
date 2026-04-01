@@ -236,8 +236,8 @@ def _load_eq(raw: dict) -> EqCfg:
         name=str(eq_raw.get("name", "eq")),
         execute=_as_bool(eq_raw["execute"], "eq.execute") if "execute" in eq_raw else False,
         use_cpu=_as_bool(eq_raw["use_cpu"], "eq.use_cpu") if "use_cpu" in eq_raw else False,
-        d=_as_float_list(eq_raw.get("d", "eq"), "eq.d"),
-        e=_as_float_list(eq_raw.get("e", "eq"), "eq.e"),
+        d=_as_float_list(eq_raw.get("d", []), "eq.d"),
+        e=_as_float_list(eq_raw.get("e", []), "eq.e"),
     )
 
 
