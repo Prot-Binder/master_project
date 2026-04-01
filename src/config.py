@@ -49,6 +49,12 @@ def _as_bool(value: Any, ctx: str) -> bool:
     raise ValueError(f"'{ctx}' must be a boolean.")
 
 
+def _as_float_list(value: Any, ctx: str) -> list[float]:
+    if isinstance(value, list):
+        return [float(item) for item in value]
+    return [float(value)]
+
+
 @dataclass(frozen=True)
 class SystemCfg:
     pdb: Path
@@ -58,6 +64,9 @@ class SystemCfg:
     protein_residues: str
     bond: Optional[str] = None
 
+@dataclass(frozen=True)
+class ClusterCfg:
+    exclude_ranks: list[str]
 
 @dataclass(frozen=True)
 class SetupCfg:
@@ -65,13 +74,29 @@ class SetupCfg:
     setup_type: str
     setup_dir: Optional[Path] = None
 
+@dataclass(frozen=True)
+class MethodCfgBase:
+    name: str
+    d: list[float]
+    e: list[float]
+
 
 @dataclass(frozen=True)
-class EqCfg:
+class EqCfg(MethodCfgBase):
     execute: bool
     use_cpu: bool
-    d: float
-    e: float
+
+    @property
+    def d(self) -> list[float]:
+        return self.d
+
+    @property
+    def e(self) -> list[float]:
+        return self.e
+
+    @property
+    def name(self) -> str:
+        return self.name
 
 
 @dataclass(frozen=True)
@@ -83,17 +108,22 @@ class PullIntervalCfg:
 
 
 @dataclass(frozen=True)
-class PullCfg:
-    d: float
-    e: float
+class PullCfg(MethodCfgBase):
     stride: float
     mode: str
     pull_intervals: list[PullIntervalCfg]
 
+    @property
+    def d(self) -> list[float]:
+        return self.d
 
-@dataclass(frozen=True)
-class ClusterCfg:
-    exclude_ranks: list[str]
+    @property
+    def e(self) -> list[float]:
+        return self.e
+
+    @property
+    def name(self) -> str:
+        return self.name
 
 
 @dataclass(frozen=True)
@@ -105,25 +135,51 @@ class USIntervalCfg:
 
 
 @dataclass(frozen=True)
-class USCfg:
-    name: str
-    d: float
-    e: float
+class USCfg(MethodCfgBase):
     us_intervals: list[USIntervalCfg]
 
 
 @dataclass(frozen=True)
-class RSREMDCfg:
-    name: str
+class RSREMDCfg(MethodCfgBase):
     n_rep: int
-    d_scaling: list[float]
-    e_scaling: list[float]
     k: float
+
+    @property
+    def d(self) -> list[float]:
+        return self.d
+
+    @property
+    def e(self) -> list[float]:
+        return self.e
+
+    @property
+    def name(self) -> str:
+        return self.name
+
+@dataclass(frozen=True)
+class USREMDCfg(MethodCfgBase):
+    n_rep: int
+    k: float
+
+    @property
+    def d(self) -> list[float]:
+        return self.d
+
+    @property
+    def e(self) -> list[float]:
+        return self.e
+
+    @property
+    def name(self) -> str:
+        return self.name
 
 
 @dataclass(frozen=True)
 class MethodsCfg:
+    eq: Optional[EqCfg]
+    pull: Optional[PullCfg]
     us: Optional[USCfg]
+    us_remd: Optional[USREMDCfg]
     rs_remd: Optional[RSREMDCfg]
 
 
@@ -148,23 +204,20 @@ class Config:
 
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
-"""
-        method_name = self.method.name
 
-        if method_name == "rs_remd":
-            if self.methods.rs_remd is None:
-                raise ValueError("method.name is 'rs_remd' but no 'methods.rs_remd' section was found.")
-            if self.methods.rs_remd.n_rep <= 0:
-                raise ValueError("methods.rs_remd.n_rep must be > 0")
-            if len(self.methods.rs_remd.d_scaling) != self.methods.rs_remd.n_rep:
-                raise ValueError("methods.rs_remd.d_scaling length must equal methods.rs_remd.n_rep")
-            if len(self.methods.rs_remd.e_scaling) != self.methods.rs_remd.n_rep:
-                raise ValueError("methods.rs_remd.e_scaling length must equal methods.rs_remd.n_rep")
-            if self.methods.rs_remd.k <= 0:
-                raise ValueError("methods.rs_remd.k must be > 0")
-        elif method_name == "us":
-            if self.methods.us is None:
-                raise ValueError("method.name is 'us' but no 'methods.us' section was found.")
+        if self.eq.execute:
+            if len(self.eq.d) == 0 or len(self.eq.e) == 0:
+                raise ValueError("eq requires non-empty d and e values.")
+
+        if self.pull is not None:
+            if len(self.pull.d) == 0 or len(self.pull.e) == 0:
+                raise ValueError("pull requires non-empty d and e values.")
+            if self.pull.stride <= 0:
+                raise ValueError("pull.stride must be > 0")
+
+        if self.methods.us is not None:
+            if len(self.methods.us.d) == 0 or len(self.methods.us.e) == 0:
+                raise ValueError("methods.us requires non-empty d and e values.")
             if len(self.methods.us.us_intervals) == 0:
                 raise ValueError("methods.us.us_intervals must be a non-empty list.")
             for idx, interval in enumerate(self.methods.us.us_intervals):
@@ -174,9 +227,19 @@ class Config:
                     raise ValueError(f"methods.us.us_intervals[{idx}].step must be > 0")
                 if interval.start >= interval.end:
                     raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
-        elif method_name not in {"eq", "us_remd"}:
-            raise ValueError(f"Unknown method name: {method_name}")
-"""
+
+        for method_name in ("rs_remd", "us_remd"):
+            method_cfg = getattr(self.methods, method_name)
+            if method_cfg is None:
+                continue
+            if method_cfg.n_rep <= 0:
+                raise ValueError(f"methods.{method_name}.n_rep must be > 0")
+            if len(method_cfg.d) != method_cfg.n_rep:
+                raise ValueError(f"methods.{method_name}.d must have length as specified in n_rep")
+            if len(method_cfg.e) != method_cfg.n_rep:
+                raise ValueError(f"methods.{method_name}.e must have length as specified in n_rep")
+            if method_cfg.k <= 0:
+                raise ValueError(f"methods.{method_name}.k must be > 0")
 
 def _load_cluster(raw: dict) -> ClusterCfg:
     cluster_raw = raw.get("cluster", {})
@@ -218,10 +281,11 @@ def _load_eq(raw: dict) -> EqCfg:
         eq_raw = {}
     eq_raw = _ensure_mapping(eq_raw, "eq")
     return EqCfg(
+        name=str(eq_raw.get("name", "eq")),
         execute=_as_bool(eq_raw["execute"], "eq.execute") if "execute" in eq_raw else False,
         use_cpu=_as_bool(eq_raw["use_cpu"], "eq.use_cpu") if "use_cpu" in eq_raw else False,
-        d=float(_require(eq_raw, "d", "eq")),
-        e=float(_require(eq_raw, "e", "eq")),
+        d=_as_float_list(eq_raw.get("d", "eq"), "eq.d"),
+        e=_as_float_list(eq_raw.get("e", "eq"), "eq.e"),
     )
 
 
@@ -245,15 +309,16 @@ def _load_pull(raw: dict) -> Optional[PullCfg]:
         )
 
     return PullCfg(
-        d=float(_require(pull_raw, "d", "pull")),
-        e=float(_require(pull_raw, "e", "pull")),
+        name=str(pull_raw.get("name", "pull")),
+        d=_as_float_list(_require(pull_raw, "d", "pull"), "pull.d"),
+        e=_as_float_list(_require(pull_raw, "e", "pull"), "pull.e"),
         stride=float(_require(pull_raw, "stride", "pull")),
         mode=str(_require(pull_raw, "mode", "pull")),
         pull_intervals=pull_intervals,
     )
 
 
-def _load_us(raw: dict, pull: Optional[PullCfg]) -> Optional[USCfg]:
+def _load_us(raw: dict) -> Optional[USCfg]:
     methods_raw = raw.get("methods", {})
     if methods_raw is None:
         methods_raw = {}
@@ -263,29 +328,12 @@ def _load_us(raw: dict, pull: Optional[PullCfg]) -> Optional[USCfg]:
     if us_raw is None:
         return None
 
-    d_value = None
-    e_value = None
-    name = None
-
-    if isinstance(us_raw, dict):
-        us_raw = _ensure_mapping(us_raw, "methods.us")
-        d_value = us_raw.get("d")
-        e_value = us_raw.get("e")
-        name = us_raw.get("name")
-        interval_source = us_raw.get("us_intervals")
-        if interval_source is None and {"start", "end", "step", "k"}.issubset(us_raw):
-            interval_source = [us_raw]
-        if interval_source is None:
-            raise ValueError("methods.us must contain 'us_intervals'.")
-    else:
-        interval_source = _ensure_list(us_raw, "methods.us")
-
-    if d_value is None and pull is not None:
-        d_value = pull.d
-    if e_value is None and pull is not None:
-        e_value = pull.e
-    if d_value is None or e_value is None:
-        raise ValueError("methods.us requires 'd' and 'e' values, directly or via pull.")
+    us_raw = _ensure_mapping(us_raw, "methods.us")
+    interval_source = us_raw.get("us_intervals")
+    if interval_source is None and {"start", "end", "step", "k"}.issubset(us_raw):
+        interval_source = [us_raw]
+    if interval_source is None:
+        raise ValueError("methods.us must contain 'us_intervals'.")
 
     us_intervals = []
     for index, item in enumerate(_ensure_list(interval_source, "methods.us.us_intervals")):
@@ -300,9 +348,9 @@ def _load_us(raw: dict, pull: Optional[PullCfg]) -> Optional[USCfg]:
         )
 
     return USCfg(
-        d=float(d_value),
-        e=float(e_value),
-        name=str(name),
+        name=str(us_raw.get("name", "us")),
+        d=_as_float_list(_require(us_raw, "d", "methods.us"), "methods.us.d"),
+        e=_as_float_list(_require(us_raw, "e", "methods.us"), "methods.us.e"),
         us_intervals=us_intervals,
     )
 
@@ -320,23 +368,33 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
     rs_raw = _ensure_mapping(rs_raw, "methods.rs_remd")
 
     return RSREMDCfg(
+        name=str(rs_raw.get("name", "rs_remd")),
+        d=_as_float_list(_require(rs_raw, "d", "methods.rs_remd"),"methods.rs_remd.d"),
+        e=_as_float_list(_require(rs_raw, "e", "methods.rs_remd"),"methods.rs_remd.e"),
         n_rep=int(_require(rs_raw, "n_rep", "methods.rs_remd")),
-        d_scaling=[
-            float(x)
-            for x in _ensure_list(
-                _require(rs_raw, "d_scaling", "methods.rs_remd"),
-                "methods.rs_remd.d_scaling",
-            )
-        ],
-        e_scaling=[
-            float(x)
-            for x in _ensure_list(
-                _require(rs_raw, "e_scaling", "methods.rs_remd"),
-                "methods.rs_remd.e_scaling",
-            )
-        ],
         k=float(_require(rs_raw, "k", "methods.rs_remd")),
-        name=str(_require(rs_raw, "name", "methods.rs_remd")),
+    )
+
+# TODO: maybe adjust it based on if we allow multi k / intervals or not; also a start/stop/end/step would be nice here;
+# but more to this later
+def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
+    methods_raw = raw.get("methods", {})
+    if methods_raw is None:
+        methods_raw = {}
+    methods_raw = _ensure_mapping(methods_raw, "methods")
+
+    us_remd_raw = methods_raw.get("us_remd")
+    if us_remd_raw is None:
+        return None
+
+    us_remd_raw = _ensure_mapping(us_remd_raw, "methods.us_remd")
+
+    return USREMDCfg(
+        name=str(us_remd_raw.get("name", "us_remd")),
+        d=_as_float_list(_require(us_remd_raw, "d", "methods.us_remd"), "methods.us_remd.d"),
+        e=_as_float_list(_require(us_remd_raw, "e", "methods.us_remd"), "methods.us_remd.e"),
+        n_rep=int(_require(us_remd_raw, "n_rep", "methods.us_remd")),
+        k=float(_require(us_remd_raw, "k", "methods.us_remd")),
     )
 
 
@@ -354,9 +412,15 @@ def load_config(path: str | Path) -> Config:
     eq = _load_eq(raw)
     pull = _load_pull(raw)
     setup = _load_setup(raw)
+    us = _load_us(raw)
+    us_remd = _load_us_remd(raw)
+    rs_remd = _load_rs_remd(raw)
     methods = MethodsCfg(
-        us=_load_us(raw, pull),
-        rs_remd=_load_rs_remd(raw),
+        eq=eq,
+        pull=pull,
+        us=us,
+        us_remd=us_remd,
+        rs_remd=rs_remd,
     )
 
     cfg = Config(
@@ -444,8 +508,7 @@ def compute_paths(cfg: Config) -> dict:
     paths["eq"]["slurm"] = paths["eq"]["root"] / "run_output" / "slurm"
 
     # define paths for all specified methods
-    for result_dir in result_dirs.values():
-        method = str(result_dir).split("/")[-2]
+    for method, result_dir in result_dirs.items():
         paths[method] = {}
         paths[method]["script"] = Path("src") / "methods" / method
         paths[method]["setup"] = result_dir / "setup"
