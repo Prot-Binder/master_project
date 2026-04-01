@@ -228,7 +228,12 @@ def _load_system(raw: dict) -> SystemCfg:
 
 
 def _load_eq(raw: dict) -> EqCfg:
-    eq_raw = raw.get("eq", {})
+    methods_raw = raw.get("methods", {})
+    if methods_raw is None:
+        methods_raw = {}
+    methods_raw = _ensure_mapping(methods_raw, "methods")
+
+    eq_raw = methods_raw.get("eq", raw.get("eq", {}))
     if eq_raw is None:
         eq_raw = {}
     eq_raw = _ensure_mapping(eq_raw, "eq")
@@ -242,7 +247,12 @@ def _load_eq(raw: dict) -> EqCfg:
 
 
 def _load_pull(raw: dict) -> Optional[PullCfg]:
-    pull_raw = raw.get("pull")
+    methods_raw = raw.get("methods", {})
+    if methods_raw is None:
+        methods_raw = {}
+    methods_raw = _ensure_mapping(methods_raw, "methods")
+
+    pull_raw = methods_raw.get("pull", raw.get("pull"))
     if pull_raw is None:
         return None
 
