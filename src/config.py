@@ -457,7 +457,7 @@ def compute_paths(cfg: Config) -> dict:
     system_name = cfg.system.name
 
     paths = {}
-    paths["top"] = Path("results") / system_name / "top"
+    # paths["top"] = Path("results") / system_name / "top"
     paths["templates"] = Path("test_templates") if cfg.test else Path("templates")
 
     # define paths for equilibration
@@ -474,6 +474,7 @@ def compute_paths(cfg: Config) -> dict:
         paths[method] = {}
         paths[method]["script"] = Path("src") / "methods" / method
         paths[method]["setup"] = result_dir / "setup"
+        paths[method]["top"] = result_dir / "top"
         paths[method]["root"] = result_dir
         paths[method]["input"] = result_dir / "input"
         paths[method]["amber"] = paths[method]["root"] / "run_output" / "amber"
