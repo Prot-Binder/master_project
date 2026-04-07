@@ -126,8 +126,8 @@ def write_topology(parm, output_file, n=None):
     with open(filename + ".txt", "w") as f:
         f.write(str(t.printLJMatrix(parm, "*")))
 
-def generate_scaled_top_files(topology_file: Path, num_replicas: int, distances: list[float],
-                         epsilons: list[float], coordinate_file: Path, output_file_basename: Path,
+def generate_scaled_top_files(topology_file: Path, num_replicas: int, d_param: list[float],
+                         e_param: list[float], coordinate_file: Path, output_file_basename: Path,
                          protein_mask: str, ligand_mask: str, d_fixed: bool = False,
                          e_fixed: bool = False, hMassRepartitioning: bool = True) -> None:
 
@@ -136,8 +136,8 @@ def generate_scaled_top_files(topology_file: Path, num_replicas: int, distances:
     interpolation_methods = [InterpolateVolumeScaling]
     Method = interpolation_methods[0]
 
-    ds = distances
-    es = epsilons
+    ds = d_param
+    es = e_param
     assert (len(ds) == 1 or len(ds) == num_replicas)
     assert (len(es) == 1 or len(es) == num_replicas)
     if len(ds) > 1:
