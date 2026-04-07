@@ -1,8 +1,18 @@
 import shutil
+from dataclasses import fields
 from pathlib import Path
 
 import numpy as np
 # TODO: change the way the directory paths are passed / created in this file
+
+
+def _configured_method_names(cfg) -> list[str]:
+    method_names = []
+    for method_field in fields(cfg.methods):
+        method_cfg = getattr(cfg.methods, method_field.name)
+        if method_cfg is not None:
+            method_names.append(method_field.name)
+    return method_names
 
 def copy_files(root_dir: Path, dest_dir: Path) -> None:
     if not root_dir.is_dir():
@@ -30,7 +40,11 @@ def generate_eq(method: str, cfg, ctx) -> None:
 
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
 
-    setup_dir = ctx.paths[cfg.method.name]["setup"].resolve()
+    configured_methods = _configured_method_names(cfg)
+    if len(configured_methods) == 0:
+        raise ValueError("No methods configured in cfg.methods.")
+
+    setup_dir = ctx.paths[configured_methods[0]]["setup"].resolve()
     shutil.copy2(setup_dir / "_lroa.r", dest_dir)
     shutil.copy2(setup_dir / "system.rst", eq_root / "inpcrd0")
 
@@ -54,8 +68,6 @@ def generate_eq(method: str, cfg, ctx) -> None:
 def generate_us(method: str, cfg, ctx):
     # copy template files from template folder to results/input
     templates_root: Path = ctx.paths["templates"].resolve()
-    results_root: Path = ctx.paths[method]["root"].resolve()
-
     template_dir = templates_root / method
     dest_dir = ctx.paths[method]["input"]
 
@@ -74,7 +86,10 @@ def generate_us(method: str, cfg, ctx):
     # define output path for run files like pmd_prod_us or com_pull
     output_path = "./run_output/pmd/"
 
-    for interval in cfg.us:
+    if cfg.methods.us is None:
+        raise ValueError("generate_us requires cfg.methods.us to be configured.")
+
+    for interval in cfg.methods.us.us_intervals:
         w_start = float(f"{float(interval.start):.2f}")
         w_end = float(f"{float(interval.end):.2f}")
         step = float(f"{float(interval.step):.2f}")
