@@ -148,7 +148,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
             method_cfg.d,
             method_cfg.e,
             setup_dir / "system.rst",
-            cfg.paths["top"] / "prmtop",
+            cfg.paths[method_name]["top"] / "prmtop",
             ":" + cfg.system.protein_residues,
             ":" + cfg.system.ligand_residues,
         )
