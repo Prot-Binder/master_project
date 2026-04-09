@@ -300,9 +300,9 @@ class ARW_setup(mda.core.universe.Universe):
         file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
 
 
-    def write_pull_file(self, filename, initial_distance=8.0, final_distance=None, 
+    def write_pull_file(self, filename, initial_distance=None, final_distance=None,
                    pull_steps=100000, equilibration_steps=150000, 
-                   initial_force=0.2, final_force=4.0, increment_freq=100):
+                   initial_force=None, final_force=None, increment_freq=100):
         """
         Write AMBER pull restraint file for the pulling phase of APR calculations.
         
@@ -337,10 +337,10 @@ class ARW_setup(mda.core.universe.Universe):
         # Calculate number of increments
         ninc = pull_steps // increment_freq
 
-        initial_dist_str = str(f"{initial_distance}:.5f") if initial_distance is not None else '{WINDOW_PREV}'
-        initial_force_str = str(f"{initial_force}:.3f") if initial_force is not None else '{KAPPA_INIT}'
+        initial_dist_str = str(f"{initial_distance:.5f}") if initial_distance is not None else '{WINDOW_PREV}'
+        initial_force_str = str(f"{initial_force:.3f}") if initial_force is not None else '{KAPPA_INIT}'
 
-        final_force_str = str(f"{final_force}:.2f") if final_force is not None else '{KAPPA}'
+        final_force_str = str(f"{final_force:.2f}") if final_force is not None else '{KAPPA}'
         
         with open(filename, 'w') as file:
             # First restraint block - pulling phase
