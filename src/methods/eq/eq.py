@@ -8,15 +8,10 @@ import subprocess
 # from src.utils.shell import run
 
 class EqMethod(BaseMethod):
-    def prepare(self, run_dir):
-        # generate replicas, mdin, restraints
-        pass
 
     def launch(self, cfg: Config, ctx: JobContext) -> str:
 
-        # TODO: change job_id somehow
-        # job_id : str = str(cfg.us[0].replica_scaling) + "_" + str(cfg.system.name)
-        job_id = str(cfg.system.name) + "_eq"
+        job_id = str(cfg.system.name) + "_" + str(cfg.tag) + "_eq"
         script_dir = ctx.paths["eq"]["script"]
         eq_dir = ctx.paths["eq"]["root"]
         slurm_dir = ctx.paths["eq"]["slurm"]
@@ -45,7 +40,6 @@ class EqMethod(BaseMethod):
                     str(int(cfg.eq.use_cpu)),
                 ]
 
-        # TODO: execute this from result directory
         eq_result = subprocess.run(
             eq_cmd,
             check=True,

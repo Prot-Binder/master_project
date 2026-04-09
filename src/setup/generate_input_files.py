@@ -56,7 +56,56 @@ def generate_eq(method: str, cfg, ctx) -> None:
     mdin_output_file = eq_input_dir/f"mdin4"
     mdin_output_file.write_text(mdin_text)
 
-        
+def generate_pull(method: str, cfg, ctx):
+
+    template_dir = ctx.paths["templates"].resolve() / method
+    pull_dir = ctx.paths[method]["input"]
+
+    # copy template files from template directory to pull directory
+    copy_files(template_dir, pull_dir)
+    print(f"[{method}] copied templates {template_dir} -> {pull_dir}")
+
+    # copy restraint files from pull/setup to pull/input
+    setup_dir = ctx.paths[method]["setup"].resolve()
+    shutil.copy2(setup_dir / "pull.r", pull_dir)
+    shutil.copy2(setup_dir / "_lroa.r", pull_dir)
+
+    # define input path for restraints file
+    input_path = ctx.paths["pull"]["input"]
+    # define output path for amber output files
+    output_path = ctx.paths["pull"]["pmd"]
+
+    if cfg.methods.pull is None:
+        raise ValueError("generate_pull requires cfg.methods.pull to be configured.")
+
+    for interval in cfg.methods.pull.pull_intervals:
+        w_start = float(f"{float(interval.start):.2f}")
+        w_end = float(f"{float(interval.end):.2f}")
+        step = float(f"{float(interval.step):.2f}")
+        kappa = float(f"{float(interval.kappa):.2f}")
+
+        # adjust input files for pull simulation
+        mdin_file = pull_dir / "mdin5"
+        restraint_file = pull_dir / "pull.r"
+        for window in np.arange(w_start, w_end + step, step):
+
+            mdin_text = (mdin_file.read_text()
+                         .replace("{WINDOW}", str(window))
+                         .replace("{IN_PATH}", input_path)
+                         .replace("{OUT_PATH}", output_path))
+            mdin_output_file = pull_dir/f"mdin5.rep{window}"
+            mdin_output_file.write_text(mdin_text)
+
+            window_prev = float(f"{window - step:.2f}") if window - step >= w_start else float(f"{window:.2f}")
+            kappa_init = kappa / 2.0
+            restraint_text = (restraint_file.read_text()
+                              .replace("{WINDOW}", str(window))
+                              .replace("{WINDOW_PREV}", str(window_prev))
+                              .replace("{KAPPA}", str(kappa))
+                              .replace("{KAPPA_INIT}", str(kappa_init))
+                              )
+            restraint_output_file = pull_dir/f"pull{window}.r"
+            restraint_output_file.write_text(restraint_text)
 
 def generate_us(method: str, cfg, ctx):
     # copy template files from template folder to results/input

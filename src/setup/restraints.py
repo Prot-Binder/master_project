@@ -336,13 +336,18 @@ class ARW_setup(mda.core.universe.Universe):
         
         # Calculate number of increments
         ninc = pull_steps // increment_freq
+
+        initial_dist_str = str(f"{initial_distance}:.5f") if initial_distance is not None else '{WINDOW_PREV}'
+        initial_force_str = str(f"{initial_force}:.3f") if initial_force is not None else '{KAPPA_INIT}'
+
+        final_force_str = str(f"{final_force}:.2f") if final_force is not None else '{KAPPA}'
         
         with open(filename, 'w') as file:
             # First restraint block - pulling phase
             file.write('&rst\n')
             file.write(f'\tiat=-1,-1, nstep1=1, nstep2={pull_steps}, ifvari=1, ninc={ninc},\t\t ! COM-Restr. /w {ninc}incrmts evry {increment_freq}stps\n')
-            file.write(f'\tr1=0.00, r2={initial_distance:.5f}, r3={initial_distance:.5f}, r4=99.00, rk2={initial_force:.3f}, rk3={initial_force:.3f}, ! nstep1 Anchor Pos+Strngth for harm. pot.\n')
-            file.write(f'\tr1a=0.0, r2a={final_dist_str}, r3a={final_dist_str}, r4a=99.0, rk2a={final_force:.2f}, rk3a={final_force:.2f}, ! nstep2 Anchor Pos+Strngth for harm. pot.\n')
+            file.write(f'\tr1=0.00, r2={initial_dist_str}, r3={initial_dist_str}, r4=99.00, rk2={initial_force_str}, rk3={initial_force_str}, ! nstep1 Anchor Pos+Strngth for harm. pot.\n')
+            file.write(f'\tr1a=0.0, r2a={final_dist_str}, r3a={final_dist_str}, r4a=99.0, rk2a={final_force_str}, rk3a={final_force_str}, ! nstep2 Anchor Pos+Strength for harm. pot.\n')
             file.write('\t! Atom IDs for calculation of COM Positions of the Receptor\n')
             file.write(f'\tigr1={rec_ids}\n')
             file.write('\t\n')
@@ -354,7 +359,7 @@ class ARW_setup(mda.core.universe.Universe):
             total_steps = pull_steps + equilibration_steps
             file.write('&rst\n')
             file.write(f'\tiat=-1,-1, nstep1={pull_steps + 1}, nstep2={total_steps}, \t\t           ! const. COM-Restr. from step {pull_steps + 1}\n')
-            file.write(f'\tr1=0.0, r2={final_dist_str}, r3={final_dist_str}, r4=99.0, rk2={final_force:.2f}, rk3={final_force:.2f}, ! Anchor Pos+Strngth for harm. pot.\n')
+            file.write(f'\tr1=0.0, r2={final_dist_str}, r3={final_dist_str}, r4=99.0, rk2={final_force_str}, rk3={final_force_str}, ! Anchor Pos+Strngth for harm. pot.\n')
             file.write('\t! Atom IDs for calculation of COM Positions of the Receptor\n')
             file.write(f'\tigr1={rec_ids}\n')
             file.write('\t\n')
