@@ -120,7 +120,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     method_names = _configured_method_names(cfg)
     if len(method_names) == 0:
         raise ValueError("No methods configured in cfg.methods.")
-
+    
     first_method = method_names[0]
     first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
@@ -153,10 +153,10 @@ def _run_setup_pipeline(cfg, ctx) -> None:
             ":" + cfg.system.ligand_residues,
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
-
-    # for method_name in method_names:
-    #    generate_inputs(method_name, cfg, ctx)
-    #    print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
+    
+    for method_name in method_names:
+       generate_inputs(str(method_name), cfg, ctx)
+       print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
 
 
 def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:

@@ -14,8 +14,9 @@ class EqMethod(BaseMethod):
 
     def launch(self, cfg: Config, ctx: JobContext) -> str:
 
-        job_id : str = str(cfg.us[0].replica_scaling) + "_" + str(cfg.system.name)
-
+        # TODO: change job_id somehow
+        # job_id : str = str(cfg.us[0].replica_scaling) + "_" + str(cfg.system.name)
+        job_id = str(cfg.system.name) + "_eq"
         script_dir = ctx.paths["eq"]["script"]
         eq_dir = ctx.paths["eq"]["root"]
         slurm_dir = ctx.paths["eq"]["slurm"]
@@ -40,8 +41,7 @@ class EqMethod(BaseMethod):
                     "1",
                     str(input_dir.resolve()),
                     str(output_dir.resolve()),
-                    str(ctx.paths["top"].resolve()),
-                    str(cfg.us[0].replica_scaling),
+                    str(ctx.paths["eq"]["top"].resolve()),
                     str(int(cfg.eq.use_cpu)),
                 ]
 

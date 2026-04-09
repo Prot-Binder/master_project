@@ -21,7 +21,7 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 
 
 	! MOLECULAR DYNAMICS
-	nstlim=250000,
+	nstlim={NSTLIM},
 	dt=0.001,
 
 	! TEMPERATURE REGULATION
@@ -48,8 +48,8 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 	infe = 1,
  /
  &pmd
- 	output_file = '{OUT_PATH}pmd_pre_pull.txt'
+ 	output_file = '{OUT_PATH}/pmd_pre_pull.txt'
  	output_freq = 50
- 	cv_file = '{IN_PATH}_lroa.r'
+ 	cv_file = '{IN_PATH}/_lroa.r'
  /
 eof

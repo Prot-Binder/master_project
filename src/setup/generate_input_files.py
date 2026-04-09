@@ -30,37 +30,30 @@ def copy_files(root_dir: Path, dest_dir: Path) -> None:
             shutil.copy2(item, dest_dir)
 
 def generate_eq(method: str, cfg, ctx) -> None:
-    # copy files from templates to results
-    templates_root: Path = ctx.paths["templates"].resolve()
-    eq_root: Path = ctx.paths["eq"]["root"].resolve()
 
-    template_dir = templates_root / method
-    dest_dir = ctx.paths["eq"]["input"]
-    copy_files(template_dir, dest_dir)
+    # path definitions
+    template_dir = ctx.paths["templates"].resolve() / method
+    eq_input_dir = ctx.paths["eq"]["input"]
+    input_path = ctx.paths["eq"]["input"]
+    output_path = ctx.paths["eq"]["pmd"]
 
-    print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
+    # copy template files from templates to results
+    copy_files(template_dir, eq_input_dir)
+    print(f"[{method}] copied templates {template_dir} -> {eq_input_dir}")
 
-    configured_methods = _configured_method_names(cfg)
-    if len(configured_methods) == 0:
-        raise ValueError("No methods configured in cfg.methods.")
-
-    setup_dir = ctx.paths[configured_methods[0]]["setup"].resolve()
-    shutil.copy2(setup_dir / "_lroa.r", dest_dir)
-    shutil.copy2(setup_dir / "system.rst", eq_root / "inpcrd0")
-
-    shutil.copy2(setup_dir / "system.rst", eq_root / "refc")
-
-    # define input path for restraints file
-    input_path = "./input/"
-    # define output path for run files like pmd_prod_us or com_pull
-    output_path = "./"
+    # copy restraint and coordinate files into correct folders
+    setup_dir = ctx.paths["eq"]["setup"].resolve()
+    shutil.copy2(setup_dir / "_lroa.r", eq_input_dir)
+    shutil.copy2(setup_dir / "system.rst", eq_input_dir / "inpcrd0")
+    shutil.copy2(setup_dir / "system.rst", eq_input_dir / "refc")
 
     # adjust input files for pull simulation
-    mdin_file = dest_dir / "mdin4"
+    mdin_file = eq_input_dir / "mdin4"
     mdin_text = (mdin_file.read_text()
-                    .replace("{IN_PATH}", input_path)
-                    .replace("{OUT_PATH}", output_path))
-    mdin_output_file = dest_dir/f"mdin4"
+                    .replace("{IN_PATH}", str(input_path))
+                    .replace("{OUT_PATH}", str(output_path))
+                    .replace("{NSTLIM}", str(cfg.methods.eq.nstlim)))
+    mdin_output_file = eq_input_dir/f"mdin4"
     mdin_output_file.write_text(mdin_text)
 
         
@@ -139,13 +132,19 @@ def generate_us_remd(method: str, cfg: dict):
 
 
 def generate_inputs(method: str, cfg: dict, ctx) -> None:
+    print(f"method={method!r}, type={type(method)}")
     if method == "eq":
         generate_eq(method, cfg, ctx)
+    elif method == "pull":
+        pass
     elif method == "us":
+        pass
         generate_us(method, cfg, ctx)
     elif method == "rs_remd":
+        pass
         generate_rs_remd(method, cfg)
     elif method == "us_remd":
+        pass
         generate_us_remd(method, cfg)
     else:
         raise ValueError(f"Unknown method: {method}")
