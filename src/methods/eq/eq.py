@@ -15,8 +15,8 @@ class EqMethod(BaseMethod):
     def launch(self, cfg: Config, ctx: JobContext) -> str:
 
         # TODO: change job_id somehow
-        job_id : str = str(cfg.us[0].replica_scaling) + "_" + str(cfg.system.name)
-
+        # job_id : str = str(cfg.us[0].replica_scaling) + "_" + str(cfg.system.name)
+        job_id = str(cfg.system.name) + "_eq"
         script_dir = ctx.paths["eq"]["script"]
         eq_dir = ctx.paths["eq"]["root"]
         slurm_dir = ctx.paths["eq"]["slurm"]
