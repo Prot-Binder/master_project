@@ -124,7 +124,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     first_method = method_names[0]
     first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
-    create_box_and_prmtop(cfg, ctx, first_method)
+    # create_box_and_prmtop(cfg, ctx, first_method)
     print(f"\033[92m[setup] Shared setup prepared in {first_method}\033[0m")
 
     for method_name in method_names[1:]:

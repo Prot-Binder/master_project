@@ -82,7 +82,7 @@ def generate_pull(method: str, cfg, ctx):
         w_start = float(f"{float(interval.start):.2f}")
         w_end = float(f"{float(interval.end):.2f}")
         step = float(f"{float(interval.step):.2f}")
-        kappa = float(f"{float(interval.kappa):.2f}")
+        kappa = float(f"{float(interval.k):.2f}")
 
         # adjust input files for pull simulation
         mdin_file = pull_dir / "mdin5"
@@ -91,8 +91,8 @@ def generate_pull(method: str, cfg, ctx):
 
             mdin_text = (mdin_file.read_text()
                          .replace("{WINDOW}", str(window))
-                         .replace("{IN_PATH}", input_path)
-                         .replace("{OUT_PATH}", output_path))
+                         .replace("{IN_PATH}", str(input_path))
+                         .replace("{OUT_PATH}", str(output_path)))
             mdin_output_file = pull_dir/f"mdin5.rep{window}"
             mdin_output_file.write_text(mdin_text)
 
@@ -185,7 +185,7 @@ def generate_inputs(method: str, cfg: dict, ctx) -> None:
     if method == "eq":
         generate_eq(method, cfg, ctx)
     elif method == "pull":
-        pass
+        generate_pull(method, cfg, ctx)
     elif method == "us":
         pass
         generate_us(method, cfg, ctx)
