@@ -462,10 +462,9 @@ def make_result_dir(cfg: Config) -> dict[str, Path]:
         method_name = method_field.name
         result_dir = (
                 Path(cfg.system.output_prefix)
-                / "results"
                 / cfg.system.name
-                / method_name
                 / cfg.tag
+                / method_name
         )
         result_dir.mkdir(parents=True, exist_ok=True)
         result_dirs[method_name] = result_dir
@@ -484,6 +483,7 @@ def compute_paths(cfg: Config) -> dict:
     paths["templates"] = Path("test_templates") if cfg.test else Path("templates")
 
     # define paths for equilibration
+    """
     paths["eq"] = {}
     paths["eq"]["script"] = Path("src") / "methods" / "eq"
     paths["eq"]["root"] = Path("results") / system_name / "eq" / cfg.tag
@@ -491,6 +491,7 @@ def compute_paths(cfg: Config) -> dict:
     paths["eq"]["amber"] = paths["eq"]["root"] / "run_output" / "amber"
     paths["eq"]["pmd"] = paths["eq"]["root"] / "run_output" / "pmd"
     paths["eq"]["slurm"] = paths["eq"]["root"] / "run_output" / "slurm"
+    """
 
     # define paths for all specified methods
     for method, result_dir in result_dirs.items():
