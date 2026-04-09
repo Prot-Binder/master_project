@@ -44,13 +44,13 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
 	infe = 1,
  /
  &pmd
- 	output_file = '{OUT_PATH}pmd_pull_us{WINDOW}.txt'
+ 	output_file = '{OUT_PATH}/pmd_pull_us{WINDOW}.txt'
  	output_freq = 50
- 	cv_file = '{IN_PATH}_lroa.r'
+ 	cv_file = '{IN_PATH}/_lroa.r'
  /
  &wt type = 'REST', istep1 = 0, istep2 = 1, value1 = 1.0, value2 = 1.0,/
  &wt type='DUMPFREQ', istep1=50,/
  &wt type = 'END',/
- DUMPAVE={OUT_PATH}com_pull_{WINDOW}.txt
- DISANG={IN_PATH}pull{WINDOW}.r
+ DUMPAVE={OUT_PATH}/com_pull_{WINDOW}.txt
+ DISANG={IN_PATH}/pull{WINDOW}.r
 eof
