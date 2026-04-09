@@ -24,9 +24,10 @@ class PullMethod(BaseMethod):
 
         exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
 
-        last_job_id = None
         # TODO: adjust this so that we write window and id pairs in here
+        last_job_id = None
         ctx.job_ids.setdefault("pull", [])
+        prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
 
         for interval in cfg.methods.pull.pull_intervals:
             w_start = float(f"{float(interval.start):.2f}")
@@ -39,13 +40,11 @@ class PullMethod(BaseMethod):
 
                 pull_cmd = [
                     "sbatch",
-                    f"--job-name={job_id}_pull{window}",
+                    f"--job-name={job_id}_{window}",
                 ]
 
-                if last_job_id is not None:
-                    pull_cmd.append(f"--dependency=afterok:{last_job_id}")
-                elif ctx.eq_job_id is not None:
-                    pull_cmd.append(f"--dependency=afterok:{ctx.eq_job_id}")
+                if prev_job_id is not None:
+                    pull_cmd.append(f"--dependency=afterok:{prev_job_id}")
 
                 pull_cmd += [
                     f"--gres=gpu:1",
@@ -56,13 +55,11 @@ class PullMethod(BaseMethod):
                     exclude_arg,
                     f"--output={slurm_dir.resolve()}/slurm-%j_pull{window}.out",
                     f"{script_dir.resolve()}/run_pull.sh",
-                    "4",
                     f"{window}",
                     str(input_dir.resolve()),
                     str(amber_dir.resolve()),
-                    str(ctx.paths["top"].resolve()),
-                    str(cfg.us[0].replica_scaling),
-                    str(ctx.paths["eq"]["root"].resolve()),
+                    str(ctx.paths["pull"]["top"].resolve()),
+                    str(ctx.paths["eq"]["input"].resolve()),
                 ]
 
                 pull_result = subprocess.run(
