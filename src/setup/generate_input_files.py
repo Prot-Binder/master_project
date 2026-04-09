@@ -34,6 +34,8 @@ def generate_eq(method: str, cfg, ctx) -> None:
     # path definitions
     template_dir = ctx.paths["templates"].resolve() / method
     eq_input_dir = ctx.paths["eq"]["input"]
+    input_path = ctx.paths["eq"]["input"]
+    output_path = ctx.paths["eq"]["pmd"]
 
     # copy template files from templates to results
     copy_files(template_dir, eq_input_dir)
@@ -44,11 +46,6 @@ def generate_eq(method: str, cfg, ctx) -> None:
     shutil.copy2(setup_dir / "_lroa.r", eq_input_dir)
     shutil.copy2(setup_dir / "system.rst", eq_input_dir / "inpcrd0")
     shutil.copy2(setup_dir / "system.rst", eq_input_dir / "refc")
-
-    # define input path for restraints; needs to be relative to where amber script is invoked
-    input_path = ctx.paths["eq"]["input"] # "./input/"
-    # TODO: check what is done here actually
-    output_path = ctx.paths["eq"]["pmd"] # "./"
 
     # adjust input files for pull simulation
     mdin_file = eq_input_dir / "mdin4"
