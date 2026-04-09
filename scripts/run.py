@@ -6,7 +6,7 @@ from src.setup.system import setup_simulation
 from src.setup import *
 from pathlib import Path
 
-from src.methods.method_selector import select_method, create_eq
+from src.methods.method_selector import select_method, create_eq, create_pull
 from dataclasses import is_dataclass, fields
 
 def iterate_structure(obj, prefix=""):
@@ -76,8 +76,13 @@ def main(cfg_path: str):
     # if cfg.method.eq:
     #    print("running equilibration")
     print("running equilibration")
-    # eq_method = create_eq(cfg)
-    # eq_method.launch(cfg, ctx)
+    eq_method = create_eq(cfg)
+    eq_job_id = eq_method.launch(cfg, ctx)
+    ctx.eq_job_id = eq_job_id
+
+    pull_method = create_pull(cfg)
+    pull_method.launch(cfg, ctx)
+
 # 
     # method = select_method(cfg)
     # if method is not None:

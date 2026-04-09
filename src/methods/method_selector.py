@@ -12,3 +12,7 @@ def select_method(cfg: Config) -> BaseMethod:
 
 def create_eq(cfg: Config) -> BaseMethod:
     return EqMethod(cfg)
+
+def create_pull(cfg: Config) -> BaseMethod:
+    from src.methods.pull.pull import PullMethod
+    return PullMethod(cfg)
