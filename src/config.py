@@ -55,6 +55,15 @@ def _as_float_list(value: Any, ctx: str) -> list[float]:
     return [float(value)]
 
 
+def _as_int(value: Any, ctx: str) -> int:
+    if isinstance(value, bool):
+        raise ValueError(f"'{ctx}' must be an integer.")
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"'{ctx}' must be an integer.") from exc
+
+
 @dataclass(frozen=True)
 class SystemCfg:
     pdb: Path
@@ -79,6 +88,7 @@ class MethodCfgBase:
     name: str
     d: list[float]
     e: list[float]
+    nstlim: int
 
 
 @dataclass(frozen=True)
@@ -160,16 +170,22 @@ class Config:
         if self.eq.execute:
             if len(self.eq.d) == 0 or len(self.eq.e) == 0:
                 raise ValueError("eq requires non-empty d and e values.")
+            if self.eq.nstlim <= 0:
+                raise ValueError("eq.nstlim must be > 0")
 
         if self.pull is not None:
             if len(self.pull.d) == 0 or len(self.pull.e) == 0:
                 raise ValueError("pull requires non-empty d and e values.")
             if self.pull.stride <= 0:
                 raise ValueError("pull.stride must be > 0")
+            if self.pull.nstlim <= 0:
+                raise ValueError("pull.nstlim must be > 0")
 
         if self.methods.us is not None:
             if len(self.methods.us.d) == 0 or len(self.methods.us.e) == 0:
                 raise ValueError("methods.us requires non-empty d and e values.")
+            if self.methods.us.nstlim <= 0:
+                raise ValueError("methods.us.nstlim must be > 0")
             if len(self.methods.us.us_intervals) == 0:
                 raise ValueError("methods.us.us_intervals must be a non-empty list.")
             for idx, interval in enumerate(self.methods.us.us_intervals):
@@ -192,6 +208,8 @@ class Config:
                 raise ValueError(f"methods.{method_name}.e must have length as specified in n_rep")
             if method_cfg.k <= 0:
                 raise ValueError(f"methods.{method_name}.k must be > 0")
+            if method_cfg.nstlim <= 0:
+                raise ValueError(f"methods.{method_name}.nstlim must be > 0")
 
 def _load_cluster(raw: dict) -> ClusterCfg:
     cluster_raw = raw.get("cluster", {})
@@ -243,6 +261,7 @@ def _load_eq(raw: dict) -> EqCfg:
         use_cpu=_as_bool(eq_raw["use_cpu"], "eq.use_cpu") if "use_cpu" in eq_raw else False,
         d=_as_float_list(eq_raw.get("d", []), "eq.d"),
         e=_as_float_list(eq_raw.get("e", []), "eq.e"),
+        nstlim=_as_int(eq_raw.get("nstlim", 250000), "eq.nstlim"),
     )
 
 
@@ -274,6 +293,7 @@ def _load_pull(raw: dict) -> Optional[PullCfg]:
         name=str(pull_raw.get("name", "pull")),
         d=_as_float_list(_require(pull_raw, "d", "pull"), "pull.d"),
         e=_as_float_list(_require(pull_raw, "e", "pull"), "pull.e"),
+        nstlim=_as_int(pull_raw.get("nstlim", 2500000), "pull.nstlim"),
         stride=float(_require(pull_raw, "stride", "pull")),
         mode=str(_require(pull_raw, "mode", "pull")),
         pull_intervals=pull_intervals,
@@ -313,6 +333,7 @@ def _load_us(raw: dict) -> Optional[USCfg]:
         name=str(us_raw.get("name", "us")),
         d=_as_float_list(_require(us_raw, "d", "methods.us"), "methods.us.d"),
         e=_as_float_list(_require(us_raw, "e", "methods.us"), "methods.us.e"),
+        nstlim=_as_int(us_raw.get("nstlim", 25000000), "methods.us.nstlim"),
         us_intervals=us_intervals,
     )
 
@@ -333,6 +354,7 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         name=str(rs_raw.get("name", "rs_remd")),
         d=_as_float_list(_require(rs_raw, "d", "methods.rs_remd"),"methods.rs_remd.d"),
         e=_as_float_list(_require(rs_raw, "e", "methods.rs_remd"),"methods.rs_remd.e"),
+        nstlim=_as_int(rs_raw.get("nstlim", 2500000), "methods.rs_remd.nstlim"),
         n_rep=int(_require(rs_raw, "n_rep", "methods.rs_remd")),
         k=float(_require(rs_raw, "k", "methods.rs_remd")),
     )
@@ -355,6 +377,7 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
         name=str(us_remd_raw.get("name", "us_remd")),
         d=_as_float_list(_require(us_remd_raw, "d", "methods.us_remd"), "methods.us_remd.d"),
         e=_as_float_list(_require(us_remd_raw, "e", "methods.us_remd"), "methods.us_remd.e"),
+        nstlim=_as_int(us_remd_raw.get("nstlim", 2500000), "methods.us_remd.nstlim"),
         n_rep=int(_require(us_remd_raw, "n_rep", "methods.us_remd")),
         k=float(_require(us_remd_raw, "k", "methods.us_remd")),
     )
