@@ -154,9 +154,9 @@ def _run_setup_pipeline(cfg, ctx) -> None:
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
 
-    # for method_name in method_names:
-    #    generate_inputs(method_name, cfg, ctx)
-    #    print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
+    for method_name in method_names:
+       generate_inputs(method_name, cfg, ctx)
+       print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
 
 
 def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
