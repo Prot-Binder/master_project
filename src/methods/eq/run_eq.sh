@@ -9,8 +9,7 @@ STEP=$3
 MDINDIR=$4
 OUTDIR=$5
 TOPDIR=$6
-REPLICA_SCALING=$7
-CPU_USAGE=$8
+CPU_USAGE=$7
 
 for n in $(seq $MIN $STEP $MAX)
 do
@@ -20,12 +19,12 @@ do
 	if (( n < CPU_USAGE ))
 	then
 		printf "sander minimization started... "
-		pmemd -O -i $MDINDIR/mdin$n -ref refc -c inpcrd$n -p $TOPDIR/prmtop$REPLICA_SCALING -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -inf $OUTDIR/mdinfo$n
+		pmemd -O -i $MDINDIR/mdin$n -ref refc -c inpcrd$n -p $TOPDIR/prmtop1 -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -inf $OUTDIR/mdinfo$n
 		echo "done"
 	else
 		# all files are id'ed by the d-variables (except prmtop)
 		printf "Running for $n... "
-		pmemd.cuda -O -i $MDINDIR/mdin$n -ref refc -c inpcrd$n -p $TOPDIR/prmtop$REPLICA_SCALING -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -x $OUTDIR/traj$n.nc -inf $OUTDIR/mdinfo$n
+		pmemd.cuda -O -i $MDINDIR/mdin$n -ref refc -c inpcrd$n -p $TOPDIR/prmtop1 -r $OUTDIR/restrt$n -o $OUTDIR/mdout$n -x $OUTDIR/traj$n.nc -inf $OUTDIR/mdinfo$n
 		echo "done"
 	fi
 

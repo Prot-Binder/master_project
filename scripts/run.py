@@ -75,8 +75,9 @@ def main(cfg_path: str):
     # # if equilibration is requested, perform equilibration first
     # if cfg.method.eq:
     #    print("running equilibration")
-    #    eq_method = create_eq(cfg)
-    #    eq_method.launch(cfg, ctx)
+    print("running equilibration")
+    eq_method = create_eq(cfg)
+    eq_method.launch(cfg, ctx)
 # 
     # method = select_method(cfg)
     # if method is not None:
