@@ -53,9 +53,9 @@ def generate_eq(method: str, cfg, ctx) -> None:
     # adjust input files for pull simulation
     mdin_file = eq_input_dir / "mdin4"
     mdin_text = (mdin_file.read_text()
-                    .replace("{IN_PATH}", input_path)
-                    .replace("{OUT_PATH}", output_path)
-                    .replace("{NSTLIM}", cfg.methods.eq.nstlim))
+                    .replace("{IN_PATH}", str(input_path))
+                    .replace("{OUT_PATH}", str(output_path))
+                    .replace("{NSTLIM}", str(cfg.methods.eq.nstlim)))
     mdin_output_file = eq_input_dir/f"mdin4"
     mdin_output_file.write_text(mdin_text)
 
@@ -135,9 +135,10 @@ def generate_us_remd(method: str, cfg: dict):
 
 
 def generate_inputs(method: str, cfg: dict, ctx) -> None:
+    print(f"method={method!r}, type={type(method)}")
     if method == "eq":
         generate_eq(method, cfg, ctx)
-    if method == "pull":
+    elif method == "pull":
         pass
     elif method == "us":
         pass
