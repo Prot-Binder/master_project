@@ -3,7 +3,7 @@
 # This helps your brain later (while writing your thesis).
 # Comment:
 ##################################################################
-tag: test_multi_k
+tag: test
 test: True
 
 cluster:
@@ -14,7 +14,7 @@ system:
   # pdb: ~/master_project/input/pdb_files/5h5s/5h5s_cleaned.pdb
   # pdb: input/pdb_files/5h5s/5h5s_cleaned.pdb
   output_prefix: ~/cluster/mp_results/
-  name: 5h5s_new3
+  name: 5h5s
   ligand_residues: 164-177
   protein_residues: 1-163
   # bond: "377.N-390.C"
