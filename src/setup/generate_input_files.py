@@ -98,11 +98,13 @@ def generate_pull(method: str, cfg, ctx):
 
             window_prev = float(f"{window - step:.2f}") if window - step >= w_start else float(f"{window:.2f}")
             kappa_init = kappa / 2.0
+            total_steps = float(cfg.methods.pull.nstlim)
             restraint_text = (restraint_file.read_text()
                               .replace("{WINDOW}", str(window))
                               .replace("{WINDOW_PREV}", str(window_prev))
                               .replace("{KAPPA}", str(kappa))
                               .replace("{KAPPA_INIT}", str(kappa_init))
+                              .replace("{TOTAL_STEPS}", str(total_steps))
                               )
             restraint_output_file = pull_dir/f"pull{window}.r"
             restraint_output_file.write_text(restraint_text)

@@ -301,8 +301,7 @@ class ARW_setup(mda.core.universe.Universe):
 
 
     def write_pull_file(self, filename, initial_distance=None, final_distance=None,
-                   pull_steps=100000, equilibration_steps=150000, 
-                   initial_force=None, final_force=None, increment_freq=100):
+                   pull_steps=100000, initial_force=None, final_force=None, increment_freq=100):
         """
         Write AMBER pull restraint file for the pulling phase of APR calculations.
         
@@ -316,8 +315,6 @@ class ARW_setup(mda.core.universe.Universe):
             Final distance for the pull (if None, uses 'WINDOW' placeholder)
         pull_steps : int
             Number of steps for the pulling phase (default: 100000)
-        equilibration_steps : int 
-            Additional equilibration steps at final distance (default: 150000)
         initial_force : float
             Initial force constant (default: 0.2 kcal/mol/Å²)
         final_force : float
@@ -341,6 +338,8 @@ class ARW_setup(mda.core.universe.Universe):
         initial_force_str = str(f"{initial_force:.3f}") if initial_force is not None else '{KAPPA_INIT}'
 
         final_force_str = str(f"{final_force:.2f}") if final_force is not None else '{KAPPA}'
+
+        total_steps = "{TOTAL_STEPS}"
         
         with open(filename, 'w') as file:
             # First restraint block - pulling phase
@@ -356,7 +355,6 @@ class ARW_setup(mda.core.universe.Universe):
             file.write('/\n')
             
             # Second restraint block - equilibration at final distance
-            total_steps = pull_steps + equilibration_steps
             file.write('&rst\n')
             file.write(f'\tiat=-1,-1, nstep1={pull_steps + 1}, nstep2={total_steps}, \t\t           ! const. COM-Restr. from step {pull_steps + 1}\n')
             file.write(f'\tr1=0.0, r2={final_dist_str}, r3={final_dist_str}, r4=99.0, rk2={final_force_str}, rk3={final_force_str}, ! Anchor Pos+Strngth for harm. pot.\n')
