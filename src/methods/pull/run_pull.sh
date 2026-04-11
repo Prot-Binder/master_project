@@ -15,5 +15,5 @@ echo "Node list: $SLURM_JOB_NODELIST"
 echo "Running on node: $(hostname)"
 
 printf "Running Pull Simulation for Replica $REPLICA_SCALING: Window $window... "
-pmemd.cuda -O -i $MDINDIR/mdin5.rep$window -c $EQ_DIR/inpcrd4 -p $TOPDIR/prmtop1 -r $OUTDIR/restrt5.rep$window -o $OUTDIR/mdout5.rep$window -x $OUTDIR/traj5.rep$window.nc -inf $OUTDIR/mdinfo5.rep$window
+pmemd.cuda -O -i $MDINDIR/mdin5.w$window -c $EQ_DIR/inpcrd4 -p $TOPDIR/prmtop1 -r $OUTDIR/restrt5.w$window -o $OUTDIR/mdout5.w$window -x $OUTDIR/traj5.w$window.nc -inf $OUTDIR/mdinfo5.w$window
 echo "done"

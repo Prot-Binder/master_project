@@ -1,96 +1,54 @@
 # src/methods/us.py
-from src.methods import JobContext
-from src.methods.base_method import BaseMethod
-# from src.utils.shell import run
-from pathlib import Path
-from src.config import Config
 import subprocess
+from pathlib import Path
+
 import numpy as np
 
+from src.config import Config
+from src.methods import JobContext
+from src.methods.base_method import BaseMethod
+
+
 class USMethod(BaseMethod):
-    def prepare(self, run_dir):
-        # generate replicas, mdin, restraints
-        pass
-    
-    def launch(self, cfg: Config, ctx: JobContext) -> str:
+
+    def launch(self, cfg: Config, ctx: JobContext) -> None:
         print(f"\033[92m[US] setting up parameters\033[0m")
-        job_id : str = str(cfg.us[0].replica_scaling) + "_" + str(cfg.system.name)
+        job_id: str = f"{cfg.system.name}_{cfg.tag}_us"
 
         input_dir = ctx.paths["us"]["input"]
-        script_dir = ctx.paths["us"]["script"] # .resolve()
+        script_dir = ctx.paths["us"]["script"]
         slurm_dir = ctx.paths["us"]["slurm"]
         amber_dir = ctx.paths["us"]["amber"]
         result_dir = ctx.paths["us"]["root"]
-        # TODO: adjust handling of eq dir: where exactly is the input stored in general?; or remove here
-        # eq_dir = cfg.paths["eq_dir"].resolve()
-
 
         exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
 
-        last_us_job_id = None
-        ctx.job_ids.setdefault("pull", [])
-        ctx.job_ids.setdefault("us", [])
+        pull_dir = self._get_pull_dir(ctx)
 
-        for us_item in cfg.us:
-            w_start = us_item.start
-            w_end = us_item.end
-            step = us_item.step
+        ctx.us_job_id = {}
+
+        for interval in cfg.methods.us.us_intervals:
+            w_start = float(f"{float(interval.start):.2f}")
+            w_end = float(f"{float(interval.end):.2f}")
+            step = float(f"{float(interval.step):.2f}")
 
             for window in np.arange(w_start, w_end + step, step):
-
-                print(f"\033[92m[US] submit pull window {window} \033[0m")
-
-                pull_cmd = [
-                    "sbatch",
-                    f"--job-name={job_id}_pull{window}",
-                ]
-
-                if ctx.eq_job_id is not None:
-                    pull_cmd.append(f"--dependency=afterok:{ctx.eq_job_id}")
-
-                pull_cmd += [
-                    f"--gres=gpu:1",
-                    f"--nodes=1",
-                    f"--time=1-00:00:00",
-                    f"--ntasks=1",
-                    f"--cpus-per-task=1",
-                    exclude_arg,
-                    f"--output={slurm_dir.resolve()}/slurm-%j_pull{window}.out",
-                    f"{script_dir.resolve()}/run_pull.sh",
-                    "4",
-                    f"{window}",
-                    str(input_dir.resolve()),
-                    str(amber_dir.resolve()),
-                    str(ctx.paths["top"].resolve()),
-                    str(cfg.us[0].replica_scaling),
-                    str(ctx.paths["eq"]["root"].resolve()),
-                ]
-
-                # TODO: execute this from result directory
-                pull_result = subprocess.run(
-                    pull_cmd,
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    cwd=result_dir.resolve(),
-                )
-
-                if pull_result.returncode != 0:
-                    print("STDOUT:\n", pull_result.stdout)
-                    print("STDERR:\n", pull_result.stderr)
-                    raise RuntimeError("sbatch failed")
-
-                pull_job_id = pull_result.stdout.strip().split()[-1]
-                ctx.job_ids["pull"].append(pull_job_id)
+                window = float(f"{float(window):.2f}")
+                dependency_job_id = self._resolve_pull_dependency(window, pull_dir, ctx)
 
                 print(f"\033[92m[US] submit us window {window}\033[0m")
                 us_cmd = [
                     "sbatch",
-                    f"--dependency=afterok:{pull_job_id}",
-                    f"--job-name={job_id}_us{window}",
+                    f"--job-name={job_id}_{window}",
+                ]
+
+                if dependency_job_id is not None:
+                    us_cmd.append(f"--dependency=afterok:{dependency_job_id}")
+
+                us_cmd += [
                     "--gres=gpu:1",
                     "--nodes=1",
-                    "--time=1-00:00:00",
+                    "--time=2-00:00:00",
                     "--ntasks=1",
                     "--cpus-per-task=1",
                     exclude_arg,
@@ -99,11 +57,10 @@ class USMethod(BaseMethod):
                     f"{window}",
                     str(input_dir.resolve()),
                     str(amber_dir.resolve()),
-                    str(ctx.paths["top"].resolve()),
-                    str(cfg.us[0].replica_scaling),
+                    str(ctx.paths["us"]["top"].resolve()),
+                    str(pull_dir.resolve()),
                 ]
 
-                # TODO: execute this from result directory
                 us_result = subprocess.run(
                     us_cmd,
                     check=True,
@@ -118,7 +75,46 @@ class USMethod(BaseMethod):
                     raise RuntimeError("sbatch failed")
 
                 us_job_id = us_result.stdout.strip().split()[-1]
-                ctx.job_ids["us"].append(us_job_id)
-                last_us_job_id = us_job_id
+                ctx.us_job_id[window] = us_job_id
 
-        return last_us_job_id
+
+    def _resolve_pull_dependency(self, window: float, pull_amber_dir: Path, ctx: JobContext) -> str | None:
+        if ctx.pull_job_id is not None:
+            pull_job_id = ctx.pull_job_id.get(window)
+            if pull_job_id is not None and self._is_slurm_job_active(pull_job_id):
+                return pull_job_id
+
+        pull_restart = pull_amber_dir / f"restrt5.w{window}"
+        if pull_restart.exists():
+            return None
+
+        raise RuntimeError(
+            f"Pull output for window {window} not available. "
+            f"Expected either an active pull job id or restart file {pull_restart}."
+        )
+
+    def _is_slurm_job_active(self, job_id: str) -> bool:
+        try:
+            result = subprocess.run(
+                ["squeue", "-h", "-j", job_id],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError:
+            return False
+
+        return bool(result.stdout.strip())
+
+    def _get_pull_dir(self, ctx: JobContext) -> Path:
+        if ctx.paths.get("pull") is not None:
+            pull_dir = ctx.paths["pull"]["amber"]
+            if not pull_dir.exists():
+                raise RuntimeError("Pull amber directory specified in yaml file does not exist.")
+            return pull_dir
+        else:
+            us_path = ctx.paths["us"]["amber"]
+            pull_dir = us_path.parent.parent / "pull" / "amber"
+            if not pull_dir.exists():
+                raise RuntimeError(f"Pull amber directory at expected location does not exist. ({pull_dir})")
+            return pull_dir
