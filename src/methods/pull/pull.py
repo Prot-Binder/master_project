@@ -83,6 +83,5 @@ class PullMethod(BaseMethod):
 
     def _check_eq_exists(self, eq_outdir: Path) -> bool:
         last_rstfile = eq_outdir / "restrt4"
-        print("last rsfile: " + str(last_rstfile))
         return last_rstfile.exists()
 
