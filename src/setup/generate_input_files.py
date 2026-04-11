@@ -92,7 +92,8 @@ def generate_pull(method: str, cfg, ctx):
             mdin_text = (mdin_file.read_text()
                          .replace("{WINDOW}", str(window))
                          .replace("{IN_PATH}", str(input_path))
-                         .replace("{OUT_PATH}", str(output_path)))
+                         .replace("{OUT_PATH}", str(output_path))
+                         .replace("{NSTLIM}", str(cfg.methods.pull.nstlim)))
             mdin_output_file = pull_dir/f"mdin5.rep{window}"
             mdin_output_file.write_text(mdin_text)
 
