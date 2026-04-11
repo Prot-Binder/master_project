@@ -34,6 +34,7 @@ class USMethod(BaseMethod):
 
             for window in np.arange(w_start, w_end + step, step):
                 window = float(f"{float(window):.2f}")
+                window_str = f"{window_val:.2f}"
                 dependency_job_id = self._resolve_pull_dependency(window, pull_dir, ctx)
 
                 print(f"\033[92m[US] submit us window {window}\033[0m")
@@ -54,7 +55,7 @@ class USMethod(BaseMethod):
                     exclude_arg,
                     f"--output={slurm_dir.resolve()}/slurm-%j_us{window}.out",
                     f"{script_dir.resolve()}/run_us.sh",
-                    f"{window}",
+                    f"{window_str}",
                     str(input_dir.resolve()),
                     str(amber_dir.resolve()),
                     str(ctx.paths["us"]["top"].resolve()),
