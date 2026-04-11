@@ -6,8 +6,11 @@ from src.setup.system import setup_simulation
 from src.setup import *
 from pathlib import Path
 
-from src.methods.method_selector import select_method, create_eq, create_pull
+from src.methods.method_selector import select_method
 from dataclasses import is_dataclass, fields
+
+from src.utils.iterate_configured_methods import get_configured_method_names
+
 
 def iterate_structure(obj, prefix=""):
     if is_dataclass(obj):
@@ -77,17 +80,11 @@ def main(cfg_path: str):
     # if cfg.method.eq:
     #    print("running equilibration")
 
-    # TODO: somehow order the methods, that eq > pull > all others, due to dependency issues
-    # TODO: change how methods are instantiated right? maybe think of something else?
-    print("running equilibration")
-    eq_method = select_method("eq", cfg)
-    eq_method.launch(ctx)
-
-    pull_method = select_method("pull", cfg)
-    pull_method.launch(ctx)
-
-    us_method = select_method("us", cfg)
-    us_method.launch(ctx)
+    method_names = get_configured_method_names(cfg)
+    for method_name in method_names:
+        print(f"running {method_name}")
+        method = select_method(method_name, cfg)
+        method.launch(ctx)
 
 # 
     # method = select_method(cfg)

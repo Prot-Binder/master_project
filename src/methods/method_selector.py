@@ -10,12 +10,4 @@ def select_method(method, cfg) -> BaseMethod:
         return PullMethod(cfg)
     if method == "us":
         return USMethod(cfg)
-    return None
-
-
-def create_eq(cfg: Config) -> BaseMethod:
-    return EqMethod(cfg)
-
-def create_pull(cfg: Config) -> BaseMethod:
-    from src.methods.pull.pull import PullMethod
-    return PullMethod(cfg)
+    raise ValueError(f"Method {method} currently not defined. Implement it yourself!")
