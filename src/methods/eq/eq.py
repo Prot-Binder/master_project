@@ -8,7 +8,7 @@ class EqMethod(BaseMethod):
 
     def launch(self, ctx: JobContext) -> None:
 
-        job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag) + "_eq"
+        job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
 
         script_dir = ctx.paths["eq"]["script"]
         eq_dir = ctx.paths["eq"]["root"]
