@@ -76,46 +76,6 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
 
     return prmtop, rst, n_ions_each
 
-# TODO: delete as we do not use it anymore
-def run_setup_steps(cfg, ctx, method_name: str) -> None:
-    setup_dir = ctx.paths[method_name]["setup"]
-    method_cfg = _get_method_cfg(cfg, method_name)
-
-    tleap_paths = TLeapPaths(
-        template_tleap=Path("templates/tleap.in.tpl"),
-        ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
-    )
-
-    prmtop, rst, n_ions_each = run_tleap(
-        setup_dir=setup_dir,
-        pdb_path=cfg.system.pdb,
-        bond=cfg.system.bond,
-        paths=tleap_paths,
-    )
-
-    parmed_paths = ParmEdPaths(template=Path("templates/HMR.parmed.tpl"))
-    run_hmr(
-        setup_dir=setup_dir,
-        in_prmtop=prmtop,
-        out_prmtop=setup_dir / "prmtop",
-        paths=parmed_paths,
-    )
-
-    system_pdb = setup_dir / "system.pdb"
-    create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
-
-    # TODO: adjust topology file generation soon, i.e. make it for every method available (also eq and pull)
-    generate_scaled_top_files(
-        setup_dir / "prmtop",
-        _get_num_replicas(method_cfg),
-        method_cfg.d,
-        method_cfg.e,
-        setup_dir / "system.rst",
-        ctx.paths["top"] / "prmtop",
-        ":" + cfg.system.protein_residues,
-        ":" + cfg.system.ligand_residues,
-    )
-
 def _run_setup_pipeline(cfg, ctx) -> None:
     method_names = _configured_method_names(cfg)
     if len(method_names) == 0:
@@ -124,9 +84,9 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     first_method = method_names[0]
     first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
-    # create_box_and_prmtop(cfg, ctx, first_method)
+    create_box_and_prmtop(cfg, ctx, first_method)
     print(f"\033[92m[setup] Shared setup prepared in {first_method}\033[0m")
-    """
+
     for method_name in method_names[1:]:
         dest_setup_dir = ctx.paths[method_name]["setup"].resolve()
         _replace_directory(first_setup_dir, dest_setup_dir)
@@ -153,7 +113,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
             ":" + cfg.system.ligand_residues,
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
-    """
+
     for method_name in method_names:
        generate_inputs(str(method_name), cfg, ctx)
        print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
@@ -164,9 +124,7 @@ def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
     if len(method_names) == 0:
         raise ValueError("No methods configured in cfg.methods.")
 
-    first_method = method_names[0]
-    slurm_dir = ctx.paths[first_method]["slurm"].resolve()
-    # slurm_dir.mkdir(parents=True, exist_ok=True)
+    slurm_dir = ctx.paths["root"]
 
     project_root = _project_root().resolve()
     python_exe = Path(sys.executable).resolve()

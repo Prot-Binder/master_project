@@ -445,14 +445,16 @@ def inject_paths(cfg: Config) -> Config:
     return cfg
 
 
-def make_result_dir(cfg: Config) -> dict[str, Path]:
+def make_result_dir(cfg: Config) -> (Path, dict[str, Path]):
     """
-    results/<system_name>/<method_name>/<tag>/
-    tag must be unique for this (system, method) combination.
+    results/<system_name>/<tag>/<method_name>/
     """
-    # TODO: iterate over all possible methods
-    #result_dir = Path(cfg.system.output_prefix) / "results" / cfg.system.name / cfg.method.name / cfg.tag
+
     result_dirs: dict[str, Path] = {}
+
+    root_dir = (Path(cfg.system.output_prefix)
+                / cfg.system.name
+                / cfg.tag)
 
     for method_field in fields(cfg.methods):
         method_cfg = getattr(cfg.methods, method_field.name)
@@ -460,38 +462,20 @@ def make_result_dir(cfg: Config) -> dict[str, Path]:
             continue
 
         method_name = method_field.name
-        result_dir = (
-                Path(cfg.system.output_prefix)
-                / cfg.system.name
-                / cfg.tag
-                / method_name
-        )
+        result_dir = (root_dir / method_name)
         result_dir.mkdir(parents=True, exist_ok=True)
         result_dirs[method_name] = result_dir
 
-    return result_dirs
+    return root_dir, result_dirs
 
 def compute_paths(cfg: Config) -> dict:
     # make a dict out of all paths that are necessary in the future
-    result_dirs = make_result_dir(cfg)
-    # method = cfg.method.name
-    # method = "us"
-    system_name = cfg.system.name
+    root_dir, result_dirs = make_result_dir(cfg)
 
     paths = {}
-    # paths["top"] = Path("results") / system_name / "top"
+    paths["root"] = root_dir
     paths["templates"] = Path("test_templates") if cfg.test else Path("templates")
 
-    # define paths for equilibration
-    """
-    paths["eq"] = {}
-    paths["eq"]["script"] = Path("src") / "methods" / "eq"
-    paths["eq"]["root"] = Path("results") / system_name / "eq" / cfg.tag
-    paths["eq"]["input"] = paths["eq"]["root"] / "input"
-    paths["eq"]["amber"] = paths["eq"]["root"] / "run_output" / "amber"
-    paths["eq"]["pmd"] = paths["eq"]["root"] / "run_output" / "pmd"
-    paths["eq"]["slurm"] = paths["eq"]["root"] / "run_output" / "slurm"
-    """
 
     # define paths for all specified methods
     for method, result_dir in result_dirs.items():
