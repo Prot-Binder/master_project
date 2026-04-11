@@ -124,21 +124,21 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     first_method = method_names[0]
     first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
-    create_box_and_prmtop(cfg, ctx, first_method)
+    # create_box_and_prmtop(cfg, ctx, first_method)
     print(f"\033[92m[setup] Shared setup prepared in {first_method}\033[0m")
-
+    """
     for method_name in method_names[1:]:
         dest_setup_dir = ctx.paths[method_name]["setup"].resolve()
         _replace_directory(first_setup_dir, dest_setup_dir)
         print(f"\033[92m[setup] Copied prmotp files from {first_method} to {method_name}\033[0m")
-
+    """
     for method_name in method_names:
         if method_name != "rs_remd":
             setup_dir = cfg.paths[method_name]["setup"]
             system_pdb = setup_dir / "system.pdb"
             create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
             print(f"\033[92m[setup] Generated scaled restraint file(s) for {method_name}\033[0m")
-
+    """
     for method_name in method_names:
         setup_dir = cfg.paths[method_name]["setup"]
         method_cfg = _get_method_cfg(cfg, method_name)
@@ -153,7 +153,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
             ":" + cfg.system.ligand_residues,
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
-    
+    """
     for method_name in method_names:
        generate_inputs(str(method_name), cfg, ctx)
        print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")

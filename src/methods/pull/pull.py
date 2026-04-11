@@ -29,6 +29,8 @@ class PullMethod(BaseMethod):
         if not self._check_eq_exists(ctx.paths["eq"]["amber"]):
             raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
+        ctx.pull_job_id = {}
+
         for interval in cfg.methods.pull.pull_intervals:
             w_start = float(f"{float(interval.start):.2f}")
             w_end = float(f"{float(interval.end):.2f}")
@@ -76,9 +78,11 @@ class PullMethod(BaseMethod):
                     raise RuntimeError("sbatch failed")
 
                 pull_job_id = pull_result.stdout.strip().split()[-1]
+                prev_job_id = pull_job_id
                 ctx.pull_job_id[window] = pull_job_id
 
     def _check_eq_exists(self, eq_outdir: Path) -> bool:
-        last_rstfile = eq_outdir / "restart4"
+        last_rstfile = eq_outdir / "restrt4"
+        print("last rsfile: " + str(last_rstfile))
         return last_rstfile.exists()
 
