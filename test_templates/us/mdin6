@@ -43,8 +43,8 @@ Prod HREUS-Run for Adv-FE-Calculation
 	infe = 1,
  /
  &pmd
- 	output_file = '{OUT_PATH}pmd_prod_us{WINDOW}.txt'
+ 	output_file = '{OUT_PATH}/pmd_prod_us{WINDOW}.txt'
  	output_freq = 50
- 	cv_file = '{IN_PATH}_lroaus{WINDOW}.r'
+ 	cv_file = '{IN_PATH}/_lroaus{WINDOW}.r'
  /
 eof

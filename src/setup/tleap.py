@@ -58,6 +58,7 @@ def _compute_ion_count(volume_a3: float, factor: float = 0.00009) -> int:
 
 def run_tleap(
     *,
+    cluster: str,
     setup_dir: Path,
     pdb_path: Path,
     bond: Optional[str],
@@ -83,6 +84,7 @@ def run_tleap(
         paths.template_tleap,
         stage1_in,
         {
+            "CLUSTER": cluster,
             "PDB_PATH": str(pdb_path),
             "BOND": _bond_line_from_cfg(bond),
             "N_NA": 0,
@@ -103,6 +105,7 @@ def run_tleap(
         paths.template_tleap,
         final_in,
         {
+            "CLUSTER": cluster,
             "PDB_PATH": str(pdb_path),
             "BOND": _bond_line_from_cfg(bond),
             "N_NA": n_each,

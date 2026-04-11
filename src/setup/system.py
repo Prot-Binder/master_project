@@ -59,7 +59,12 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
         ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
     )
 
+    if cfg.setup.setup_type == "cluster":
+        cluster=""
+    else:
+        cluster="cluster/"
     prmtop, rst, n_ions_each = run_tleap(
+        cluster=cluster,
         setup_dir=setup_dir,
         pdb_path=cfg.system.pdb,
         bond=cfg.system.bond,
