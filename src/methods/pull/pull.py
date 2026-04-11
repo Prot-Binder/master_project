@@ -26,7 +26,7 @@ class PullMethod(BaseMethod):
 
         # check for dependency on equilibration job
         prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
-        if not self._check_eq_exists(ctx.paths["eq"]["amber"]):
+        if prev_job_id is None and (not self._check_eq_exists(ctx.paths["eq"]["amber"])):
             raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
         ctx.pull_job_id = {}

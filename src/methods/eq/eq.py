@@ -4,9 +4,6 @@ from src.methods.base_method import BaseMethod
 from src.config import Config
 import subprocess
 
-
-# from src.utils.shell import run
-
 class EqMethod(BaseMethod):
 
     def launch(self, cfg: Config, ctx: JobContext) -> None:
@@ -24,6 +21,11 @@ class EqMethod(BaseMethod):
         eq_cmd = [
                     "sbatch",
                     f"--job-name={job_id}_eq",
+        ]
+        if ctx.setup_job_id is not None:
+            eq_cmd.append(f"--dependency=afterok:{ctx.setup_job_id}")
+
+        eq_cmd += [
                     f"--gres=gpu:1",
                     f"--nodes=1",
                     f"--time=1-00:00:00",

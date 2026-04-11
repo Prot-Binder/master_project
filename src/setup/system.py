@@ -178,7 +178,6 @@ def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
 
     sbatch_cmd = [
         "sbatch",
-        "--wait",
         "--parsable",
         f"--job-name=setup_{cfg.system.name}_{cfg.tag}",
         "--nodes=1",
@@ -198,6 +197,7 @@ def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
         cwd=project_root,
     )
     job_id = result.stdout.strip()
+    ctx.setup_job_id = job_id
     print(f"\033[92m[setup] Cluster setup finished via Slurm job {job_id}\033[0m")
     return job_id
 
