@@ -10,9 +10,9 @@ import numpy as np
 
 class PullMethod(BaseMethod):
 
-    def launch(self, cfg: Config, ctx: JobContext) -> None:
+    def launch(self, ctx: JobContext) -> None:
         print(f"\033[92m[PULL] setting up parameters\033[0m")
-        job_id: str = str(cfg.system.name) + "_" + str(cfg.tag) + "_pull"
+        job_id: str = str(self.cfg.system.name) + "_" + str(self.cfg.tag) + "_pull"
 
         # define paths
         input_dir = ctx.paths["pull"]["input"]
@@ -22,7 +22,7 @@ class PullMethod(BaseMethod):
         result_dir = ctx.paths["pull"]["root"]
 
         # define slurm arguments
-        exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
+        exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
 
         # check for dependency on equilibration job
         prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
@@ -31,12 +31,14 @@ class PullMethod(BaseMethod):
 
         ctx.pull_job_id = {}
 
-        for interval in cfg.methods.pull.pull_intervals:
+        for interval in self.cfg.methods.pull.pull_intervals:
             w_start = float(f"{float(interval.start):.2f}")
             w_end = float(f"{float(interval.end):.2f}")
             step = float(f"{float(interval.step):.2f}")
 
             for window in np.arange(w_start, w_end + step, step):
+                window_val = float(f"{float(window):.2f}")
+                window_str = f"{window_val:.2f}"
 
                 print(f"\033[92m[PULL] submit pull window {window} \033[0m")
 
@@ -57,7 +59,7 @@ class PullMethod(BaseMethod):
                     exclude_arg,
                     f"--output={slurm_dir.resolve()}/slurm-%j_pull{window}.out",
                     f"{script_dir.resolve()}/run_pull.sh",
-                    f"{window}",
+                    f"{window_str}",
                     str(input_dir.resolve()),
                     str(amber_dir.resolve()),
                     str(ctx.paths["pull"]["top"].resolve()),

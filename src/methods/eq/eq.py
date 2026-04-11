@@ -6,16 +6,16 @@ import subprocess
 
 class EqMethod(BaseMethod):
 
-    def launch(self, cfg: Config, ctx: JobContext) -> None:
+    def launch(self, ctx: JobContext) -> None:
 
-        job_id = str(cfg.system.name) + "_" + str(cfg.tag) + "_eq"
+        job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag) + "_eq"
 
         script_dir = ctx.paths["eq"]["script"]
         eq_dir = ctx.paths["eq"]["root"]
         slurm_dir = ctx.paths["eq"]["slurm"]
         output_dir = ctx.paths["eq"]["amber"]
         input_dir = ctx.paths["eq"]["input"]
-        exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
+        exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
         
 
         eq_cmd = [
@@ -40,7 +40,7 @@ class EqMethod(BaseMethod):
                     str(input_dir.resolve()),
                     str(output_dir.resolve()),
                     str(ctx.paths["eq"]["top"].resolve()),
-                    str(int(cfg.eq.use_cpu)),
+                    str(int(self.cfg.eq.use_cpu)),
                 ]
 
         eq_result = subprocess.run(

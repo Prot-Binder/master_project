@@ -11,9 +11,9 @@ from src.methods.base_method import BaseMethod
 
 class USMethod(BaseMethod):
 
-    def launch(self, cfg: Config, ctx: JobContext) -> None:
+    def launch(self, ctx: JobContext) -> None:
         print(f"\033[92m[US] setting up parameters\033[0m")
-        job_id: str = f"{cfg.system.name}_{cfg.tag}_us"
+        job_id: str = f"{self.cfg.system.name}_{self.cfg.tag}_us"
 
         input_dir = ctx.paths["us"]["input"]
         script_dir = ctx.paths["us"]["script"]
@@ -21,13 +21,13 @@ class USMethod(BaseMethod):
         amber_dir = ctx.paths["us"]["amber"]
         result_dir = ctx.paths["us"]["root"]
 
-        exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
+        exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
 
         pull_dir = self._get_pull_dir(ctx)
 
         ctx.us_job_id = {}
 
-        for interval in cfg.methods.us.us_intervals:
+        for interval in self.cfg.methods.us.us_intervals:
             w_start = float(f"{float(interval.start):.2f}")
             w_end = float(f"{float(interval.end):.2f}")
             step = float(f"{float(interval.step):.2f}")

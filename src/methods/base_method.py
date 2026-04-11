@@ -7,5 +7,5 @@ class BaseMethod:
     def __init__(self, cfg):
         self.cfg = cfg
 
-    def launch(self, cfg: Config, ctx: JobContext) -> str:
+    def launch(self, ctx: JobContext) -> str:
         raise NotImplementedError
