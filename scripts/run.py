@@ -76,10 +76,12 @@ def main(cfg_path: str):
     # # if equilibration is requested, perform equilibration first
     # if cfg.method.eq:
     #    print("running equilibration")
+
+    # TODO: somehow order the methods, that eq > pull > all others, due to dependency issues
+    # TODO: change how methods are instantiated right? maybe think of something else?
     print("running equilibration")
     eq_method = create_eq(cfg)
-    eq_job_id = eq_method.launch(cfg, ctx)
-    ctx.eq_job_id = eq_job_id
+    eq_method.launch(cfg, ctx)
 
     pull_method = create_pull(cfg)
     pull_method.launch(cfg, ctx)

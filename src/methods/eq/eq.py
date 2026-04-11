@@ -9,7 +9,7 @@ import subprocess
 
 class EqMethod(BaseMethod):
 
-    def launch(self, cfg: Config, ctx: JobContext) -> str:
+    def launch(self, cfg: Config, ctx: JobContext) -> None:
 
         job_id = str(cfg.system.name) + "_" + str(cfg.tag) + "_eq"
 
@@ -56,4 +56,3 @@ class EqMethod(BaseMethod):
 
         eq_job_id = eq_result.stdout.strip().split()[-1]
         ctx.eq_job_id = eq_job_id
-        return eq_job_id

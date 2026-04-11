@@ -10,24 +10,24 @@ import numpy as np
 
 class PullMethod(BaseMethod):
 
-    def launch(self, cfg: Config, ctx: JobContext) -> str:
+    def launch(self, cfg: Config, ctx: JobContext) -> None:
         print(f"\033[92m[PULL] setting up parameters\033[0m")
         job_id: str = str(cfg.system.name) + "_" + str(cfg.tag) + "_pull"
 
+        # define paths
         input_dir = ctx.paths["pull"]["input"]
         script_dir = ctx.paths["pull"]["script"]  # .resolve()
         slurm_dir = ctx.paths["pull"]["slurm"]
         amber_dir = ctx.paths["pull"]["amber"]
         result_dir = ctx.paths["pull"]["root"]
-        # TODO: adjust handling of eq dir: where exactly is the input stored in general?; or remove here
-        # eq_dir = cfg.paths["eq_dir"].resolve()
 
+        # define slurm arguments
         exclude_arg = f"--exclude={','.join(cfg.cluster.exclude_ranks)}"
 
-        # TODO: adjust this so that we write window and id pairs in here
-        last_job_id = None
-        ctx.job_ids.setdefault("pull", [])
+        # check for dependency on equilibration job
         prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
+        if not self._check_eq_exists(ctx.paths["eq"]["amber"]):
+            raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
         for interval in cfg.methods.pull.pull_intervals:
             w_start = float(f"{float(interval.start):.2f}")
@@ -75,9 +75,10 @@ class PullMethod(BaseMethod):
                     print("STDERR:\n", pull_result.stderr)
                     raise RuntimeError("sbatch failed")
 
-                # TODO: adjust some stuff here for correct writing
                 pull_job_id = pull_result.stdout.strip().split()[-1]
-                ctx.job_ids["pull"].append(pull_job_id)
-                last_job_id = pull_job_id
+                ctx.pull_job_id[window] = pull_job_id
 
-        return last_job_id
+    def _check_eq_exists(self, eq_outdir: Path) -> bool:
+        last_rstfile = eq_outdir / "restart4"
+        return last_rstfile.exists()
+
