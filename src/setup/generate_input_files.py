@@ -88,26 +88,27 @@ def generate_pull(cfg, ctx):
         mdin_file = pull_dir / "mdin5"
         restraint_file = pull_dir / "pull.r"
         for window in np.arange(w_start, w_end + step, step):
-
+            window_val = float(f"{float(window):.2f}")
+            window_str = f"{window_val:.2f}"
             mdin_text = (mdin_file.read_text()
-                         .replace("{WINDOW}", str(window))
+                         .replace("{WINDOW}", str(window_str))
                          .replace("{IN_PATH}", str(input_path))
                          .replace("{OUT_PATH}", str(output_path))
                          .replace("{NSTLIM}", str(int(cfg.methods.pull.nstlim))))
-            mdin_output_file = pull_dir/f"mdin5.w{window}"
+            mdin_output_file = pull_dir/f"mdin5.w{window_str}"
             mdin_output_file.write_text(mdin_text)
 
-            window_prev = float(f"{window - step:.2f}") if window - step >= w_start else float(f"{window:.2f}")
+            window_prev = float(f"{window - step:.2f}") if window - step >= w_start else window_val
             kappa_init = kappa / 2.0
             total_steps = float(cfg.methods.pull.nstlim)
             restraint_text = (restraint_file.read_text()
-                              .replace("{WINDOW}", str(window))
+                              .replace("{WINDOW}", str(window_str))
                               .replace("{WINDOW_PREV}", str(window_prev))
                               .replace("{KAPPA}", str(kappa))
                               .replace("{KAPPA_INIT}", str(kappa_init))
                               .replace("{TOTAL_STEPS}", str(total_steps))
                               )
-            restraint_output_file = pull_dir/f"pull{window}.r"
+            restraint_output_file = pull_dir/f"pull{window_str}.r"
             restraint_output_file.write_text(restraint_text)
 
 def generate_us(cfg, ctx):
@@ -141,18 +142,20 @@ def generate_us(cfg, ctx):
         mdin_file = dest_dir / "mdin6"
         restraint_file = dest_dir / "_lroaus.r"
         for window in np.arange(w_start, w_end + step, step):
+            window_val = float(f"{float(window):.2f}")
+            window_str = f"{window_val:.2f}"
 
             mdin_text = (mdin_file.read_text()
-                    .replace("{WINDOW}", str(window))
-                    .replace("{IN_PATH}", input_path)
-                    .replace("{OUT_PATH}", output_path))
-            mdin_output_file = dest_dir / f"mdin6.w{window}"
+                    .replace("{WINDOW}", str(window_str))
+                    .replace("{IN_PATH}", str(input_path))
+                    .replace("{OUT_PATH}", str(output_path)))
+            mdin_output_file = dest_dir / f"mdin6.w{window_str}"
             mdin_output_file.write_text(mdin_text)
 
             restraint_text = (restraint_file.read_text()
-                              .replace("{WINDOW}", str(window))
+                              .replace("{WINDOW}", str(window_str))
                               .replace("{KAPPA}", str(interval.k)))
-            restraint_output_file = dest_dir / f"_lroaus{window}.r"
+            restraint_output_file = dest_dir / f"_lroaus{window_str}.r"
             restraint_output_file.write_text(restraint_text)
 
 
