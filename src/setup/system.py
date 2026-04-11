@@ -126,7 +126,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
 
     create_box_and_prmtop(cfg, ctx, first_method)
     print(f"\033[92m[setup] Shared setup prepared in {first_method}\033[0m")
-
+    """
     for method_name in method_names[1:]:
         dest_setup_dir = ctx.paths[method_name]["setup"].resolve()
         _replace_directory(first_setup_dir, dest_setup_dir)
@@ -153,7 +153,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
             ":" + cfg.system.ligand_residues,
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
-
+    """
     for method_name in method_names:
        generate_inputs(str(method_name), cfg, ctx)
        print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
