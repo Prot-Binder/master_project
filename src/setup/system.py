@@ -128,7 +128,7 @@ def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
 
     project_root = _project_root().resolve()
     python_exe = Path(sys.executable).resolve()
-    wrap_cmd = "cd {root} && module load ambertools && {python} -m src.setup.run_setup_job {cfg_path}".format(
+    wrap_cmd = "bash -lc cd {root} && module load ambertools && {python} -m src.setup.run_setup_job {cfg_path}".format(
         root=shlex.quote(str(project_root)),
         python=shlex.quote(str(python_exe)),
         cfg_path=shlex.quote(str(cfg_path.resolve())),

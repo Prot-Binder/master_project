@@ -34,7 +34,7 @@ class USMethod(BaseMethod):
 
             for window in np.arange(w_start, w_end + step, step):
                 window = float(f"{float(window):.2f}")
-                window_str = f"{window_val:.2f}"
+                window_str = f"{window:.2f}"
                 dependency_job_id = self._resolve_pull_dependency(window, pull_dir, ctx)
 
                 print(f"\033[92m[US] submit us window {window}\033[0m")
