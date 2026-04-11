@@ -131,8 +131,6 @@ def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
 
     wrap_cmd = (
         "bash -lc 'cd {root} && "
-        "source /etc/profile && "
-        "module load ambertools && "
         "{python} -m src.setup.run_setup_job {cfg_path}'"
     ).format(
         root=shlex.quote(str(project_root)),
