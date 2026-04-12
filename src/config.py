@@ -475,21 +475,29 @@ def compute_paths(cfg: Config) -> dict:
     paths["root"] = root_dir
     paths["templates"] = Path("test_templates") if cfg.test else Path("templates")
 
+    def _method_paths(method: str, result_dir: Path) -> dict[str, Path]:
+        method_paths = {}
+        method_paths["script"] = Path("src") / "methods" / method
+        method_paths["setup"] = result_dir / "setup"
+        method_paths["top"] = result_dir / "top"
+        method_paths["root"] = result_dir
+        method_paths["input"] = result_dir / "input"
+        method_paths["amber"] = method_paths["root"] / "run_output" / "amber"
+        method_paths["pmd"] = method_paths["root"] / "run_output" / "pmd"
+        method_paths["slurm"] = method_paths["root"] / "run_output" / "slurm"
+        return method_paths
 
     # define paths for all specified methods
     for method, result_dir in result_dirs.items():
-        paths[method] = {}
-        paths[method]["script"] = Path("src") / "methods" / method
-        paths[method]["setup"] = result_dir / "setup"
-        paths[method]["top"] = result_dir / "top"
-        paths[method]["root"] = result_dir
-        paths[method]["input"] = result_dir / "input"
-        paths[method]["amber"] = paths[method]["root"] / "run_output" / "amber"
-        paths[method]["pmd"] = paths[method]["root"] / "run_output" / "pmd"
-        paths[method]["slurm"] = paths[method]["root"] / "run_output" / "slurm"
-
+        paths[method] = _method_paths(method, result_dir)
         if method == "rs_remd":
             paths["rs_remd"]["eq"] = paths["rs_remd"]["root"] / "eq"
+
+    for method in ("eq", "pull"):
+        if method in paths:
+            continue
+        result_dir = root_dir / method
+        paths[method] = _method_paths(method, result_dir)
 
     return paths
 
