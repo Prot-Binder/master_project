@@ -145,7 +145,7 @@ class RSREMDMethod(BaseMethod):
             f"--time=2-00:00:00",
             f"--ntasks={self.cfg.methods.rs_remd.n_rep}",
             f"--cpus-per-task=1",
-            f"--constraints={self.cfg.methods.rs_remd.constraints}",
+            f"--constraint={self.cfg.methods.rs_remd.constraints}",
             exclude_arg,
             f"--output={slurm_dir.resolve()}/slurm-%j_rsremd.out",
             f"{script_dir.resolve()}/run_rsremd_prod.sh",

@@ -133,7 +133,7 @@ class RSREMDCfg(MethodCfgBase):
     numexchg: int
     ngpu: int
     partition: Optional[str] = None
-    constraints: Optional[str] = None
+    constraint: Optional[str] = None
 
 @dataclass(frozen=True)
 class USREMDCfg(MethodCfgBase):
@@ -363,7 +363,7 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         numexchg=int(_require(rs_raw, "numexchg", "methods.rs_remd")),
         ngpu=int(_require(rs_raw, "ngpu", "methods.rs_remd")),
         partition=str(rs_raw["partition"]) if rs_raw.get("partition") is not None else None,
-        constraints=str(rs_raw["constraints"]) if rs_raw.get("constraints") is not None else None,
+        constraint=str(rs_raw["constraint"]) if rs_raw.get("constraint") is not None else None,
     )
 
 # TODO: maybe adjust it based on if we allow multi k / intervals or not; also a start/stop/end/step would be nice here;
