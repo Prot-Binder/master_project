@@ -139,7 +139,7 @@ class RSREMDMethod(BaseMethod):
             rsremd_prod.append(f"--partition={self.cfg.methods.rs_remd.partition}")
 
         if self.cfg.methods.rs_remd.constraint is not None:
-            rsremd_prod.append("--constraint={self.cfg.methods.rs_remd.constraint}")
+            rsremd_prod.append(f"--constraint={self.cfg.methods.rs_remd.constraint}")
 
 
         input_file = input_dir.resolve() / "rs_remd.groupfile"

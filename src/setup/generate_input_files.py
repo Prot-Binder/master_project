@@ -210,7 +210,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
         mdin_output_file.write_text(mdin_text)
 
     # generate rsremd group file
-    lines = ["RS-REMD groupfile (Hamiltonian Replica Exchange Molecular Dynamics)\n"]
+    lines = ["# RS-REMD groupfile (Hamiltonian Replica Exchange Molecular Dynamics)\n"]
     in_dir = ctx.paths["rs_remd"]["input"].resolve()
     out_dir = ctx.paths["rs_remd"]["amber"].resolve()
     top_dir = ctx.paths["rs_remd"]["top"].resolve()
