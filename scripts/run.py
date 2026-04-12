@@ -70,6 +70,7 @@ def main(cfg_path: str):
     cfg.paths = paths
     ctx = JobContext()
     ctx.paths = paths
+    ctx.cfg_path = str(Path(cfg_path).resolve())
     setup_id = setup_simulation(cfg, ctx, Path(cfg_path).resolve())
     # setup_id = None
     print(f"\033[92m[setup] Setup completed with ID {setup_id}\033[0m")

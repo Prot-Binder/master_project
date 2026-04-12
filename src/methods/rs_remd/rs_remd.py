@@ -1,8 +1,10 @@
+import subprocess
+import shlex
+import sys
+from pathlib import Path
+
 from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
-import subprocess
-
-from src.methods.rs_remd.rs_remd_setup import setup_rs_remd
 from src.utils.check_eq_exists import check_eq_exists
 
 
@@ -11,8 +13,8 @@ class RSREMDMethod(BaseMethod):
     def launch(self, ctx: JobContext) -> None:
 
         self._submit_eq_simulation(ctx)
-        setup_rs_remd(self.cfg, ctx)
-        self._submit_prod_simulation()
+        self._submit_setup_job(ctx)
+        self._submit_prod_simulation(ctx)
 
 
     def _submit_eq_simulation(self, ctx: JobContext):
@@ -67,8 +69,53 @@ class RSREMDMethod(BaseMethod):
             print("STDERR:\n", rsremd_eq_result.stderr)
             raise RuntimeError("sbatch failed")
 
-        rsremd_eq_result = rsremd_eq_result.stdout.strip().split()[-1]
-        ctx.rsremd_eq_result = rsremd_eq_result
+        rsremd_eq_job_id = rsremd_eq_result.stdout.strip().split()[-1]
+        ctx.rsremd_eq_job_id = rsremd_eq_job_id
 
-    def _submit_prod_simulation(self):
+    def _submit_setup_job(self, ctx: JobContext) -> None:
+        if ctx.cfg_path is None:
+            raise ValueError("ctx.cfg_path is required to submit the RS-REMD setup job.")
+        if ctx.rsremd_eq_job_id is None:
+            raise ValueError("ctx.rsremd_eq_job_id is required before submitting the RS-REMD setup job.")
+
+        project_root = Path(__file__).resolve().parents[3]
+        python_exe = Path(sys.executable).resolve()
+        slurm_dir = ctx.paths["rs_remd"]["slurm"]
+        result_dir = ctx.paths["rs_remd"]["root"]
+
+        wrap_cmd = "cd {root} && {python} -m src.methods.rs_remd.run_rsremd_setup_job {cfg_path}".format(
+            root=shlex.quote(str(project_root)),
+            python=shlex.quote(str(python_exe)),
+            cfg_path=shlex.quote(str(Path(ctx.cfg_path).resolve())),
+        )
+
+        rsremd_setup_cmd = [
+            "sbatch",
+            f"--job-name={self.cfg.system.name}_{self.cfg.tag}_rsremd_setup",
+            f"--dependency=afterok:{ctx.rsremd_eq_job_id}",
+            "--nodes=1",
+            "--ntasks=1",
+            "--cpus-per-task=1",
+            "--time=00:30:00",
+            f"--output={slurm_dir.resolve()}/slurm-%j_rsremd_setup.out",
+            "--wrap",
+            wrap_cmd,
+        ]
+
+        rsremd_setup_result = subprocess.run(
+            rsremd_setup_cmd,
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=result_dir.resolve(),
+        )
+
+        if rsremd_setup_result.returncode != 0:
+            print("STDOUT:\n", rsremd_setup_result.stdout)
+            print("STDERR:\n", rsremd_setup_result.stderr)
+            raise RuntimeError("sbatch failed")
+
+        ctx.rsremd_setup_job_id = rsremd_setup_result.stdout.strip().split()[-1]
+
+    def _submit_prod_simulation(self, ctx: JobContext):
         pass

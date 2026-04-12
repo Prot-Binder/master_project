@@ -5,10 +5,12 @@ from dataclasses import dataclass, field
 @dataclass
 class JobContext:
     paths: dict = field(default_factory=dict)
+    cfg_path: str | None = None
     setup_job_id: str | None = None
     eq_job_id: str | None = None
     pull_job_id: dict[float, str] | None = None
     us_job_id: dict[float, str] | None = None
     rsremd_eq_job_id: str | None = None
+    rsremd_setup_job_id: str | None = None
     rsremd_prod_job_id: dict[int, str] | None = None
     com_distance: float | None = None

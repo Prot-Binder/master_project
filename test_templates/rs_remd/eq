@@ -15,10 +15,7 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 	iwrap=0,
 
 	! FROZEN OR RESTRAINT ATOMS
-	ntr=1,
-	restraint_wt=1.0,
-	restraintmask='(!:WAT & !@H=)',
-
+	ntr=0,
 
 	! MOLECULAR DYNAMICS
 	nstlim=5000,
