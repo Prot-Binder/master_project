@@ -204,7 +204,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
                      .replace("{NUMEXCHG}", str(cfg.methods.rs_remd.numexchg))
                      .replace("{IN_PATH}", str(input_path))
                      .replace("{OUT_PATH}", str(output_path))
-                     .replce("{REPLICA}", str(rep)))
+                     .replace("{REPLICA}", str(rep)))
         mdin_output_file = rs_remd_input_dir / f"mdin_rsremd_rep{rep}"
         mdin_output_file.write_text(mdin_text)
 
