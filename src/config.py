@@ -151,10 +151,8 @@ class Config:
     tag: str
     test: bool
     cluster: ClusterCfg
-    eq: EqCfg
     system: SystemCfg
     setup: SetupCfg
-    pull: Optional[PullCfg]
     paths: dict
     methods: MethodsCfg
 
@@ -168,13 +166,13 @@ class Config:
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
 
-        if self.eq.execute:
+        if self.methods.eq.execute:
             if len(self.eq.d) == 0 or len(self.eq.e) == 0:
                 raise ValueError("eq requires non-empty d and e values.")
             if self.eq.nstlim <= 0:
                 raise ValueError("eq.nstlim must be > 0")
 
-        if self.pull is not None:
+        if self.methods.pull is not None:
             if len(self.pull.d) == 0 or len(self.pull.e) == 0:
                 raise ValueError("pull requires non-empty d and e values.")
             if self.pull.stride <= 0:
