@@ -6,14 +6,7 @@ from pathlib import Path
 from src.config import compute_paths, load_config
 from src.methods.JobContext import JobContext
 from src.methods.rs_remd.rs_remd_setup import setup_rs_remd
-
-
-def _create_directories(paths: dict) -> None:
-    for value in paths.values():
-        if isinstance(value, dict):
-            _create_directories(value)
-        elif isinstance(value, Path):
-            value.mkdir(parents=True, exist_ok=True)
+from src.utils.create_directories import _create_directories
 
 
 def main(cfg_path: str) -> None:

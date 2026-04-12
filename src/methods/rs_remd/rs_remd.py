@@ -38,7 +38,7 @@ class RSREMDMethod(BaseMethod):
             f"--job-name={job_id}_rsremd_eq",
         ]
         if ctx.setup_job_id is not None:
-            rsremd_eq.append(f"--dependency=afterok:{ctx.setup_job_id}")
+            rsremd_eq.append(f"--dependency=afterok:{prev_job_id}")
 
         rsremd_eq += [
             f"--gres=gpu:1",

@@ -7,7 +7,7 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 	irest=1,
 	ntx=5,
 	ntwr=10000,    ! Number of timesteps to write out a backup restrt file
-	ntwx=10000,
+	ntwx=1000,
 
 	! NATURE AND FORMAT OF THE OUTPUT
 	ntxo=2,
