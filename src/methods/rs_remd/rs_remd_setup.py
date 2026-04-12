@@ -6,13 +6,13 @@ from src.setup.generate_input_files import generate_rs_remd_prod
 
 
 def calculate_com_distance(ctx, cfg) -> float:
-    receptor_start = cfg.protein_residues.split("-")[0]
-    receptor_end = cfg.protein_residues.split("-")[1]
+    receptor_start = cfg.system.protein_residues.split("-")[0]
+    receptor_end = cfg.system.protein_residues.split("-")[1]
 
-    ligand_start = cfg.ligand_residues.split("-")[0]
-    ligand_end = cfg.ligand_residues.split("-")[1]
+    ligand_start = cfg.system.ligand_residues.split("-")[0]
+    ligand_end = cfg.system.ligand_residues.split("-")[1]
 
-    highest_replica_scaling = cfg.methods.rs_remd.nrep
+    highest_replica_scaling = cfg.methods.rs_remd.n_rep
     top_path = str(ctx.paths["rs_remd"]["top"] / f"prmtop{highest_replica_scaling}")
     output_path = ctx.paths["rs_remd"]["root"] / "run_output"
     output_file = f"{output_path}/com_distance_{cfg.system.name}.dat"

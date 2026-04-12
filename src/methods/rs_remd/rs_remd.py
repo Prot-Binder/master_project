@@ -46,7 +46,7 @@ class RSREMDMethod(BaseMethod):
             f"--cpus-per-task=1",
             exclude_arg,
             f"--output={slurm_dir.resolve()}/slurm-%j_rsremd_eq.out",
-            f"{script_dir.resolve()}/run_pull.sh",
+            f"{script_dir.resolve()}/rsremd_eq.sh",
             str(input_dir.resolve()),
             str(output_dir.resolve()),
             str(ctx.paths["rs_remd"]["top"].resolve()),
