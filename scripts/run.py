@@ -80,8 +80,8 @@ def main(cfg_path: str):
     # if cfg.method.eq:
     #    print("running equilibration")
 
-    # method_names = get_configured_method_names(cfg)
-    method_names = []
+    method_names = get_configured_method_names(cfg)
+    # method_names = []
     for method_name in method_names:
         print(f"running {method_name}")
         method = select_method(method_name, cfg)

@@ -18,7 +18,7 @@ def calculate_com_distance(ctx, cfg) -> float:
     output_file = f"{output_path}/com_distance_{cfg.system.name}.dat"
 
     # trajectory is
-    traj_path = str(ctx.paths["rs_remd"]["eq"] / "traj_eq.nc")
+    traj_path = str(ctx.paths["rs_remd"]["eq"] / "traj_rsremd_eq.nc")
     cpptraj_in = f"""
     parm {top_path}
     trajin {traj_path}

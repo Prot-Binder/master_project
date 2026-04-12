@@ -7,6 +7,8 @@ from src.config import Config
 import subprocess
 import numpy as np
 
+from src.utils.check_eq_exists import check_eq_exists
+
 
 class PullMethod(BaseMethod):
 
@@ -26,7 +28,7 @@ class PullMethod(BaseMethod):
 
         # check for dependency on equilibration job
         prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
-        if prev_job_id is None and (not self._check_eq_exists(ctx.paths["eq"]["amber"])):
+        if prev_job_id is None and (not check_eq_exists(ctx.paths["eq"]["amber"])):
             raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
         ctx.pull_job_id = {}
@@ -82,8 +84,3 @@ class PullMethod(BaseMethod):
                 pull_job_id = pull_result.stdout.strip().split()[-1]
                 prev_job_id = pull_job_id
                 ctx.pull_job_id[window] = pull_job_id
-
-    def _check_eq_exists(self, eq_outdir: Path) -> bool:
-        last_rstfile = eq_outdir / "restrt4"
-        return last_rstfile.exists()
-

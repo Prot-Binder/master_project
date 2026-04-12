@@ -16,3 +16,7 @@ class RSREMDMethod(BaseMethod):
         #     run(["sbatch", "submit_rs_remd.slurm"], cwd=run_dir)
         # else:
         #     pass
+
+
+def rs_remd_setup():
+    return None
