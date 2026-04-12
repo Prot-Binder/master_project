@@ -129,12 +129,13 @@ class USCfg(MethodCfgBase):
 class RSREMDCfg(MethodCfgBase):
     n_rep: int
     k: float
+    nstlim_eq: int
+    numexchg: int
 
 @dataclass(frozen=True)
 class USREMDCfg(MethodCfgBase):
     n_rep: int
     k: float
-
 
 @dataclass(frozen=True)
 class MethodsCfg:
@@ -357,6 +358,8 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         nstlim=_as_int(rs_raw.get("nstlim", 2500000), "methods.rs_remd.nstlim"),
         n_rep=int(_require(rs_raw, "n_rep", "methods.rs_remd")),
         k=float(_require(rs_raw, "k", "methods.rs_remd")),
+        nstlim_eq=int(_require(rs_raw, "nstlim_eq", "methods.rs_remd")),
+        numexchg=int(_require(rs_raw, "numexchg", "methods.rs_remd")),
     )
 
 # TODO: maybe adjust it based on if we allow multi k / intervals or not; also a start/stop/end/step would be nice here;

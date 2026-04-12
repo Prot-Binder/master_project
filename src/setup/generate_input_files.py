@@ -5,15 +5,6 @@ from pathlib import Path
 import numpy as np
 # TODO: change the way the directory paths are passed / created in this file
 
-
-def _configured_method_names(cfg) -> list[str]:
-    method_names = []
-    for method_field in fields(cfg.methods):
-        method_cfg = getattr(cfg.methods, method_field.name)
-        if method_cfg is not None:
-            method_names.append(method_field.name)
-    return method_names
-
 def copy_template_files(ctx, method: str) -> None:
 
     template_dir = ctx.paths["templates"].resolve() / method

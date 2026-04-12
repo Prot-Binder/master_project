@@ -9,16 +9,7 @@ from src.setup.hmr import ParmEdPaths, run_hmr
 from src.setup.restraints import create_restraints
 from src.setup.generate_topology import generate_scaled_top_files
 from src.setup.generate_input_files import generate_inputs
-
-
-def _configured_method_names(cfg) -> list[str]:
-    method_names = []
-    for method_field in fields(cfg.methods):
-        method_cfg = getattr(cfg.methods, method_field.name)
-        if method_cfg is not None:
-            method_names.append(method_field.name)
-    return method_names
-
+from src.utils.iterate_configured_methods import get_configured_method_names
 
 def _replace_directory(src_dir: Path, dest_dir: Path) -> None:
     if src_dir.resolve() == dest_dir.resolve():
@@ -82,27 +73,25 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
     return prmtop, rst, n_ions_each
 
 def _run_setup_pipeline(cfg, ctx) -> None:
-    method_names = _configured_method_names(cfg)
+    method_names = get_configured_method_names(cfg)
     if len(method_names) == 0:
         raise ValueError("No methods configured in cfg.methods.")
     
     first_method = method_names[0]
     first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
+    # run tleap and HMR
     create_box_and_prmtop(cfg, ctx, first_method)
+    # create restraint template files
+    system_pdb = first_setup_dir / "system.pdb"
+    create_restraints(first_setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
     print(f"\033[92m[setup] Shared setup prepared in {first_method}\033[0m")
 
+    #copy shared setup files from first method to all other methods;
     for method_name in method_names[1:]:
         dest_setup_dir = ctx.paths[method_name]["setup"].resolve()
         _replace_directory(first_setup_dir, dest_setup_dir)
-        print(f"\033[92m[setup] Copied prmotp files from {first_method} to {method_name}\033[0m")
-
-    for method_name in method_names:
-        if method_name != "rs_remd":
-            setup_dir = cfg.paths[method_name]["setup"]
-            system_pdb = setup_dir / "system.pdb"
-            create_restraints(setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
-            print(f"\033[92m[setup] Generated scaled restraint file(s) for {method_name}\033[0m")
+        print(f"\033[92m[setup] Copied setup files from {first_method} to {method_name}\033[0m")
 
     for method_name in method_names:
         setup_dir = cfg.paths[method_name]["setup"]
@@ -125,7 +114,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
 
 
 def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
-    method_names = _configured_method_names(cfg)
+    method_names = get_configured_method_names(cfg)
     if len(method_names) == 0:
         raise ValueError("No methods configured in cfg.methods.")
 
