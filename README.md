@@ -4,3 +4,11 @@ potential error: currently, we use absolut paths to specify the DISANG etc. file
 
 
 remember to load ambertools so that tleap is availabe on the cluster.
+
+pull:
+we can specify nstlim; the first 100,000 steps are used to pull the system with a lower force constant: from k/2 to k. 
+
+rs-remd:
+setup (e.g. restraint file for pulling to equilibrium distance and _lroaus restraints) can only be created once the eq.
+was performed as the eq. distance is needed to create the restraint file for the pulling step and the _lroaus restraints.
+So first perform the eq. and then create the setup for rs-remd.

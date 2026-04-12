@@ -489,6 +489,9 @@ def compute_paths(cfg: Config) -> dict:
         paths[method]["pmd"] = paths[method]["root"] / "run_output" / "pmd"
         paths[method]["slurm"] = paths[method]["root"] / "run_output" / "slurm"
 
+        if method == "rs_remd":
+            paths["rs_remd"]["eq"] = paths["rs_remd"]["root"] / "eq"
+
     return paths
 
 
