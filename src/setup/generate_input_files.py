@@ -211,12 +211,13 @@ def generate_rs_remd_prod(cfg: dict, ctx):
 
     # generate rsremd group file
     lines = ["RS-REMD groupfile (Hamiltonian Replica Exchange Molecular Dynamics)\n"]
+    in_dir = ctx.paths["rs_remd"]["input"].resolve()
     out_dir = ctx.paths["rs_remd"]["amber"].resolve()
     top_dir = ctx.paths["rs_remd"]["top"].resolve()
     coord_init = str(ctx.paths["rs_remd"]["eq"] / "restrt_rsremd_eq")
     for rep in range(1, cfg.methods.rs_remd.n_rep+1):
         line = (
-            f"-i mdin_rsremd_rep{rep} "
+            f"-i {in_dir}/mdin_rsremd_rep{rep} "
             f"-c {coord_init} "
             f"-p {top_dir}/prmtop{rep} "
             f"-r {out_dir}/restrt_rs_rep{rep} "

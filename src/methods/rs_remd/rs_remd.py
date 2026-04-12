@@ -123,10 +123,8 @@ class RSREMDMethod(BaseMethod):
         prev_job_id = ctx.rsremd_setup_job_id if ctx.rsremd_setup_job_id is not None else None
 
         script_dir = ctx.paths["rs_remd"]["script"]
-        # change
         result_dir = ctx.paths["rs_remd"]["root"]
         slurm_dir = ctx.paths["rs_remd"]["slurm"]
-        output_dir = ctx.paths["rs_remd"]["amber"]
         input_dir = ctx.paths["rs_remd"]["input"]
         exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
 
