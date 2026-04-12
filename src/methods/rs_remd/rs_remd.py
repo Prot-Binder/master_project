@@ -37,7 +37,7 @@ class RSREMDMethod(BaseMethod):
             "sbatch",
             f"--job-name={job_id}_rsremd_eq",
         ]
-        if ctx.setup_job_id is not None:
+        if prev_job_id is not None:
             rsremd_eq.append(f"--dependency=afterok:{prev_job_id}")
 
         rsremd_eq += [
@@ -48,7 +48,7 @@ class RSREMDMethod(BaseMethod):
             f"--cpus-per-task=1",
             exclude_arg,
             f"--output={slurm_dir.resolve()}/slurm-%j_rsremd_eq.out",
-            f"{script_dir.resolve()}/rsremd_eq.sh",
+            f"{script_dir.resolve()}/run_rsremd_eq.sh",
             str(input_dir.resolve()),
             str(output_dir.resolve()),
             str(ctx.paths["rs_remd"]["top"].resolve()),
@@ -118,4 +118,55 @@ class RSREMDMethod(BaseMethod):
         ctx.rsremd_setup_job_id = rsremd_setup_result.stdout.strip().split()[-1]
 
     def _submit_prod_simulation(self, ctx: JobContext):
-        pass
+        job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
+
+        prev_job_id = ctx.rsremd_setup_job_id if ctx.rsremd_setup_job_id is not None else None
+
+        script_dir = ctx.paths["rs_remd"]["script"]
+        # change
+        result_dir = ctx.paths["rs_remd"]["root"]
+        slurm_dir = ctx.paths["rs_remd"]["slurm"]
+        output_dir = ctx.paths["rs_remd"]["amber"]
+        input_dir = ctx.paths["rs_remd"]["input"]
+        exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
+
+        rsremd_prod = [
+            "sbatch",
+            f"--job-name={job_id}_rsremd",
+        ]
+        if prev_job_id is not None:
+            rsremd_prod.append(f"--dependency=afterok:{prev_job_id}")
+
+        if self.cfg.methods.rs_remd.partition is not None:
+            rsremd_prod.append(f"--partition={self.cfg.methods.rs_remd.partition}")
+
+        input_file = input_dir.resolve() / "rs_remd.groupfile"
+        rsremd_prod += [
+            f"--gres=gpu:{self.cfg.methods.rs_remd.ngpu}",
+            f"--nodes=1",
+            f"--time=2-00:00:00",
+            f"--ntasks={self.cfg.methods.rs_remd.n_rep}",
+            f"--cpus-per-task=1",
+            f"--constraints={self.cfg.methods.rs_remd.constraint}",
+            exclude_arg,
+            f"--output={slurm_dir.resolve()}/slurm-%j_rsremd.out",
+            f"{script_dir.resolve()}/run_rsremd_prod.sh",
+            str(self.cfg.methods.rs_remd.n_rep),
+            str(input_file),
+        ]
+
+        rsremd_prod_result = subprocess.run(
+            rsremd_prod,
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=result_dir.resolve(),
+        )
+
+        if rsremd_prod_result.returncode != 0:
+            print("STDOUT:\n", rsremd_prod_result.stdout)
+            print("STDERR:\n", rsremd_prod_result.stderr)
+            raise RuntimeError("sbatch failed")
+
+        rsremd_prod_job_id = rsremd_prod_result.stdout.strip().split()[-1]
+        ctx.rsremd_prod_job_id = rsremd_prod_job_id

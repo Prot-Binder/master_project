@@ -198,6 +198,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     restraint_file = rs_remd_input_dir / "_lroaus.r"
     com_window = float(f"{ctx.com_distance:.2f}")
 
+    # generate mdin files for each replica with correct number of steps and exchange frequency
     for rep in range(1,cfg.methods.rs_remd.n_rep+1):
         mdin_text = (mdin_file.read_text()
                      .replace("{NSTLIM}", str(cfg.methods.rs_remd.nstlim))
@@ -208,6 +209,26 @@ def generate_rs_remd_prod(cfg: dict, ctx):
         mdin_output_file = rs_remd_input_dir / f"mdin_rsremd_rep{rep}"
         mdin_output_file.write_text(mdin_text)
 
+    # generate rsremd group file
+    lines = ["RS-REMD groupfile (Hamiltonian Replica Exchange Molecular Dynamics)\n"]
+    out_dir = ctx.paths["rs_remd"]["amber"].resolve()
+    top_dir = ctx.paths["rs_remd"]["top"].resolve()
+    coord_init = str(ctx.paths["rs_remd"]["eq"] / "restrt_rsremd_eq")
+    for rep in range(1, cfg.methods.rs_remd.n_rep+1):
+        line = (
+            f"-i mdin_rsremd_rep{rep} "
+            f"-c {coord_init} "
+            f"-p {top_dir}/prmtop{rep} "
+            f"-r {out_dir}/restrt_rs_rep{rep} "
+            f"-o {out_dir}/mdout_rs_rep{rep} "
+            f"-x {out_dir}/traj_rs_rep{rep}.nc "
+            f"-inf {out_dir}/mdinfo_rs_rep{rep}\n"
+        )
+        lines.append(line)
+    groupfile_path = rs_remd_input_dir / "rs_remd.groupfile"
+    groupfile_path.write_text("".join(lines))
+
+    # adjust _lroaus.r file for rs_remd production run
     restraint_text = (restraint_file.read_text()
                       .replace("{WINDOW}", str(f"{com_window:.2f}"))
                       .replace("{KAPPA}", str(cfg.methods.rs_remd.k)))

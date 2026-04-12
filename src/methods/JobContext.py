@@ -12,5 +12,5 @@ class JobContext:
     us_job_id: dict[float, str] | None = None
     rsremd_eq_job_id: str | None = None
     rsremd_setup_job_id: str | None = None
-    rsremd_prod_job_id: dict[int, str] | None = None
+    rsremd_prod_job_id: str | None = None
     com_distance: float | None = None
