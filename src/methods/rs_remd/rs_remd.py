@@ -138,6 +138,10 @@ class RSREMDMethod(BaseMethod):
         if self.cfg.methods.rs_remd.partition is not None:
             rsremd_prod.append(f"--partition={self.cfg.methods.rs_remd.partition}")
 
+        if self.cfg.methods.rs_remd.constraint is not None:
+            rsremd_prod.append("--constraint={self.cfg.methods.rs_remd.constraint}")
+
+
         input_file = input_dir.resolve() / "rs_remd.groupfile"
         rsremd_prod += [
             f"--gres=gpu:{self.cfg.methods.rs_remd.ngpu}",
@@ -145,7 +149,6 @@ class RSREMDMethod(BaseMethod):
             f"--time=2-00:00:00",
             f"--ntasks={self.cfg.methods.rs_remd.n_rep}",
             f"--cpus-per-task=1",
-            f"--constraint={self.cfg.methods.rs_remd.constraint}",
             exclude_arg,
             f"--output={slurm_dir.resolve()}/slurm-%j_rsremd.out",
             f"{script_dir.resolve()}/run_rsremd_prod.sh",
