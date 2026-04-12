@@ -26,12 +26,6 @@ setup:
   # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
 
 methods:
-  eq:
-    name: "eq"
-    d: 0.9
-    e: 0.9
-    execute: True
-    use_cpu: True
   rs_remd:
     name: rs_remd
     n_rep: 4

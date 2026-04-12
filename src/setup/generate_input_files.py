@@ -198,7 +198,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     restraint_file = rs_remd_input_dir / "_lroaus.r"
     com_window = float(f"{ctx.com_distance:.2f}")
 
-    for rep in range(1,cfg.methods.rs_remd.nrep+1):
+    for rep in range(1,cfg.methods.rs_remd.n_rep+1):
         mdin_text = (mdin_file.read_text()
                      .replace("{NSTLIM}", str(cfg.methods.rs_remd.nstlim))
                      .replace("{NUMEXCHG}", str(cfg.methods.rs_remd.numexchg))
