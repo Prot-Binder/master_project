@@ -6,6 +6,8 @@ import subprocess
 class EqMethod(BaseMethod):
 
     def launch(self, ctx: JobContext) -> None:
+        if self.cfg.methods.eq is None:
+            raise ValueError("EqMethod.launch() requires cfg.methods.eq to be configured.")
 
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
 
@@ -39,7 +41,7 @@ class EqMethod(BaseMethod):
                     str(input_dir.resolve()),
                     str(output_dir.resolve()),
                     str(ctx.paths["eq"]["top"].resolve()),
-                    str(int(self.cfg.eq.use_cpu)),
+                    str(int(self.cfg.methods.eq.use_cpu)),
                 ]
 
         eq_result = subprocess.run(

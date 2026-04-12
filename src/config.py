@@ -166,18 +166,18 @@ class Config:
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
 
-        if self.methods.eq.execute:
-            if len(self.eq.d) == 0 or len(self.eq.e) == 0:
+        if self.methods.eq is not None and self.methods.eq.execute:
+            if len(self.methods.eq.d) == 0 or len(self.methods.eq.e) == 0:
                 raise ValueError("eq requires non-empty d and e values.")
-            if self.eq.nstlim <= 0:
+            if self.methods.eq.nstlim <= 0:
                 raise ValueError("eq.nstlim must be > 0")
 
         if self.methods.pull is not None:
-            if len(self.pull.d) == 0 or len(self.pull.e) == 0:
+            if len(self.methods.pull.d) == 0 or len(self.methods.pull.e) == 0:
                 raise ValueError("pull requires non-empty d and e values.")
-            if self.pull.stride <= 0:
+            if self.methods.pull.stride <= 0:
                 raise ValueError("pull.stride must be > 0")
-            if self.pull.nstlim <= 0:
+            if self.methods.pull.nstlim <= 0:
                 raise ValueError("pull.nstlim must be > 0")
 
         if self.methods.us is not None:
@@ -244,15 +244,15 @@ def _load_system(raw: dict) -> SystemCfg:
     )
 
 
-def _load_eq(raw: dict) -> EqCfg:
+def _load_eq(raw: dict) -> Optional[EqCfg]:
     methods_raw = raw.get("methods", {})
     if methods_raw is None:
         methods_raw = {}
     methods_raw = _ensure_mapping(methods_raw, "methods")
 
-    eq_raw = methods_raw.get("eq", raw.get("eq", {}))
+    eq_raw = methods_raw.get("eq", raw.get("eq"))
     if eq_raw is None:
-        eq_raw = {}
+        return None
     eq_raw = _ensure_mapping(eq_raw, "eq")
     return EqCfg(
         name=str(eq_raw.get("name", "eq")),
