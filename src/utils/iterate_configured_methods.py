@@ -11,6 +11,7 @@ def get_configured_method_names(cfg) -> list[str]:
 # this function ensures that eq is invoked before pull and pull before all other methods, as the remaining methods depend on it.
 def _sort_methods_by_order(method_names) -> list[str]:
     sorted_methods = []
+    print("all methods specified: " + str(method_names))
     priority_methods = ["eq", "pull"]
     if "eq" in method_names:
         sorted_methods.append("eq")

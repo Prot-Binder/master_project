@@ -178,6 +178,7 @@ def generate_rs_remd_eq(cfg, ctx):
     mdin_output_file.write_text(mdin_text)
 
 def generate_rs_remd_prod(cfg: dict, ctx):
+    print("in generate rs_remd_prod")
     rs_remd_input_dir = ctx.paths["rs_remd"]["input"]
 
     # copy restraint files from results/setup to results/input
