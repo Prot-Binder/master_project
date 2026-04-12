@@ -31,10 +31,10 @@ def calculate_com_distance(ctx, cfg) -> float:
     Path(cpptraj_file).write_text(cpptraj_in)
     subprocess.run(["cpptraj", "-i", str(cpptraj_file)], check=True)
 
-    data = np.loadtxt(output_file, comments="#", usecols=1)
+    data = np.atleast_1d(np.loadtxt(output_file, comments="#", usecols=1))
+    idx = len(data) // 2 if len(data) > 2 else 0
+    avg_com_dist = np.mean(data[idx:])
 
-    # calculate average distance from last 50% of data
-    avg_com_dist = np.mean(data[len(data)/ 2:])
     try:
         avg_com_dist = float(avg_com_dist)
     except (TypeError, ValueError):
