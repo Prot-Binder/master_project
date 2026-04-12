@@ -171,7 +171,7 @@ def generate_rs_remd_eq(cfg, ctx):
     mdin_file = rs_remd_input_dir / "eq"
 
     mdin_text = (mdin_file.read_text()
-                 .replace("{NSTLIM}", str(cfg.methods.rs_remd.eq_nstlim))
+                 .replace("{NSTLIM}", str(cfg.methods.rs_remd.nstlim_eq))
                  .replace("{IN_PATH}", str(input_path))
                  .replace("{OUT_PATH}", str(output_path)))
     mdin_output_file = rs_remd_input_dir / "eq"

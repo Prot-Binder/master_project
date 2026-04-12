@@ -1,4 +1,3 @@
-# src/methods/rs_remd.py
 from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
 from src.config import Config
