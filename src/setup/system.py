@@ -162,9 +162,9 @@ def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
 def setup_simulation(cfg, ctx, cfg_path: Path):
     setup_type = cfg.setup.setup_type.lower()
     if setup_type == "local":
-        _run_setup_pipeline(cfg, ctx)
+        # _run_setup_pipeline(cfg, ctx)
         return 0
     elif setup_type == "cluster":
-        return _submit_setup_job_and_wait(cfg, ctx, cfg_path)
+        # return _submit_setup_job_and_wait(cfg, ctx, cfg_path)
     else:
         raise ValueError(f"Unknown setup.setup_type: {cfg.setup.setup_type}")
