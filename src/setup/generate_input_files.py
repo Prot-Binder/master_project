@@ -265,7 +265,7 @@ def generate_us_remd(cfg, ctx):
     amber_dir_rel = "./run_output/amber"
     pull_amber_dir_rel = "../pull/run_output/amber"
 
-    for block_idx, interval in enumerate(cfg.methods.us_remd.us_remd_intervals, start=1):
+    for block_idx, interval in enumerate(cfg.methods.us_remd.us_remd_intervals):
         windows = _interval_windows(interval.start, interval.end, interval.step)
         groupfile_lines = [
             "# Example US-REMD groupfile\n",

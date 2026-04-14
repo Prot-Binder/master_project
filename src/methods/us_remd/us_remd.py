@@ -44,10 +44,6 @@ class USREMDMethod(BaseMethod):
             raise ValueError("USREMDMethod.launch() requires cfg.methods.us_remd to be configured.")
 
         method_cfg = self.cfg.methods.us_remd
-        pull_method = method_cfg.pull_method
-
-        if pull_method not in ctx.paths:
-            raise ValueError(f"Pull method is not available in ctx.paths.")
 
         script_dir = ctx.paths["us_remd"]["script"]
         result_dir = ctx.paths["us_remd"]["root"]
@@ -57,7 +53,7 @@ class USREMDMethod(BaseMethod):
 
         ctx.us_remd_job_id = {}
 
-        for block_idx, interval in enumerate(method_cfg.us_remd_intervals, start=1):
+        for block_idx, interval in enumerate(method_cfg.us_remd_intervals):
             windows = _interval_windows(interval.start, interval.end, interval.step)
             dependency_ids = _collect_pull_dependencies(ctx, windows)
 
