@@ -4,7 +4,7 @@
 # Comment:
 # running us-remd for the 5h5q system.
 ##################################################################
-tag: us_remd_test
+tag: u_test
 test: True
 
 cluster:
@@ -32,7 +32,7 @@ methods:
     d: [0.20]
     e: [0.90]
     execute: True
-    use_cpu: True
+    use_cpu: False
     nstlim: 250000
 
   pull:

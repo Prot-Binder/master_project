@@ -31,7 +31,7 @@ class PullMethod(BaseMethod):
         if prev_job_id is None and (not check_eq_exists(ctx.paths["eq"]["amber"])):
             raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
-        ctx.pull_job_id = {}
+        ctx.pull_job_ids = {}
 
         for interval in self.cfg.methods.pull.pull_intervals:
             w_start = float(f"{float(interval.start):.2f}")
@@ -83,4 +83,4 @@ class PullMethod(BaseMethod):
 
                 pull_job_id = pull_result.stdout.strip().split()[-1]
                 prev_job_id = pull_job_id
-                ctx.pull_job_id[window] = pull_job_id
+                ctx.pull_job_ids[window] = pull_job_id
