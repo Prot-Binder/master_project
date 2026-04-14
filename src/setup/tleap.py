@@ -84,7 +84,7 @@ def run_tleap(
         paths.template_tleap,
         stage1_in,
         {
-            "CLUSTER": cluster,
+            "FORCEFIELD_DIR": str(ff_dir),
             "PDB_PATH": str(pdb_path),
             "BOND": _bond_line_from_cfg(bond),
             "N_NA": 0,
@@ -105,7 +105,7 @@ def run_tleap(
         paths.template_tleap,
         final_in,
         {
-            "CLUSTER": cluster,
+            "FORCEFIELD_DIR": str(ff_dir),
             "PDB_PATH": str(pdb_path),
             "BOND": _bond_line_from_cfg(bond),
             "N_NA": n_each,

@@ -5,6 +5,13 @@ from pathlib import Path
 import numpy as np
 # TODO: change the way the directory paths are passed / created in this file
 
+
+def _interval_windows(start: float, end: float, step: float) -> list[float]:
+    windows = []
+    for window in np.arange(start, end + step, step):
+        windows.append(float(f"{float(window):.2f}"))
+    return windows
+
 def copy_template_files(ctx, method: str) -> None:
 
     template_dir = ctx.paths["templates"].resolve() / method
@@ -186,9 +193,9 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     shutil.copy2(setup_dir / "_lroaus.r", rs_remd_input_dir)
 
     # define input path for restraints file
-    input_path = "./input" # ctx.paths["rs_remd"]["input"]
+    input_path = "./" # ctx.paths["rs_remd"]["input"]
     # define output path for amber output files
-    output_path = "./run_output/pmd"  # ctx.paths["rs_remd"]["pmd"]
+    output_path = "../run_output/pmd"  # ctx.paths["rs_remd"]["pmd"]
 
     if cfg.methods.rs_remd is None:
         raise ValueError("generate_us requires cfg.methods.rs_remd to be configured.")
@@ -237,8 +244,49 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     restraint_output_file.write_text(restraint_text)
 
 
-def generate_us_remd(method: str, cfg: dict):
-    pass
+def generate_us_remd(cfg, ctx):
+    us_remd_input_dir = ctx.paths["us_remd"]["input"]
+
+    copy_template_files(ctx, method="us_remd")
+
+    setup_dir = ctx.paths["us_remd"]["setup"].resolve()
+    shutil.copy2(setup_dir / "_lroaus.r", us_remd_input_dir)
+
+    input_path = "./input"
+    output_path = "./run_output/pmd"
+
+    if cfg.methods.us_remd is None:
+        raise ValueError("generate_us_remd requires cfg.methods.us_remd to be configured.")
+
+    mdin_template = us_remd_input_dir / "mdin_usremd"
+    restraint_template = us_remd_input_dir / "_lroaus.r"
+
+    for block_idx, interval in enumerate(cfg.methods.us_remd.us_remd_intervals, start=1):
+        windows = _interval_windows(interval.start, interval.end, interval.step)
+        for rep_idx, window in enumerate(windows, start=1):
+            window_str = f"{window:.2f}"
+            rep_str = str(rep_idx)
+            block_str = str(block_idx)
+
+            mdin_text = (
+                mdin_template.read_text()
+                .replace("{NSTLIM}", str(cfg.methods.us_remd.nstlim))
+                .replace("{NUMEXCHG}", str(cfg.methods.us_remd.numexchg))
+                .replace("{IN_PATH}", input_path)
+                .replace("{OUT_PATH}", output_path)
+                .replace("{BLOCK}", block_str)
+                .replace("{REPLICA}", rep_str)
+            )
+            mdin_output_file = us_remd_input_dir / f"mdin_usremd_b{block_str}_rep{rep_str}"
+            mdin_output_file.write_text(mdin_text)
+
+            restraint_text = (
+                restraint_template.read_text()
+                .replace("{WINDOW}", window_str)
+                .replace("{KAPPA}", str(cfg.methods.us_remd.k))
+            )
+            restraint_output_file = us_remd_input_dir / f"_lroaus_usremd_b{block_str}_rep{rep_str}.r"
+            restraint_output_file.write_text(restraint_text)
 
 
 def generate_inputs(method: str, cfg: dict, ctx) -> None:
@@ -251,7 +299,6 @@ def generate_inputs(method: str, cfg: dict, ctx) -> None:
     elif method == "rs_remd":
         generate_rs_remd_eq(cfg, ctx)
     elif method == "us_remd":
-        pass
         generate_us_remd(cfg, ctx)
     else:
         raise ValueError(f"Unknown method: {method}")

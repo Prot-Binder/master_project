@@ -83,10 +83,10 @@ def main(cfg_path: str):
 
     method_names = get_configured_method_names(cfg)
     # method_names = []
-    for method_name in method_names:
-        print(f"running {method_name}")
-        method = select_method(method_name, cfg)
-        method.launch(ctx)
+    # for method_name in method_names:
+    #     print(f"running {method_name}")
+    #     method = select_method(method_name, cfg)
+    #     method.launch(ctx)
 
 # 
     # method = select_method(cfg)
