@@ -136,9 +136,20 @@ class RSREMDCfg(MethodCfgBase):
     constraint: Optional[str] = None
 
 @dataclass(frozen=True)
-class USREMDCfg(MethodCfgBase):
-    n_rep: int
+class USREMDIntervalCfg:
+    start: float
+    end: float
+    step: float
     k: float
+
+
+@dataclass(frozen=True)
+class USREMDCfg(MethodCfgBase):
+    numexchg: int
+    ngpu: int
+    us_remd_intervals: list[USREMDIntervalCfg]
+    partition: Optional[str] = None
+    constraint: Optional[str] = None
 
 @dataclass(frozen=True)
 class MethodsCfg:
@@ -212,6 +223,27 @@ class Config:
                 raise ValueError(f"methods.{method_name}.k must be > 0")
             if method_cfg.nstlim <= 0:
                 raise ValueError(f"methods.{method_name}.nstlim must be > 0")
+            if hasattr(method_cfg, "numexchg") and method_cfg.numexchg <= 0:
+                raise ValueError(f"methods.{method_name}.numexchg must be > 0")
+            if hasattr(method_cfg, "ngpu") and method_cfg.ngpu <= 0:
+                raise ValueError(f"methods.{method_name}.ngpu must be > 0")
+
+        if self.methods.us_remd is not None:
+            if len(self.methods.us_remd.us_remd_intervals) == 0:
+                raise ValueError("methods.us_remd.us_remd_intervals must be a non-empty list.")
+            if not self.methods.us_remd.pull_method.strip():
+                raise ValueError("methods.us_remd.pull_method must be a non-empty string.")
+            for idx, interval in enumerate(self.methods.us_remd.us_remd_intervals):
+                if interval.step <= 0:
+                    raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].step must be > 0")
+                if interval.start > interval.end:
+                    raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].start must be <= end")
+                n_windows = int(round((interval.end - interval.start) / interval.step)) + 1
+                if n_windows != self.methods.us_remd.n_rep:
+                    raise ValueError(
+                        f"methods.us_remd.us_remd_intervals[{idx}] defines {n_windows} windows, "
+                        f"but methods.us_remd.n_rep is {self.methods.us_remd.n_rep}."
+                    )
 
 def _load_cluster(raw: dict) -> ClusterCfg:
     cluster_raw = raw.get("cluster", {})
@@ -366,8 +398,6 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         constraint=str(rs_raw["constraint"]) if rs_raw.get("constraint") is not None else None,
     )
 
-# TODO: maybe adjust it based on if we allow multi k / intervals or not; also a start/stop/end/step would be nice here;
-# but more to this later
 def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
     methods_raw = raw.get("methods", {})
     if methods_raw is None:
@@ -380,13 +410,35 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
 
     us_remd_raw = _ensure_mapping(us_remd_raw, "methods.us_remd")
 
+    interval_source = us_remd_raw.get("us_remd_intervals")
+    if interval_source is None and {"start", "end", "step"}.issubset(us_remd_raw):
+        interval_source = [us_remd_raw]
+    if interval_source is None:
+        raise ValueError("methods.us_remd must contain 'us_remd_intervals'.")
+
+    us_remd_intervals = []
+    for index, item in enumerate(_ensure_list(interval_source, "methods.us_remd.us_remd_intervals")):
+        item = _ensure_mapping(item, f"methods.us_remd.us_remd_intervals[{index}]")
+        us_remd_intervals.append(
+            USREMDIntervalCfg(
+                start=float(_require(item, "start", f"methods.us_remd.us_remd_intervals[{index}]")),
+                end=float(_require(item, "end", f"methods.us_remd.us_remd_intervals[{index}]")),
+                step=float(_require(item, "step", f"methods.us_remd.us_remd_intervals[{index}]")),
+                k=float(_require(item, "k", f"methods.us_remd.us_remd_intervals[{index}]")),
+            )
+        )
+
     return USREMDCfg(
         name=str(us_remd_raw.get("name", "us_remd")),
         d=_as_float_list(_require(us_remd_raw, "d", "methods.us_remd"), "methods.us_remd.d"),
         e=_as_float_list(_require(us_remd_raw, "e", "methods.us_remd"), "methods.us_remd.e"),
         nstlim=_as_int(us_remd_raw.get("nstlim", 2500000), "methods.us_remd.nstlim"),
-        n_rep=int(_require(us_remd_raw, "n_rep", "methods.us_remd")),
         k=float(_require(us_remd_raw, "k", "methods.us_remd")),
+        numexchg=_as_int(_require(us_remd_raw, "numexchg", "methods.us_remd"), "methods.us_remd.numexchg"),
+        ngpu=_as_int(_require(us_remd_raw, "ngpu", "methods.us_remd"), "methods.us_remd.ngpu"),
+        us_remd_intervals=us_remd_intervals,
+        partition=str(us_remd_raw["partition"]) if us_remd_raw.get("partition") is not None else None,
+        constraint=str(us_remd_raw["constraint"]) if us_remd_raw.get("constraint") is not None else None,
     )
 
 

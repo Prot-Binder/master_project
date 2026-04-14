@@ -252,8 +252,8 @@ def generate_us_remd(cfg, ctx):
     setup_dir = ctx.paths["us_remd"]["setup"].resolve()
     shutil.copy2(setup_dir / "_lroaus.r", us_remd_input_dir)
 
-    input_path = "./input"
-    output_path = "./run_output/pmd"
+    input_path = "./"
+    output_path = "../run_output/pmd"
 
     if cfg.methods.us_remd is None:
         raise ValueError("generate_us_remd requires cfg.methods.us_remd to be configured.")
@@ -274,7 +274,6 @@ def generate_us_remd(cfg, ctx):
                 .replace("{NUMEXCHG}", str(cfg.methods.us_remd.numexchg))
                 .replace("{IN_PATH}", input_path)
                 .replace("{OUT_PATH}", output_path)
-                .replace("{BLOCK}", block_str)
                 .replace("{REPLICA}", rep_str)
             )
             mdin_output_file = us_remd_input_dir / f"mdin_usremd_b{block_str}_rep{rep_str}"
