@@ -35,19 +35,19 @@ methods:
   #   use_cpu: False
   #   nstlim: 250000
 
-  pull:
-    name: "pull"
-    d: [0.20]
-    e: [0.90]
-    mode: "serial"
-    stride: 1
-    nstlim: 2500
-    pull_intervals:
-      - start: 5
-        end: 8
-        step: 1.00
-        replica_scaling: 1
-        k: 4.0
+  # pull:
+  #   name: "pull"
+  #   d: [0.20]
+  #   e: [0.90]
+  #   mode: "serial"
+  #   stride: 1
+  #   nstlim: 2500
+  #   pull_intervals:
+  #     - start: 5
+  #       end: 8
+  #       step: 1.00
+  #       replica_scaling: 1
+  #       k: 4.0
 
   us_remd:
     name: us_remd
