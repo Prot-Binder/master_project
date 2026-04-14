@@ -165,6 +165,7 @@ def setup_simulation(cfg, ctx, cfg_path: Path):
         # _run_setup_pipeline(cfg, ctx)
         return 0
     elif setup_type == "cluster":
+        return 0
         # return _submit_setup_job_and_wait(cfg, ctx, cfg_path)
     else:
         raise ValueError(f"Unknown setup.setup_type: {cfg.setup.setup_type}")
