@@ -433,7 +433,6 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
         d=_as_float_list(_require(us_remd_raw, "d", "methods.us_remd"), "methods.us_remd.d"),
         e=_as_float_list(_require(us_remd_raw, "e", "methods.us_remd"), "methods.us_remd.e"),
         nstlim=_as_int(us_remd_raw.get("nstlim", 2500000), "methods.us_remd.nstlim"),
-        k=float(_require(us_remd_raw, "k", "methods.us_remd")),
         numexchg=_as_int(_require(us_remd_raw, "numexchg", "methods.us_remd"), "methods.us_remd.numexchg"),
         ngpu=_as_int(_require(us_remd_raw, "ngpu", "methods.us_remd"), "methods.us_remd.ngpu"),
         us_remd_intervals=us_remd_intervals,
