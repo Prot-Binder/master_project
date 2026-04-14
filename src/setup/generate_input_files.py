@@ -252,7 +252,7 @@ def generate_us_remd(cfg, ctx):
     setup_dir = ctx.paths["us_remd"]["setup"].resolve()
     shutil.copy2(setup_dir / "_lroaus.r", us_remd_input_dir)
 
-    input_path = "./"
+    input_path = "."
     output_path = "../run_output/pmd"
 
     if cfg.methods.us_remd is None:
