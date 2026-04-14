@@ -6,7 +6,7 @@
 # the goal is to verify the rs-remd contribution as this was buggy in previous runs.
 ##################################################################
 tag: rs_remd_rep8
-test: True
+test: False
 
 cluster:
   exclude_ranks: [] # [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042]
@@ -24,7 +24,7 @@ system:
 
 setup:
   setup: True # TODO: think of deleting this filed as it may be redundant
-  setup_type: local # cluster or local; i.e. tleap may not be available on the cluster
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
   # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
 
 methods:
@@ -43,6 +43,6 @@ methods:
     nstlim_eq: 500000
     nstlim: 250
     numexchg: 20000
-    d: [0.00 0.0133 0.0266 0.0399 0.0532 0.0665 0.0798 0.0931 0.106 0.120 0.133 0.146 0.156 0.173 0.186 0.20]
-    e: [1.00 0.993 0.987 0.980 0.973 0.967 0.960 0.953 0.946 0.940 0.933 0.926 0.920 0.913 0.906 0.90]
+    d: [0.0000, 0.0286, 0.0571, 0.0857, 0.1143, 0.1429, 0.1714, 0.2000]
+    e: [1.0000, 0.9857, 0.9714, 0.9571, 0.9429, 0.9286, 0.9143, 0.9000]
     k: 24.0
