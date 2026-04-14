@@ -260,13 +260,20 @@ def generate_us_remd(cfg, ctx):
 
     mdin_template = us_remd_input_dir / "mdin_usremd"
     restraint_template = us_remd_input_dir / "_lroaus.r"
+    input_dir_rel = "./input"
+    top_dir_rel = "./top"
+    amber_dir_rel = "./run_output/amber"
+    pull_amber_dir_rel = "../pull/run_output/amber"
 
     for block_idx, interval in enumerate(cfg.methods.us_remd.us_remd_intervals, start=1):
         windows = _interval_windows(interval.start, interval.end, interval.step)
-        for rep_idx, window in enumerate(windows, start=1):
+        groupfile_lines = [
+            "# Example US-REMD groupfile\n",
+            "# Replace the exact line structure in generate_us_remd() when needed.\n",
+        ]
+
+        for window in windows:
             window_str = f"{window:.2f}"
-            rep_str = str(rep_idx)
-            block_str = str(block_idx)
 
             mdin_text = (
                 mdin_template.read_text()
@@ -274,9 +281,9 @@ def generate_us_remd(cfg, ctx):
                 .replace("{NUMEXCHG}", str(cfg.methods.us_remd.numexchg))
                 .replace("{IN_PATH}", input_path)
                 .replace("{OUT_PATH}", output_path)
-                .replace("{REPLICA}", rep_str)
+                .replace("{WINDOW}", window_str)
             )
-            mdin_output_file = us_remd_input_dir / f"mdin_usremd_b{block_str}_rep{rep_str}"
+            mdin_output_file = us_remd_input_dir / f"mdin_usremd_w{window_str}"
             mdin_output_file.write_text(mdin_text)
 
             restraint_text = (
@@ -284,8 +291,21 @@ def generate_us_remd(cfg, ctx):
                 .replace("{WINDOW}", window_str)
                 .replace("{KAPPA}", str(cfg.methods.us_remd.k))
             )
-            restraint_output_file = us_remd_input_dir / f"_lroaus_usremd_b{block_str}_rep{rep_str}.r"
+            restraint_output_file = us_remd_input_dir / f"_lroaus_usremd_w{window_str}.r"
             restraint_output_file.write_text(restraint_text)
+
+            groupfile_lines.append(
+                f"-i {input_dir_rel}/mdin_usremd_w{window_str} "
+                f"-c {pull_amber_dir_rel}/restrt5.w{window_str} "
+                f"-p {top_dir_rel}/prmtop1"
+                f"-r {amber_dir_rel}/restrt_usremd_b{block_idx}_rep{window_str} "
+                f"-o {amber_dir_rel}/mdout_usremd_b{block_idx}_rep{window_str} "
+                f"-x {amber_dir_rel}/traj_usremd_b{block_idx}_rep{window_str}.nc "
+                f"-inf {amber_dir_rel}/mdinfo_usremd_b{block_idx}_rep{window_str}\n"
+            )
+
+        groupfile_path = us_remd_input_dir / f"us_remd_block{block_idx}.groupfile"
+        groupfile_path.write_text("".join(groupfile_lines))
 
 
 def generate_inputs(method: str, cfg: dict, ctx) -> None:

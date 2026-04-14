@@ -32,6 +32,6 @@
 /
   &wt type='REST', istep1=0, istep2=1, value1=1.0, value2=1.0, /
   &wt type='END', /
-  DISANG = {IN_PATH}/_lroaus_usremd_{REPLICA}.r
-  DUMPAVE={OUT_PATH}/usremd_{REPLICA}.txt
+  DISANG = {IN_PATH}/_lroaus_usremd_{WINDOW}.r
+  DUMPAVE={OUT_PATH}/usremd_{WINDOW}.txt
 eof
