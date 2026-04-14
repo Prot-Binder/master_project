@@ -27,13 +27,13 @@ setup:
   # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
 
 methods:
-  eq:
-    name: "eq"
-    d: [0.20]
-    e: [0.90]
-    execute: True
-    use_cpu: False
-    nstlim: 250000
+  # eq:
+  #   name: "eq"
+  #   d: [0.20]
+  #   e: [0.90]
+  #   execute: True
+  #   use_cpu: False
+  #   nstlim: 250000
 
   pull:
     name: "pull"
@@ -44,15 +44,10 @@ methods:
     nstlim: 2500
     pull_intervals:
       - start: 5
-        end: 7
+        end: 8
         step: 1.00
         replica_scaling: 1
         k: 4.0
-      - start: 8
-        end: 10
-        step: 0.50
-        replica_scaling: 1
-        k: 8.0
 
   us_remd:
     name: us_remd
@@ -64,10 +59,6 @@ methods:
     e: [0.90]
     us_remd_intervals:
       - start: 5
-        end: 7
+        end: 8
         step: 1.00
         k: 4.0
-      - start: 8
-        end: 10
-        step: 0.50
-        k: 8.0
