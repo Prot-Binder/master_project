@@ -260,10 +260,10 @@ def generate_us_remd(cfg, ctx):
 
     mdin_template = us_remd_input_dir / "mdin_usremd"
     restraint_template = us_remd_input_dir / "_lroaus.r"
-    input_dir_rel = "./input"
-    top_dir_rel = "./top"
-    amber_dir_rel = "./run_output/amber"
-    pull_amber_dir_rel = "../pull/run_output/amber"
+    input_dir_rel = ctx.paths['us_remd']['input'] # "./input"
+    top_dir_rel = ctx.paths['us_remd']['top']# "./top"
+    amber_dir_rel = ctx.paths['us_remd']['amber']# "./run_output/amber"
+    pull_amber_dir_rel = ctx.paths['pull']['amber']# "../pull/run_output/amber"
 
     for block_idx, interval in enumerate(cfg.methods.us_remd.us_remd_intervals):
         windows = _interval_windows(interval.start, interval.end, interval.step)
