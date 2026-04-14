@@ -76,17 +76,12 @@ def main(cfg_path: str):
     print(f"\033[92m[setup] Setup completed with ID {setup_id}\033[0m")
     copy_yaml_input(cfg, cfg_path)
 
-    # # 3. select and execute the desired method
-    # # if equilibration is requested, perform equilibration first
-    # if cfg.method.eq:
-    #    print("running equilibration")
-
     method_names = get_configured_method_names(cfg)
     # method_names = []
-    # for method_name in method_names:
-    #     print(f"running {method_name}")
-    #     method = select_method(method_name, cfg)
-    #     method.launch(ctx)
+    for method_name in method_names:
+        print(f"running {method_name}")
+        method = select_method(method_name, cfg)
+        method.launch(ctx)
 
 # 
     # method = select_method(cfg)

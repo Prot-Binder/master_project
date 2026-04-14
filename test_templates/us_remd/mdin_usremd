@@ -1,0 +1,37 @@
+&cntrl
+  irest=1,
+  ntx=5,
+  ioutfm=1,
+
+  nstlim={NSTLIM},
+  numexchg={NUMEXCHG},
+  dt=0.004,
+
+  dielc=1.0,
+
+  ntt=3,
+  gamma_ln=2,
+  temp0=300,
+
+  ntc=2,
+  ntf=2,
+  nscm=0,
+  cut=9.0,
+
+  ntp=0,
+  iwrap=1,
+  ntb=1,
+  ntxo=2,
+
+  ntpr=2500,
+  ntwx=2500,
+  ntwr=10000,
+
+  ntr=0,
+  nmropt=1,
+/
+  &wt type='REST', istep1=0, istep2=1, value1=1.0, value2=1.0, /
+  &wt type='END', /
+  DISANG = {IN_PATH}/_lroaus_usremd_{WINDOW}.r
+  DUMPAVE={OUT_PATH}/usremd_{WINDOW}.txt
+eof
