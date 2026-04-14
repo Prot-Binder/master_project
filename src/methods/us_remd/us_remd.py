@@ -14,6 +14,29 @@ def _interval_windows(start: float, end: float, step: float) -> list[float]:
     return windows
 
 
+def _collect_pull_dependencies(ctx: JobContext, windows: list[float]) -> list[str]:
+    dependency_ids: list[str] = []
+    pull_amber_dir = ctx.paths["pull"]["amber"]
+
+    for window in windows:
+        pull_job_id = None
+        if ctx.pull_job_ids is not None:
+            pull_job_id = ctx.pull_job_ids.get(window)
+        if pull_job_id is not None:
+            if pull_job_id not in dependency_ids:
+                dependency_ids.append(pull_job_id)
+            continue
+
+        restart_file = pull_amber_dir / f"restrt5.w{window:.2f}"
+        if not restart_file.exists():
+            raise RuntimeError(
+                f"Missing pull restart file for window {window:.2f}: {restart_file}. "
+                "Run the referenced pull method first or keep its job ids in ctx.pull_job_id."
+            )
+
+    return dependency_ids
+
+
 class USREMDMethod(BaseMethod):
 
     def launch(self, ctx: JobContext) -> None:
@@ -24,7 +47,7 @@ class USREMDMethod(BaseMethod):
         pull_method = method_cfg.pull_method
 
         if pull_method not in ctx.paths:
-            raise ValueError(f"Pull method '{pull_method}' is not available in ctx.paths.")
+            raise ValueError(f"Pull method is not available in ctx.paths.")
 
         script_dir = ctx.paths["us_remd"]["script"]
         result_dir = ctx.paths["us_remd"]["root"]
@@ -36,7 +59,7 @@ class USREMDMethod(BaseMethod):
 
         for block_idx, interval in enumerate(method_cfg.us_remd_intervals, start=1):
             windows = _interval_windows(interval.start, interval.end, interval.step)
-            dependency_ids = self._collect_pull_dependencies(ctx, pull_method, windows)
+            dependency_ids = _collect_pull_dependencies(ctx, windows)
 
             n_windows = len(windows)
 
@@ -85,25 +108,3 @@ class USREMDMethod(BaseMethod):
                 raise RuntimeError("sbatch failed")
 
             ctx.us_remd_job_id[block_idx] = result.stdout.strip().split()[-1]
-
-    def _collect_pull_dependencies(self, ctx: JobContext, pull_method: str, windows: list[float]) -> list[str]:
-        dependency_ids: list[str] = []
-        pull_amber_dir = ctx.paths[pull_method]["amber"]
-
-        for window in windows:
-            pull_job_id = None
-            if ctx.pull_job_ids is not None:
-                pull_job_id = ctx.pull_job_ids.get(window)
-            if pull_job_id is not None:
-                if pull_job_id not in dependency_ids:
-                    dependency_ids.append(pull_job_id)
-                continue
-
-            restart_file = pull_amber_dir / f"restrt5.w{window:.2f}"
-            if not restart_file.exists():
-                raise RuntimeError(
-                    f"Missing pull restart file for window {window:.2f}: {restart_file}. "
-                    "Run the referenced pull method first or keep its job ids in ctx.pull_job_id."
-                )
-
-        return dependency_ids
