@@ -297,7 +297,7 @@ def generate_us_remd(cfg, ctx):
             groupfile_lines.append(
                 f"-i {input_dir_rel}/mdin_usremd_w{window_str} "
                 f"-c {pull_amber_dir_rel}/restrt5.w{window_str} "
-                f"-p {top_dir_rel}/prmtop1"
+                f"-p {top_dir_rel}/prmtop1 "
                 f"-r {amber_dir_rel}/restrt_usremd_b{block_idx}_rep{window_str} "
                 f"-o {amber_dir_rel}/mdout_usremd_b{block_idx}_rep{window_str} "
                 f"-x {amber_dir_rel}/traj_usremd_b{block_idx}_rep{window_str}.nc "
