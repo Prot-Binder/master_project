@@ -209,24 +209,30 @@ class Config:
                 if interval.start >= interval.end:
                     raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
 
-        for method_name in ("rs_remd", "us_remd"):
-            method_cfg = getattr(self.methods, method_name)
-            if method_cfg is None:
-                continue
-            if method_cfg.n_rep <= 0:
-                raise ValueError(f"methods.{method_name}.n_rep must be > 0")
-            if len(method_cfg.d) != method_cfg.n_rep:
-                raise ValueError(f"methods.{method_name}.d must have length as specified in n_rep")
-            if len(method_cfg.e) != method_cfg.n_rep:
-                raise ValueError(f"methods.{method_name}.e must have length as specified in n_rep")
-            if method_cfg.k <= 0:
-                raise ValueError(f"methods.{method_name}.k must be > 0")
-            if method_cfg.nstlim <= 0:
-                raise ValueError(f"methods.{method_name}.nstlim must be > 0")
-            if hasattr(method_cfg, "numexchg") and method_cfg.numexchg <= 0:
-                raise ValueError(f"methods.{method_name}.numexchg must be > 0")
-            if hasattr(method_cfg, "ngpu") and method_cfg.ngpu <= 0:
-                raise ValueError(f"methods.{method_name}.ngpu must be > 0")
+        if self.methods.rs_remd is not None:
+            rs_cfg = self.methods.rs_remd
+            if rs_cfg.n_rep <= 0:
+                raise ValueError("methods.rs_remd.n_rep must be > 0")
+            if len(rs_cfg.d) != rs_cfg.n_rep:
+                raise ValueError("methods.rs_remd.d must have length as specified in n_rep")
+            if len(rs_cfg.e) != rs_cfg.n_rep:
+                raise ValueError("methods.rs_remd.e must have length as specified in n_rep")
+            if rs_cfg.k <= 0:
+                raise ValueError("methods.rs_remd.k must be > 0")
+            if rs_cfg.nstlim <= 0:
+                raise ValueError("methods.rs_remd.nstlim must be > 0")
+            if rs_cfg.nstlim_eq <= 0:
+                raise ValueError("methods.rs_remd.nstlim_eq must be > 0")
+            if rs_cfg.numexchg <= 0:
+                raise ValueError("methods.rs_remd.numexchg must be > 0")
+            if rs_cfg.ngpu <= 0:
+                raise ValueError("methods.rs_remd.ngpu must be > 0")
+            if rs_cfg.ngpu > rs_cfg.n_rep:
+                raise ValueError("methods.rs_remd.ngpu must be <= methods.rs_remd.n_rep")
+            if rs_cfg.partition is not None and not rs_cfg.partition.strip():
+                raise ValueError("methods.rs_remd.partition must not be empty if specified")
+            if rs_cfg.constraint is not None and not rs_cfg.constraint.strip():
+                raise ValueError("methods.rs_remd.constraint must not be empty if specified")
 
         if self.methods.us_remd is not None:
             if len(self.methods.us_remd.us_remd_intervals) == 0:
