@@ -285,11 +285,11 @@ def generate_us_remd(cfg, ctx):
             )
             mdin_output_file = us_remd_input_dir / f"mdin_usremd_w{window_str}"
             mdin_output_file.write_text(mdin_text)
-
+            kappa = str(cfg.methods.us_remd.us_remd_intervals[block_idx].kappa)
             restraint_text = (
                 restraint_template.read_text()
                 .replace("{WINDOW}", window_str)
-                .replace("{KAPPA}", str(cfg.methods.us_remd.k))
+                .replace("{KAPPA}", kappa)
             )
             restraint_output_file = us_remd_input_dir / f"_lroaus_usremd_w{window_str}.r"
             restraint_output_file.write_text(restraint_text)
