@@ -1,5 +1,5 @@
-#Load the Force Field; TODO: adjust if necessary
-source ~/cluster/master_project/forcefield/leaprc.cyclic.ff14SB
+#Load the Force Field;
+source {FORCEFIELD_DIR}/leaprc.cyclic.ff14SB
 loadamberparams frcmod.ionsjc_tip3p
 source leaprc.water.tip3p
 
