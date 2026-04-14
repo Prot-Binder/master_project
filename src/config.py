@@ -243,11 +243,6 @@ class Config:
                 if interval.start > interval.end:
                     raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].start must be <= end")
                 n_windows = int(round((interval.end - interval.start) / interval.step)) + 1
-                if n_windows != self.methods.us_remd.n_rep:
-                    raise ValueError(
-                        f"methods.us_remd.us_remd_intervals[{idx}] defines {n_windows} windows, "
-                        f"but methods.us_remd.n_rep is {self.methods.us_remd.n_rep}."
-                    )
 
 def _load_cluster(raw: dict) -> ClusterCfg:
     cluster_raw = raw.get("cluster", {})
