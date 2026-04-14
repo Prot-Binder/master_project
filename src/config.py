@@ -237,8 +237,6 @@ class Config:
         if self.methods.us_remd is not None:
             if len(self.methods.us_remd.us_remd_intervals) == 0:
                 raise ValueError("methods.us_remd.us_remd_intervals must be a non-empty list.")
-            if not self.methods.us_remd.pull_method.strip():
-                raise ValueError("methods.us_remd.pull_method must be a non-empty string.")
             for idx, interval in enumerate(self.methods.us_remd.us_remd_intervals):
                 if interval.step <= 0:
                     raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].step must be > 0")
