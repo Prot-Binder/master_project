@@ -82,7 +82,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     """
     # run tleap and HMR
     create_box_and_prmtop(cfg, ctx, first_method)
-    
+    """
     # create restraint template files
     system_pdb = first_setup_dir / "system.pdb"
     create_restraints(first_setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
@@ -108,7 +108,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
             ":" + cfg.system.ligand_residues,
         )
         print(f"\033[92m[setup] Generated scaled prmotp file(s) for {method_name}\033[0m")
-    """
+
     for method_name in method_names:
        generate_inputs(str(method_name), cfg, ctx)
        print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
