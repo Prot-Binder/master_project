@@ -6,6 +6,8 @@
 *.rst
 *.restrt
 
+**/.fuse*
+
 # topology files
 **/top/
 # Temporary files
