@@ -1,0 +1,94 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# running us-remd for the 1sfi system. From 15.00 to 27.00 using
+# a spacing of 0.50 and force constant
+##################################################################
+tag: rep0
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042]
+
+system:
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 1sfi
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  eq:
+    name: "eq"
+    d: [0.00]
+    e: [1.00]
+    execute: True
+    use_cpu: True
+    nstlim: 250000
+  pull:
+    name: "pull"
+    d: [0.00]
+    e: [1.00]
+    mode: "serial"
+    stride: 1
+    nstlim: 500000
+    pull_intervals:
+    - start: 13.00
+      end: 27.50
+      step: 0.25
+      replica_scaling: 1
+      k: 24.0
+    - start: 27.75
+      end: 35.75
+      step: 1.00
+      replica_scaling: 1
+      k: 4.0
+
+  us_remd:
+    name: "us_remd"
+    ngpu: 1
+    partition: "barracuda"
+    constraint: "rtx4090|rtx5090"
+    nstlim: 250
+    numexchg: 25000
+    d: [0.00]
+    e: [1.00]
+    us_remd_intervals:
+      - start: 15.00
+        end: 17.75
+        step: 0.25
+        k: 24.0
+      - start: 17.75
+        end: 21.00
+        step: 0.25
+        k: 24.0
+      - start: 21.00
+        end: 24.25
+        step: 0.25
+        k: 24.0
+      - start: 24.25
+        end: 27.50
+        step: 0.25
+        k: 24.0
+
+  us:
+    name: "us"
+    nstlim: 12500000000
+    d: [0.00]
+    e: [1.00]
+    us_intervals:
+      - start: 13.00
+        end: 14.75
+        step: 0.25
+        k: 24.00
+      - start: 27.75
+        end: 35.75
+        step: 1.00
+        k: 4.0
