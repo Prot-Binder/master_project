@@ -6,9 +6,9 @@ REMARK     285 WAS MISSING.
 REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
 REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
 REMARK     285 THIS RECORD ARE MEANINGLESS.
-ATOM      1 lig0 lig0A   1       7.543  12.078  -6.749  1.00  0.00      DUM     
-ATOM      2 lig1 lig1A   1       6.099   3.927 -10.849  1.00  0.00      DUM     
-ATOM      3 lig2 lig2A   1       2.112  22.982  -4.100  1.00  0.00      DUM     
+ATOM      1 lig0 lig0A   1       6.810  13.615  -6.737  1.00  0.00      DUM     
+ATOM      2 lig1 lig1A   1      13.031   9.428  -7.277  1.00  0.00      DUM     
+ATOM      3 lig2 lig2A   1       7.875  24.570  -7.744  1.00  0.00      DUM     
 ATOM      4 rec0 rec0A   1      -4.380  -4.022  -1.556  1.00  0.00      DUM     
 ATOM      5 rec1 rec1A   1      -0.453 -14.312 -10.408  1.00  0.00      DUM     
 ATOM      6 rec2 rec2A   1       6.637   2.533  -4.268  1.00  0.00      DUM     
