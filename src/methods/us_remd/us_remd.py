@@ -60,12 +60,12 @@ class USREMDMethod(BaseMethod):
 
             n_windows = len(windows)
 
-            groupfile = input_dir / f"us_remd_block{block_idx}.groupfile"
-            if not groupfile.exists():
-                raise FileNotFoundError(
-                    f"US-REMD groupfile not found: {groupfile}. "
-                    "Create it before launching the us_remd method."
-                )
+            groupfile = input_dir.resolve() / f"us_remd_block{block_idx}.groupfile"
+            # if not groupfile.exists():
+            #     raise FileNotFoundError(
+            #         f"US-REMD groupfile not found: {groupfile}. "
+            #         "Create it before launching the us_remd method."
+            #     )
 
             usremd_cmd = [
                 "sbatch",
@@ -84,11 +84,12 @@ class USREMDMethod(BaseMethod):
                 "--time=2-00:00:00",
                 f"--ntasks={n_windows}",
                 "--cpus-per-task=1",
+                "--mem=24G",
                 exclude_arg,
                 f"--output={slurm_dir.resolve()}/slurm-%j_usremd_b{block_idx}.out",
                 f"{script_dir.resolve()}/run_usremd_prod.sh",
                 str(n_windows),
-                str(groupfile.resolve()),
+                str(groupfile),
             ]
 
             result = subprocess.run(

@@ -80,8 +80,8 @@ class USMethod(BaseMethod):
 
 
     def _resolve_pull_dependency(self, window: float, pull_amber_dir: Path, ctx: JobContext) -> str | None:
-        if ctx.pull_job_id is not None:
-            pull_job_id = ctx.pull_job_id.get(window)
+        if ctx.pull_job_ids is not None:
+            pull_job_id = ctx.pull_job_ids.get(window)
             if pull_job_id is not None and self._is_slurm_job_active(pull_job_id):
                 return pull_job_id
 
