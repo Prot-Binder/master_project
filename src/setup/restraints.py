@@ -424,7 +424,7 @@ def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: st
     test1 = ARW_setup(pdb_path, receptor=f'resid {r_start} to {r_end} and not element H', ligand=f'resid {l_start} to {l_end} and not element H')
 
     test1.set_anchors()
-    test1.save_anchor_view()
+    test1.save_anchor_view(anchorsPDB=f'{setup_path}/anchors.pdb', ligrecPDB=f'{setup_path}/lig_rec.pdb')
     test1.write_restraint_file(f"{setup_path}/_.r",False, False, False, False, None) #measure colvars
     test1.write_restraint_file(f"{setup_path}/_l.r",True, False, False, False, None)
     test1.write_restraint_file(f"{setup_path}/_lr.r",True, True, False, False, None)
