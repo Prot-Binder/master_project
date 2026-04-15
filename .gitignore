@@ -8,6 +8,9 @@
 
 **/.fuse*
 
+results/
+**/results/
+
 # topology files
 **/top/
 # Temporary files
