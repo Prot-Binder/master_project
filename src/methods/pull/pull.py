@@ -61,7 +61,7 @@ class PullMethod(BaseMethod):
                     f"--ntasks=1",
                     f"--cpus-per-task=1",
                     exclude_arg,
-                    f"--output={slurm_dir.resolve()}/slurm-%j_pull{window}.out",
+                    f"--output={slurm_dir.resolve()}/slurm-%j_pull{window_val}.out",
                     f"{script_dir.resolve()}/run_pull.sh",
                     f"{window_str}",
                     str(input_dir.resolve()),
