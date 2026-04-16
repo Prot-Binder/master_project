@@ -124,6 +124,8 @@ class RSREMDMethod(BaseMethod):
 
         script_dir = ctx.paths["rs_remd"]["script"]
         result_dir = ctx.paths["rs_remd"]["root"]
+        log_dir = result_dir / "log"
+        log_dir.mkdir(parents=True, exist_ok=True)
         slurm_dir = ctx.paths["rs_remd"]["slurm"]
         input_dir = ctx.paths["rs_remd"]["input"]
         exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
@@ -161,7 +163,7 @@ class RSREMDMethod(BaseMethod):
             check=True,
             capture_output=True,
             text=True,
-            cwd=result_dir.resolve(),
+            cwd=log_dir.resolve(),
         )
 
         if rsremd_prod_result.returncode != 0:

@@ -59,6 +59,8 @@ class USREMDMethod(BaseMethod):
             dependency_ids = _collect_pull_dependencies(ctx, windows)
 
             n_windows = len(windows)
+            block_dir = result_dir / f"log_block_{block_idx}"
+            block_dir.mkdir(parents=True, exist_ok=True)
 
             groupfile = input_dir.resolve() / f"us_remd_block{block_idx}.groupfile"
             # if not groupfile.exists():
@@ -97,7 +99,7 @@ class USREMDMethod(BaseMethod):
                 check=True,
                 capture_output=True,
                 text=True,
-                cwd=result_dir.resolve(),
+                cwd=block_dir.resolve(),
             )
 
             if result.returncode != 0:
