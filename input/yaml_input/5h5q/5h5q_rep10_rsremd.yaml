@@ -6,7 +6,7 @@
 # we like to show which value do we get for stronger scaling; compared to
 # rep4 and rep8; as rs-remd failed previously, we need to submit again
 ##################################################################
-tag: rep10
+tag: rep10_rs
 test: False
 
 cluster:
