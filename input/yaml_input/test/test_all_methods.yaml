@@ -36,7 +36,7 @@ methods:
     e: [0.86]
     mode: "serial"
     stride: 1
-    nstlim: 5000
+    nstlim: 500
     pull_intervals:
       - start: 21.00
         end: 22.50
