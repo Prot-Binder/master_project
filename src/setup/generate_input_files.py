@@ -12,7 +12,7 @@ def _interval_windows(start: float, end: float, step: float) -> list[float]:
         windows.append(float(f"{float(window):.2f}"))
     return windows
 
-def copy_template_files(ctx, method: str) -> None:
+def copy_template_files(ctx, method: str, clean: bool = True) -> None:
 
     template_dir = ctx.paths["templates"].resolve() / method
     dest_dir = ctx.paths[method]["input"]
@@ -21,7 +21,7 @@ def copy_template_files(ctx, method: str) -> None:
         raise FileNotFoundError(f"Source dir not found: {template_dir}")
 
     # Start clean (optional, but avoids mixed old/new files)
-    if dest_dir.exists():
+    if clean and dest_dir.exists():
         shutil.rmtree(dest_dir)
 
     # TODO: check if creating directory here is useful
@@ -63,7 +63,7 @@ def generate_pull(cfg, ctx):
     pull_input_dir = ctx.paths["pull"]["input"]
 
     # copy template files from template directory to pull directory
-    copy_template_files(ctx, method="pull")
+    copy_template_files(ctx, method="pull", clean=False)
 
     # copy restraint files from pull/setup to pull/input
     setup_dir = ctx.paths["pull"]["setup"].resolve()
@@ -87,8 +87,8 @@ def generate_pull(cfg, ctx):
         # adjust input files for pull simulation
         mdin_file = pull_input_dir / "mdin5"
         restraint_file = pull_input_dir / "pull.r"
-        for window in np.arange(w_start, w_end + step, step):
-            window_val = float(f"{float(window):.2f}")
+        windows = _interval_windows(w_start, w_end, step)
+        for window_val in windows:
             window_str = f"{window_val:.2f}"
             mdin_text = (mdin_file.read_text()
                          .replace("{WINDOW}", str(window_str))
@@ -98,7 +98,7 @@ def generate_pull(cfg, ctx):
             mdin_output_file = pull_input_dir/f"mdin5.w{window_str}"
             mdin_output_file.write_text(mdin_text)
 
-            window_prev = float(f"{window - step:.2f}") if window - step >= w_start else window_val
+            window_prev = float(f"{window_val - step:.2f}") if window_val - step >= w_start else window_val
             kappa_init = kappa / 2.0
             total_steps = int(cfg.methods.pull.nstlim)
             restraint_text = (restraint_file.read_text()
@@ -116,7 +116,7 @@ def generate_us(cfg, ctx):
     us_input_dir = ctx.paths["us"]["input"]
 
     # copy template files from template folder to results/input
-    copy_template_files(ctx, method="us")
+    copy_template_files(ctx, method="us", clean=False)
 
     # copy restraint files from results/setup to results/input
     setup_dir = ctx.paths["us"]["setup"].resolve()
@@ -138,8 +138,8 @@ def generate_us(cfg, ctx):
         # adjust input files for us simulation
         mdin_file = us_input_dir / "mdin6"
         restraint_file = us_input_dir / "_lroaus.r"
-        for window in np.arange(w_start, w_end + step, step):
-            window_val = float(f"{float(window):.2f}")
+        windows = _interval_windows(w_start, w_end, step)
+        for window_val in windows:
             window_str = f"{window_val:.2f}"
 
             mdin_text = (mdin_file.read_text()
@@ -247,7 +247,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
 def generate_us_remd(cfg, ctx):
     us_remd_input_dir = ctx.paths["us_remd"]["input"]
 
-    copy_template_files(ctx, method="us_remd")
+    copy_template_files(ctx, method="us_remd", clean=False)
 
     setup_dir = ctx.paths["us_remd"]["setup"].resolve()
     shutil.copy2(setup_dir / "_lroaus.r", us_remd_input_dir)

@@ -32,8 +32,9 @@ class USMethod(BaseMethod):
             w_end = float(f"{float(interval.end):.2f}")
             step = float(f"{float(interval.step):.2f}")
 
-            for window in np.arange(w_start, w_end + step, step):
-                window = float(f"{float(window):.2f}")
+            windows = [float(f"{float(window):.2f}") for window in np.arange(w_start, w_end + step, step)]
+
+            for window in windows:
                 window_str = f"{window:.2f}"
                 dependency_job_id = self._resolve_pull_dependency(window, pull_dir, ctx)
 

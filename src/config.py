@@ -83,6 +83,7 @@ class SetupCfg:
     setup_type: str
     setup_dir: Optional[Path] = None
 
+
 @dataclass(frozen=True)
 class MethodCfgBase:
     name: str

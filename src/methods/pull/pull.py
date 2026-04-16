@@ -38,15 +38,17 @@ class PullMethod(BaseMethod):
             w_end = float(f"{float(interval.end):.2f}")
             step = float(f"{float(interval.step):.2f}")
 
-            for window in np.arange(w_start, w_end + step, step):
-                window_val = float(f"{float(window):.2f}")
+            windows = [float(f"{float(window):.2f}") for window in np.arange(w_start, w_end + step, step)]
+
+            for window_val in windows:
+                window_val = float(f"{float(window_val):.2f}")
                 window_str = f"{window_val:.2f}"
 
-                print(f"\033[92m[PULL] submit pull window {window} \033[0m")
+                print(f"\033[92m[PULL] submit pull window {window_val} \033[0m")
 
                 pull_cmd = [
                     "sbatch",
-                    f"--job-name={job_id}_{window}",
+                    f"--job-name={job_id}_{window_val}",
                 ]
 
                 if prev_job_id is not None:
@@ -83,4 +85,4 @@ class PullMethod(BaseMethod):
 
                 pull_job_id = pull_result.stdout.strip().split()[-1]
                 prev_job_id = pull_job_id
-                ctx.pull_job_ids[window] = pull_job_id
+                ctx.pull_job_ids[window_val] = pull_job_id

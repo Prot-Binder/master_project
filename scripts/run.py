@@ -2,11 +2,10 @@ from src.config import load_config, inject_paths, prepare_directories, validate_
     compute_paths
 from src.methods.JobContext import JobContext
 from src.setup.system import setup_simulation
+from src.utils.backup_manager import BackupManager
 
 from src.setup import *
 from pathlib import Path
-from datetime import datetime
-import shutil
 
 from src.methods.method_selector import select_method
 from dataclasses import is_dataclass, fields
@@ -57,27 +56,6 @@ def create_directories(paths: dict) -> None:
             value.mkdir(parents=True, exist_ok=True)
 
 
-def backup_existing_method_dirs(cfg, paths: dict) -> None:
-    method_names = get_configured_method_names(cfg)
-    if len(method_names) == 0:
-        return
-
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_root = paths["root"] / "_backup" / timestamp
-
-    for method_name in method_names:
-        method_root = paths[method_name]["root"]
-        if not method_root.exists() or not method_root.is_dir():
-            continue
-        if not any(method_root.iterdir()):
-            continue
-
-        backup_dest = backup_root / method_name
-        backup_dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(method_root), str(backup_dest))
-        print(f"[backup] moved {method_root} -> {backup_dest}")
-
-
 def main(cfg_path: str):
 
     # 1. load configuration from yaml file and copy yaml input file into setup dir
@@ -89,7 +67,7 @@ def main(cfg_path: str):
 
     # 2. perform setup step depending on setup_type and if setup for similar system was already performed
     paths = compute_paths(cfg)
-    backup_existing_method_dirs(cfg, paths)
+    BackupManager(cfg, paths).backup_run_targets()
     create_directories(paths) # todo:check if this is necessary; probably already in the prepare_directories step, but we can keep it here for safety
     cfg.paths = paths
     ctx = JobContext()
@@ -101,7 +79,7 @@ def main(cfg_path: str):
     copy_yaml_input(cfg, cfg_path)
 
     method_names = get_configured_method_names(cfg)
-    # method_names = []
+
     for method_name in method_names:
         print(f"running {method_name}")
         method = select_method(method_name, cfg)
