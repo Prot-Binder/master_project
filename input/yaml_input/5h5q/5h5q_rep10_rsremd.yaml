@@ -1,0 +1,41 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# running creating PMF and rs-remd for rep10, i.e. d = .28; e = 0.86;
+# we like to show which value do we get for stronger scaling; compared to
+# rep4 and rep8; as rs-remd failed previously, we need to submit again
+##################################################################
+tag: rep10
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042]
+
+system:
+  pdb: ~/master_project/input/pdb_files/5h5q/5h5q_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 5h5q
+  ligand_residues: 166-178
+  protein_residues: 1-164
+  # bond: "377.N-390.C"
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  rs_remd:
+    name: "rs_remd"
+    n_rep: 8
+    ngpu: 2
+    partition: "barracuda"
+    constraint: "rtx4090|rtx5090|rtx2080ti"
+    nstlim_eq: 1000000
+    nstlim: 250
+    numexchg: 20000
+    d: [0.000, 0.040, 0.080, 0.120, 0.160, 0.200, 0.240, 0.280]
+    e: [1.000, 0.980, 0.960, 0.940, 0.920, 0.900, 0.880, 0.860]
+    k: 12.0
+
