@@ -19,7 +19,7 @@ NVT Eq. /w Cmplx Rstrnts
 	restraintmask='(!:WAT & !@H=)',
 
 	! MOLECULAR DYNAMICS
-	nstlim=80000,
+	nstlim=8000,
 	dt=0.001,
 
 	! TEMPERATURE REGULATION
@@ -41,7 +41,7 @@ NVT Eq. /w Cmplx Rstrnts
 &wt
     type='TEMP0',
     istep1=0,
-    istep2=80000,    ! == nstlim
+    istep2=8000,    ! == nstlim
     value1=0,
     value2=300,
 &end
