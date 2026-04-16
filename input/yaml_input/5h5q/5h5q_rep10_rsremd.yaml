@@ -29,9 +29,7 @@ methods:
   rs_remd:
     name: "rs_remd"
     n_rep: 8
-    ngpu: 2
-    partition: "barracuda"
-    constraint: "rtx4090|rtx5090|rtx2080ti"
+    ngpu: 1
     nstlim_eq: 1000000
     nstlim: 250
     numexchg: 20000
