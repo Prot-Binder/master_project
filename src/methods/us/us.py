@@ -45,8 +45,9 @@ class USMethod(BaseMethod):
                     f"--job-name={job_id}_{window_str}",
                 ]
 
-                if dependency_job_id is not None:
-                    us_cmd.append(f"--dependency=afterok:{dependency_job_id}")
+                dependency_arg = self._dependency_arg(ctx.setup_job_id, dependency_job_id)
+                if dependency_arg is not None:
+                    us_cmd.append(dependency_arg)
 
                 us_cmd += [
                     "--gres=gpu:1",

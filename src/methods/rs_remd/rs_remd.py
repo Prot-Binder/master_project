@@ -37,8 +37,9 @@ class RSREMDMethod(BaseMethod):
             "sbatch",
             f"--job-name={job_id}_rsremd_eq",
         ]
-        if prev_job_id is not None:
-            rsremd_eq.append(f"--dependency=afterok:{prev_job_id}")
+        dependency_arg = self._dependency_arg(ctx.setup_job_id, prev_job_id)
+        if dependency_arg is not None:
+            rsremd_eq.append(dependency_arg)
 
         rsremd_eq += [
             f"--gres=gpu:1",

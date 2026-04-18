@@ -51,8 +51,9 @@ class PullMethod(BaseMethod):
                     f"--job-name={job_id}_{window_val}",
                 ]
 
-                if prev_job_id is not None:
-                    pull_cmd.append(f"--dependency=afterok:{prev_job_id}")
+                dependency_arg = self._dependency_arg(ctx.setup_job_id, prev_job_id)
+                if dependency_arg is not None:
+                    pull_cmd.append(dependency_arg)
 
                 pull_cmd += [
                     f"--gres=gpu:1",

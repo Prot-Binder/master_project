@@ -73,8 +73,9 @@ class USREMDMethod(BaseMethod):
                 "sbatch",
                 f"--job-name={self.cfg.system.name}_{self.cfg.tag}_usremd_b{block_idx}",
             ]
-            if dependency_ids:
-                usremd_cmd.append(f"--dependency=afterok:{':'.join(dependency_ids)}")
+            dependency_arg = self._dependency_arg(ctx.setup_job_id, dependency_ids)
+            if dependency_arg is not None:
+                usremd_cmd.append(dependency_arg)
             if method_cfg.partition is not None:
                 usremd_cmd.append(f"--partition={method_cfg.partition}")
             if method_cfg.constraint is not None:
