@@ -145,7 +145,8 @@ def generate_us(cfg, ctx):
             mdin_text = (mdin_file.read_text()
                     .replace("{WINDOW}", str(window_str))
                     .replace("{IN_PATH}", str(input_path))
-                    .replace("{OUT_PATH}", str(output_path)))
+                    .replace("{OUT_PATH}", str(output_path))
+                    .replace("{NSTLIM}", str(int(cfg.methods.us.nstlim))))
             mdin_output_file = us_input_dir / f"mdin6.w{window_str}"
             mdin_output_file.write_text(mdin_text)
 

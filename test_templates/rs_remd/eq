@@ -18,7 +18,7 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 	ntr=0,
 
 	! MOLECULAR DYNAMICS
-	nstlim=5000,
+	nstlim={NSTLIM},
 	dt=0.001,
 
 	! TEMPERATURE REGULATION

@@ -19,7 +19,7 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
 	ntr=0,
 
 	! MOLECULAR DYNAMICS
-	nstlim=2500,
+	nstlim={NSTLIM},
 	dt=0.004,
 
 	! TEMPERATURE REGULATION
