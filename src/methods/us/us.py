@@ -36,13 +36,13 @@ class USMethod(BaseMethod):
 
             for window in windows:
                 window_value = float(f"{float(window):.2f}")
-                window_str = f"{window:.2f}"
+                window_str = f"{window_value:.2f}"
                 dependency_job_id = self._resolve_pull_dependency(window_value, pull_dir, ctx)
 
                 print(f"\033[92m[US] submit us window {window_value}\033[0m")
                 us_cmd = [
                     "sbatch",
-                    f"--job-name={job_id}_{window_value}",
+                    f"--job-name={job_id}_{window_str}",
                 ]
 
                 if dependency_job_id is not None:
@@ -55,7 +55,7 @@ class USMethod(BaseMethod):
                     "--ntasks=1",
                     "--cpus-per-task=1",
                     exclude_arg,
-                    f"--output={slurm_dir.resolve()}/slurm-%j_us{window_value}.out",
+                    f"--output={slurm_dir.resolve()}/slurm-%j_us{window_str}.out",
                     f"{script_dir.resolve()}/run_us.sh",
                     f"{window_str}",
                     str(input_dir.resolve()),
@@ -83,17 +83,18 @@ class USMethod(BaseMethod):
 
     def _resolve_pull_dependency(self, window: float, pull_amber_dir: Path, ctx: JobContext) -> str | None:
         window_val = float(f"{float(window):.2f}")
+        window_str = f"{window_val:.2f}"
         if ctx.pull_job_ids is not None:
             pull_job_id = ctx.pull_job_ids.get(window_val)
             if pull_job_id is not None and self._is_slurm_job_active(pull_job_id):
                 return pull_job_id
 
-        pull_restart = pull_amber_dir / f"restrt5.w{window_val}"
+        pull_restart = pull_amber_dir / f"restrt5.w{window_str}"
         if pull_restart.exists():
             return None
 
         raise RuntimeError(
-            f"Pull output for window {window_val} not available. "
+            f"Pull output for window {window_str} not available. "
             f"Expected either an active pull job id or restart file {pull_restart}."
         )
 
