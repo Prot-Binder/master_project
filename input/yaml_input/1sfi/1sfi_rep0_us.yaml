@@ -27,7 +27,7 @@ setup:
 methods:
   us:
     name: "us"
-    nstlim: 12500000000
+    nstlim: 12500000
     d: [0.00]
     e: [1.00]
     us_intervals:
