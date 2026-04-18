@@ -35,13 +35,14 @@ class USMethod(BaseMethod):
             windows = [float(f"{float(window):.2f}") for window in np.arange(w_start, w_end + step, step)]
 
             for window in windows:
+                window_value = float(f"{float(window):.2f}")
                 window_str = f"{window:.2f}"
-                dependency_job_id = self._resolve_pull_dependency(window, pull_dir, ctx)
+                dependency_job_id = self._resolve_pull_dependency(window_value, pull_dir, ctx)
 
-                print(f"\033[92m[US] submit us window {window}\033[0m")
+                print(f"\033[92m[US] submit us window {window_value}\033[0m")
                 us_cmd = [
                     "sbatch",
-                    f"--job-name={job_id}_{window}",
+                    f"--job-name={job_id}_{window_value}",
                 ]
 
                 if dependency_job_id is not None:
@@ -54,7 +55,7 @@ class USMethod(BaseMethod):
                     "--ntasks=1",
                     "--cpus-per-task=1",
                     exclude_arg,
-                    f"--output={slurm_dir.resolve()}/slurm-%j_us{window}.out",
+                    f"--output={slurm_dir.resolve()}/slurm-%j_us{window_value}.out",
                     f"{script_dir.resolve()}/run_us.sh",
                     f"{window_str}",
                     str(input_dir.resolve()),
