@@ -82,17 +82,18 @@ class USMethod(BaseMethod):
 
 
     def _resolve_pull_dependency(self, window: float, pull_amber_dir: Path, ctx: JobContext) -> str | None:
+        window_val = float(f"{float(window):.2f}")
         if ctx.pull_job_ids is not None:
-            pull_job_id = ctx.pull_job_ids.get(window)
+            pull_job_id = ctx.pull_job_ids.get(window_val)
             if pull_job_id is not None and self._is_slurm_job_active(pull_job_id):
                 return pull_job_id
 
-        pull_restart = pull_amber_dir / f"restrt5.w{window}"
+        pull_restart = pull_amber_dir / f"restrt5.w{window_val}"
         if pull_restart.exists():
             return None
 
         raise RuntimeError(
-            f"Pull output for window {window} not available. "
+            f"Pull output for window {window_val} not available. "
             f"Expected either an active pull job id or restart file {pull_restart}."
         )
 
