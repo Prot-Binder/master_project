@@ -39,7 +39,7 @@ class USMethod(BaseMethod):
                 window_str = f"{window_value:.2f}"
                 dependency_job_id = self._resolve_pull_dependency(window_value, pull_dir, ctx)
 
-                print(f"\033[92m[US] submit us window {window_value}\033[0m")
+                print(f"\033[92m[US] submit us window {window_str}\033[0m")
                 us_cmd = [
                     "sbatch",
                     f"--job-name={job_id}_{window_str}",
