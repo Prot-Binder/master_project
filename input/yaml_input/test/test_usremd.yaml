@@ -23,6 +23,13 @@ setup:
   setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
 
 methods:
+  eq:
+    name: "eq"
+    d: [0.28]
+    e: [0.86]
+    execute: True
+    use_cpu: False
+    nstlim: 2500
   pull:
     name: "pull"
     d: [0.28]
