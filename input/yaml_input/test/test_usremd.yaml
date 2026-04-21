@@ -4,7 +4,7 @@
 # Comment: THIS IS A FILE CONTAINING ALL METHODS FOR TESTING PURPOSES.
 # DO NOT DELETE AND ALWAYS ADD NEW METHODS TO THIS FILE.
 ##################################################################
-tag: test
+tag: test_usremd
 test: True
 
 cluster:
