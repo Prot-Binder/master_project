@@ -196,7 +196,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     # define input path for restraints file
     input_path = "../input" # ctx.paths["rs_remd"]["input"]
     # define output path for amber output files
-    output_path = "../run_output/pmd"  # ctx.paths["rs_remd"]["pmd"]
+    output_path = ctx.paths["rs_remd"]["pmd"].resolve() # "../run_output/pmd"  # ctx.paths["rs_remd"]["pmd"]
 
     if cfg.methods.rs_remd is None:
         raise ValueError("generate_us requires cfg.methods.rs_remd to be configured.")
