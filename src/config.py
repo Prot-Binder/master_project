@@ -122,8 +122,15 @@ class USIntervalCfg:
 
 
 @dataclass(frozen=True)
+class ContinuationCfg:
+    enabled: bool
+    source_tag: str
+
+
+@dataclass(frozen=True)
 class USCfg(MethodCfgBase):
     us_intervals: list[USIntervalCfg]
+    continuation: Optional[ContinuationCfg] = None
 
 
 @dataclass(frozen=True)
@@ -209,6 +216,12 @@ class Config:
                     raise ValueError(f"methods.us.us_intervals[{idx}].step must be > 0")
                 if interval.start >= interval.end:
                     raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
+            if self.methods.us.continuation is not None and self.methods.us.continuation.enabled:
+                source_tag = self.methods.us.continuation.source_tag.strip()
+                if not source_tag:
+                    raise ValueError("methods.us.continuation.source_tag must be non-empty when continuation is enabled.")
+                if source_tag == self.tag:
+                    raise ValueError("methods.us.continuation.source_tag must differ from the current tag.")
 
         if self.methods.rs_remd is not None:
             rs_cfg = self.methods.rs_remd
@@ -334,6 +347,22 @@ def _load_pull(raw: dict) -> Optional[PullCfg]:
     )
 
 
+def _load_continuation(raw: dict, ctx: str) -> Optional[ContinuationCfg]:
+    continuation_raw = raw.get("continuation")
+    if continuation_raw is None:
+        return None
+
+    continuation_raw = _ensure_mapping(continuation_raw, f"{ctx}.continuation")
+    enabled = _as_bool(continuation_raw.get("enabled", False), f"{ctx}.continuation.enabled")
+    if not enabled:
+        return None
+
+    return ContinuationCfg(
+        enabled=enabled,
+        source_tag=str(_require(continuation_raw, "source_tag", f"{ctx}.continuation")),
+    )
+
+
 def _load_us(raw: dict) -> Optional[USCfg]:
     methods_raw = raw.get("methods", {})
     if methods_raw is None:
@@ -369,6 +398,7 @@ def _load_us(raw: dict) -> Optional[USCfg]:
         e=_as_float_list(_require(us_raw, "e", "methods.us"), "methods.us.e"),
         nstlim=_as_int(us_raw.get("nstlim", 25000000), "methods.us.nstlim"),
         us_intervals=us_intervals,
+        continuation=_load_continuation(us_raw, "methods.us"),
     )
 
 
@@ -477,6 +507,48 @@ def load_config(path: str | Path) -> Config:
     )
     cfg.validate()
     return cfg
+
+
+def _configured_us_windows(us_cfg: USCfg) -> list[str]:
+    windows: list[str] = []
+    for interval in us_cfg.us_intervals:
+        n_windows = int(round((interval.end - interval.start) / interval.step)) + 1
+        for idx in range(n_windows):
+            window = float(f"{interval.start + idx * interval.step:.2f}")
+            window_str = f"{window:.2f}"
+            if window_str not in windows:
+                windows.append(window_str)
+    return windows
+
+
+def validate_continuation_settings(cfg: Config) -> None:
+    """
+    Validate continuation inputs before compute_paths() creates the current tag directory.
+    """
+    us_cfg = cfg.methods.us
+    if us_cfg is None or us_cfg.continuation is None or not us_cfg.continuation.enabled:
+        return
+
+    target_root = cfg.system.output_prefix / cfg.system.name / cfg.tag
+    if target_root.exists():
+        raise FileExistsError(
+            f"US continuation requires a new tag, but the target tag already exists: {target_root}"
+        )
+
+    source_root = cfg.system.output_prefix / cfg.system.name / us_cfg.continuation.source_tag
+    source_amber_dir = source_root / "us" / "run_output" / "amber"
+    missing_restart_files = [
+        source_amber_dir / f"restrt6.w{window_str}"
+        for window_str in _configured_us_windows(us_cfg)
+        if not (source_amber_dir / f"restrt6.w{window_str}").exists()
+    ]
+
+    if missing_restart_files:
+        formatted_missing = "\n".join(str(path) for path in missing_restart_files)
+        raise FileNotFoundError(
+            "US continuation is enabled, but restart files are missing in the source tag:\n"
+            f"{formatted_missing}"
+        )
 
 # TODO: possibly delete thsi
 def inject_paths(cfg: Config) -> Config:

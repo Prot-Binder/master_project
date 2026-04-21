@@ -1,10 +1,8 @@
-# src/methods/us.py
 import subprocess
 from pathlib import Path
 
 import numpy as np
 
-from src.config import Config
 from src.methods import JobContext
 from src.methods.base_method import BaseMethod
 
@@ -23,9 +21,10 @@ class USMethod(BaseMethod):
 
         exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
 
-        pull_dir = self._get_pull_dir(ctx)
+        continuation_enabled = self._is_continuation_enabled()
+        pull_dir = None if continuation_enabled else self._get_pull_dir(ctx)
 
-        ctx.us_job_id = {}
+        ctx.us_job_ids = {}
 
         for interval in self.cfg.methods.us.us_intervals:
             w_start = float(f"{float(interval.start):.2f}")
@@ -37,7 +36,10 @@ class USMethod(BaseMethod):
             for window in windows:
                 window_value = float(f"{float(window):.2f}")
                 window_str = f"{window_value:.2f}"
-                dependency_job_id = self._resolve_pull_dependency(window_value, pull_dir, ctx)
+                coordinate_file = self._resolve_input_coordinate(window_value, pull_dir)
+                dependency_job_id = None
+                if not continuation_enabled:
+                    dependency_job_id = self._resolve_pull_dependency(window_value, pull_dir, ctx)
 
                 print(f"\033[92m[US] submit us window {window_str}\033[0m")
                 us_cmd = [
@@ -62,7 +64,7 @@ class USMethod(BaseMethod):
                     str(input_dir.resolve()),
                     str(amber_dir.resolve()),
                     str(ctx.paths["us"]["top"].resolve()),
-                    str(pull_dir.resolve()),
+                    str(coordinate_file.resolve()),
                 ]
 
                 us_result = subprocess.run(
@@ -79,10 +81,40 @@ class USMethod(BaseMethod):
                     raise RuntimeError("sbatch failed")
 
                 us_job_id = us_result.stdout.strip().split()[-1]
-                ctx.us_job_id[window] = us_job_id
+                ctx.us_job_ids[window] = us_job_id
 
 
-    def _resolve_pull_dependency(self, window: float, pull_amber_dir: Path, ctx: JobContext) -> str | None:
+    def _is_continuation_enabled(self) -> bool:
+        us_cfg = self.cfg.methods.us
+        return us_cfg is not None and us_cfg.continuation is not None and us_cfg.continuation.enabled
+
+    def _resolve_input_coordinate(self, window: float, pull_amber_dir: Path | None) -> Path:
+        window_val = float(f"{float(window):.2f}")
+        window_str = f"{window_val:.2f}"
+        if self._is_continuation_enabled():
+            source_tag = self.cfg.methods.us.continuation.source_tag
+            coord_file = (
+                Path(self.cfg.system.output_prefix)
+                / self.cfg.system.name
+                / source_tag
+                / "us"
+                / "run_output"
+                / "amber"
+                / f"restrt6.w{window_str}"
+            )
+        else:
+            if pull_amber_dir is None:
+                raise RuntimeError("Internal error: pull_amber_dir is required when US continuation is disabled.")
+            coord_file = pull_amber_dir / f"restrt5.w{window_str}"
+
+        if not coord_file.exists():
+            raise FileNotFoundError(f"US input coordinate file does not exist for window {window_str}: {coord_file}")
+        return coord_file
+
+    def _resolve_pull_dependency(self, window: float, pull_amber_dir: Path | None, ctx: JobContext) -> str | None:
+        if pull_amber_dir is None:
+            raise RuntimeError("Internal error: pull_amber_dir is required for pull dependency resolution.")
+
         window_val = float(f"{float(window):.2f}")
         window_str = f"{window_val:.2f}"
         if ctx.pull_job_ids is not None:
