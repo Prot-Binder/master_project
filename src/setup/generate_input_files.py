@@ -71,9 +71,9 @@ def generate_pull(cfg, ctx):
     shutil.copy2(setup_dir / "_lroa.r", pull_input_dir)
 
     # define input path for restraints file
-    input_path = ctx.paths["pull"]["input"]
+    input_path = "./input" # ctx.paths["pull"]["input"]
     # define output path for amber output files
-    output_path = ctx.paths["pull"]["pmd"]
+    output_path = "./run_output/pmd" # ctx.paths["pull"]["pmd"]
 
     if cfg.methods.pull is None:
         raise ValueError("generate_pull requires cfg.methods.pull to be configured.")
