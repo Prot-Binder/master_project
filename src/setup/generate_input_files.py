@@ -194,9 +194,9 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     shutil.copy2(setup_dir / "_lroaus.r", rs_remd_input_dir)
 
     # define input path for restraints file
-    input_path = "../input" # ctx.paths["rs_remd"]["input"]
+    input_path = "../input"
     # define output path for amber output files
-    output_path = "../run_output/pmd" # ctx.paths["rs_remd"]["pmd"].resolve() # "../run_output/pmd"  # ctx.paths["rs_remd"]["pmd"]
+    output_path = "../run_output/pmd"
 
     if cfg.methods.rs_remd is None:
         raise ValueError("generate_us requires cfg.methods.rs_remd to be configured.")

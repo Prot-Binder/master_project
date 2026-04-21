@@ -27,11 +27,11 @@
   ntwx=2500,
   ntwr=10000,
 
-  ntr=0,
-  nmropt=1,
-/
-  &wt type='REST', istep1=0, istep2=1, value1=1.0, value2=1.0, /
-  &wt type='END', /
-  DISANG = {IN_PATH}/_lroaus_usremd_w{WINDOW}.r
-  DUMPAVE={OUT_PATH}/usremd_w{WINDOW}.txt
+  infe=1, ! enable colvar style restraints (i.e. pmd)
+ /
+ &pmd
+        output_file = '{OUT_PATH}/usremd_w{WINDOW}.txt'
+        output_freq = 50
+        cv_file = '{IN_PATH}/_lroaus_usremd_w{WINDOW}.r'
+ /
 eof
