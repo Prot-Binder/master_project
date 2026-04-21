@@ -165,6 +165,7 @@ class RSREMDMethod(BaseMethod):
             capture_output=True,
             text=True,
             cwd=log_dir.resolve(),
+            # cwd=result_dir.resolve(),
         )
 
         if rsremd_prod_result.returncode != 0:

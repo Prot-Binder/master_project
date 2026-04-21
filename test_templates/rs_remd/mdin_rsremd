@@ -30,8 +30,8 @@
   infe=1, ! enable colvar style restraints (i.e. pmd)
  /
  &pmd
-        output_file = {OUT_PATH}/rsremd_{REPLICA}.txt
+        output_file = '{OUT_PATH}/rsremd_{REPLICA}.txt'
         output_freq = 50
-        cv_file = {IN_PATH}/_lroaus_rs.r
+        cv_file = '{IN_PATH}/_lroaus_rs.r'
  /
 eof
