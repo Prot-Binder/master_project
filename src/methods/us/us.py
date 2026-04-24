@@ -99,13 +99,15 @@ class USMethod(BaseMethod):
                 current_method="us",
                 window=window_str,
             )
+            if not coord_file.exists():
+                raise FileNotFoundError(
+                    f"US input coordinate file does not exist for window {window_str}: {coord_file}"
+                )
         else:
             if pull_amber_dir is None:
                 raise RuntimeError("Internal error: pull_amber_dir is required when US continuation is disabled.")
             coord_file = pull_amber_dir / f"restrt5.w{window_str}"
 
-        if not coord_file.exists():
-            raise FileNotFoundError(f"US input coordinate file does not exist for window {window_str}: {coord_file}")
         return coord_file
 
     def _resolve_pull_dependency(self, window: float, pull_amber_dir: Path | None, ctx: JobContext) -> str | None:
