@@ -34,6 +34,7 @@ methods:
     name: "rs_remd"
     n_rep: 8
     ngpu: 1
+    # nodelist: "nodeX"
     # partition: "barracuda"
     # constraint: "rtx4090|rtx5090|rtx2080ti"
     nstlim_eq: 1000

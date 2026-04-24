@@ -50,6 +50,7 @@ methods:
   us_remd:
     name: "us_remd"
     ngpu: 1
+    # nodelist: "nodeX"
     # partition: "barracuda"
     # constraint: "rtx4090|rtx5090|rtx2080ti"
     # Optional continuation from a previous tag.

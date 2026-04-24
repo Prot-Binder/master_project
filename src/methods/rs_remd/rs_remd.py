@@ -138,6 +138,9 @@ class RSREMDMethod(BaseMethod):
         if prev_job_id is not None:
             rsremd_prod.append(f"--dependency=afterok:{prev_job_id}")
 
+        if self.cfg.methods.rs_remd.nodelist is not None:
+            rsremd_prod.append(f"--nodelist={self.cfg.methods.rs_remd.nodelist}")
+
         if self.cfg.methods.rs_remd.partition is not None:
             rsremd_prod.append(f"--partition={self.cfg.methods.rs_remd.partition}")
 

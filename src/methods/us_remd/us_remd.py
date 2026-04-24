@@ -83,6 +83,8 @@ class USREMDMethod(BaseMethod):
             dependency_arg = self._dependency_arg(ctx.setup_job_id, dependency_ids)
             if dependency_arg is not None:
                 usremd_cmd.append(dependency_arg)
+            if method_cfg.nodelist is not None:
+                usremd_cmd.append(f"--nodelist={method_cfg.nodelist}")
             if method_cfg.partition is not None:
                 usremd_cmd.append(f"--partition={method_cfg.partition}")
             if method_cfg.constraint is not None:
