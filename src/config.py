@@ -154,6 +154,7 @@ class RSREMDCfg(MethodCfgBase):
     n_rep: int
     k: float
     nstlim_eq: int
+    nstlim_eq_each: Optional[int] = None
     numexchg: int
     ngpu: int
     nodelist: Optional[str] = None
@@ -252,6 +253,8 @@ class Config:
                 raise ValueError("methods.rs_remd.nstlim must be > 0")
             if rs_cfg.nstlim_eq <= 0:
                 raise ValueError("methods.rs_remd.nstlim_eq must be > 0")
+            if rs_cfg.nstlim_eq_each is not None and rs_cfg.nstlim_eq_each <= 0:
+                raise ValueError("methods.rs_remd.nstlim_eq_each must be > 0 if specified")
             if rs_cfg.numexchg <= 0:
                 raise ValueError("methods.rs_remd.numexchg must be > 0")
             if rs_cfg.ngpu <= 0:
@@ -474,6 +477,8 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         n_rep=int(_require(rs_raw, "n_rep", "methods.rs_remd")),
         k=float(_require(rs_raw, "k", "methods.rs_remd")),
         nstlim_eq=int(_require(rs_raw, "nstlim_eq", "methods.rs_remd")),
+        nstlim_eq_each=_as_int(rs_raw["nstlim_eq_each"], "methods.rs_remd.nstlim_eq_each")
+        if rs_raw.get("nstlim_eq_each") is not None else None,
         numexchg=int(_require(rs_raw, "numexchg", "methods.rs_remd")),
         ngpu=int(_require(rs_raw, "ngpu", "methods.rs_remd")),
         nodelist=str(rs_raw["nodelist"]) if rs_raw.get("nodelist") is not None else None,

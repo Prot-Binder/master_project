@@ -38,6 +38,8 @@ methods:
     # partition: "barracuda"
     # constraint: "rtx4090|rtx5090|rtx2080ti"
     nstlim_eq: 1000
+    # Optional short equilibration for every scaling / replica after the initial special-scaling eq.
+    # nstlim_eq_each: 250
     nstlim: 250
     numexchg: 100
     d: [0.000, 0.040, 0.080, 0.120, 0.160, 0.200, 0.240, 0.280]

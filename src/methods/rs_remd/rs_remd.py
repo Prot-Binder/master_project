@@ -14,6 +14,7 @@ class RSREMDMethod(BaseMethod):
 
         self._submit_eq_simulation(ctx)
         self._submit_setup_job(ctx)
+        self._submit_replica_eq_simulation(ctx)
         self._submit_prod_simulation(ctx)
 
 
@@ -118,10 +119,75 @@ class RSREMDMethod(BaseMethod):
 
         ctx.rsremd_setup_job_id = rsremd_setup_result.stdout.strip().split()[-1]
 
+    def _submit_replica_eq_simulation(self, ctx: JobContext) -> None:
+        if self.cfg.methods.rs_remd.nstlim_eq_each is None:
+            ctx.rsremd_eq_each_job_id = None
+            return
+
+        if ctx.rsremd_setup_job_id is None:
+            raise ValueError("ctx.rsremd_setup_job_id is required before submitting the RS-REMD replica equilibration job.")
+
+        job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
+        script_dir = ctx.paths["rs_remd"]["script"]
+        result_dir = ctx.paths["rs_remd"]["root"]
+        log_dir = result_dir / "log_eq_each"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        slurm_dir = ctx.paths["rs_remd"]["slurm"]
+        input_dir = ctx.paths["rs_remd"]["input"]
+        exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
+
+        rsremd_eq_each = [
+            "sbatch",
+            f"--job-name={job_id}_rsremd_eq_each",
+            f"--dependency=afterok:{ctx.rsremd_setup_job_id}",
+        ]
+
+        if self.cfg.methods.rs_remd.nodelist is not None:
+            rsremd_eq_each.append(f"--nodelist={self.cfg.methods.rs_remd.nodelist}")
+
+        if self.cfg.methods.rs_remd.partition is not None:
+            rsremd_eq_each.append(f"--partition={self.cfg.methods.rs_remd.partition}")
+
+        if self.cfg.methods.rs_remd.constraint is not None:
+            rsremd_eq_each.append(f"--constraint={self.cfg.methods.rs_remd.constraint}")
+
+        input_file = input_dir.resolve() / "rs_remd_eq_each.groupfile"
+        rsremd_eq_each += [
+            f"--gres=gpu:{self.cfg.methods.rs_remd.ngpu}",
+            "--nodes=1",
+            "--time=2-00:00:00",
+            f"--ntasks={self.cfg.methods.rs_remd.n_rep}",
+            "--cpus-per-task=1",
+            exclude_arg,
+            f"--output={slurm_dir.resolve()}/slurm-%j_rsremd_eq_each.out",
+            f"{script_dir.resolve()}/run_rsremd_eq_each.sh",
+            str(self.cfg.methods.rs_remd.n_rep),
+            str(input_file),
+        ]
+
+        rsremd_eq_each_result = subprocess.run(
+            rsremd_eq_each,
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=log_dir.resolve(),
+        )
+
+        if rsremd_eq_each_result.returncode != 0:
+            print("STDOUT:\n", rsremd_eq_each_result.stdout)
+            print("STDERR:\n", rsremd_eq_each_result.stderr)
+            raise RuntimeError("sbatch failed")
+
+        ctx.rsremd_eq_each_job_id = rsremd_eq_each_result.stdout.strip().split()[-1]
+
     def _submit_prod_simulation(self, ctx: JobContext):
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
 
-        prev_job_id = ctx.rsremd_setup_job_id if ctx.rsremd_setup_job_id is not None else None
+        prev_job_id = (
+            ctx.rsremd_eq_each_job_id
+            if ctx.rsremd_eq_each_job_id is not None
+            else ctx.rsremd_setup_job_id
+        )
 
         script_dir = ctx.paths["rs_remd"]["script"]
         result_dir = ctx.paths["rs_remd"]["root"]

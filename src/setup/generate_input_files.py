@@ -204,6 +204,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
 
     # adjust input files for us simulation
     mdin_file = rs_remd_input_dir / "mdin_rsremd"
+    mdin_eq_each_file = rs_remd_input_dir / "mdin_rsremd_eq_each"
     restraint_file = rs_remd_input_dir / "_lroaus.r"
     com_window = float(f"{ctx.com_distance:.2f}")
 
@@ -218,16 +219,48 @@ def generate_rs_remd_prod(cfg: dict, ctx):
         mdin_output_file = rs_remd_input_dir / f"mdin_rsremd_rep{rep}"
         mdin_output_file.write_text(mdin_text)
 
-    # generate rsremd group file
-    lines = ["# RS-REMD groupfile (Hamiltonian Replica Exchange Molecular Dynamics)\n"]
+        if cfg.methods.rs_remd.nstlim_eq_each is not None:
+            mdin_eq_each_text = (mdin_eq_each_file.read_text()
+                                 .replace("{NSTLIM}", str(cfg.methods.rs_remd.nstlim_eq_each))
+                                 .replace("{IN_PATH}", str(input_path))
+                                 .replace("{OUT_PATH}", str(output_path))
+                                 .replace("{REPLICA}", str(rep)))
+            mdin_eq_each_output_file = rs_remd_input_dir / f"mdin_rsremd_eq_each_rep{rep}"
+            mdin_eq_each_output_file.write_text(mdin_eq_each_text)
+
+    # generate optional short equilibration group file for each replica/scaling
     in_dir = ctx.paths["rs_remd"]["input"].resolve()
     out_dir = ctx.paths["rs_remd"]["amber"].resolve()
     top_dir = ctx.paths["rs_remd"]["top"].resolve()
     coord_init = str(ctx.paths["rs_remd"]["eq"] / "restrt_rsremd_eq")
+
+    if cfg.methods.rs_remd.nstlim_eq_each is not None:
+        eq_each_lines = ["# RS-REMD short equilibration at each scaling\n"]
+        for rep in range(1, cfg.methods.rs_remd.n_rep+1):
+            eq_each_line = (
+                f"-i {in_dir}/mdin_rsremd_eq_each_rep{rep} "
+                f"-c {coord_init} "
+                f"-p {top_dir}/prmtop{rep} "
+                f"-r {out_dir}/restrt_rs_eq_each_rep{rep} "
+                f"-o {out_dir}/mdout_rs_eq_each_rep{rep} "
+                f"-x {out_dir}/traj_rs_eq_each_rep{rep}.nc "
+                f"-inf {out_dir}/mdinfo_rs_eq_each_rep{rep}\n"
+            )
+            eq_each_lines.append(eq_each_line)
+        eq_each_groupfile_path = rs_remd_input_dir / "rs_remd_eq_each.groupfile"
+        eq_each_groupfile_path.write_text("".join(eq_each_lines))
+
+    # generate rsremd production group file
+    lines = ["# RS-REMD groupfile (Hamiltonian Replica Exchange Molecular Dynamics)\n"]
     for rep in range(1, cfg.methods.rs_remd.n_rep+1):
+        coord_path = (
+            f"{out_dir}/restrt_rs_eq_each_rep{rep}"
+            if cfg.methods.rs_remd.nstlim_eq_each is not None
+            else coord_init
+        )
         line = (
             f"-i {in_dir}/mdin_rsremd_rep{rep} "
-            f"-c {coord_init} "
+            f"-c {coord_path} "
             f"-p {top_dir}/prmtop{rep} "
             f"-r {out_dir}/restrt_rs_rep{rep} "
             f"-o {out_dir}/mdout_rs_rep{rep} "
