@@ -4,7 +4,7 @@
 # Comment: THIS IS A FILE CONTAINING ALL METHODS FOR TESTING PURPOSES.
 # DO NOT DELETE AND ALWAYS ADD NEW METHODS TO THIS FILE.
 ##################################################################
-tag: test_usremd
+tag: test_usremd_cnt
 test: True
 
 cluster:
@@ -54,10 +54,10 @@ methods:
     # constraint: "rtx4090|rtx5090|rtx2080ti"
     # Optional continuation from a previous tag.
     # If source_method is omitted, it defaults to the current method: us_remd.
-    # continuation:
-    #   enabled: True
-    #   source_tag: previous_tag
-    #   source_method: us  # or us_remd
+    continuation:
+      enabled: True
+      source_tag: rep0_150ns
+      source_method: us  # or us_remd
     nstlim: 250
     numexchg: 10
     d: [ 0.28 ]
