@@ -2,7 +2,6 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
  &cntrl
 	! GENERAL FLAGS DESCRIBING THE CALCULATION
 	imin=0,
-	nmropt=1,
 
 	! NATURE AND FORMAT OF THE INPUT
 	irest=1,
@@ -48,3 +47,7 @@ Pre HREUS-Run with COM-Pulling for Adv-FE-Calculation
  	output_freq = 50
  	cv_file = '{IN_PATH}/_lroa.r'
  /
+ &wt
+    type='END',
+/
+eof
