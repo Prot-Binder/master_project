@@ -154,9 +154,9 @@ class RSREMDCfg(MethodCfgBase):
     n_rep: int
     k: float
     nstlim_eq: int
-    nstlim_eq_each: Optional[int] = None
     numexchg: int
     ngpu: int
+    nstlim_eq_each: Optional[int] = None
     nodelist: Optional[str] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
