@@ -2,13 +2,14 @@
 # Describe what this run is all about.
 # This helps your brain later (while writing your thesis).
 # Comment:
-# running us-remd for the 1sfi system. From 13.00 to 27.00 using
+# running us-remd for the 1sfi system. From 21.25 to 27.00 using
 # a spacing of 0.25 and force constant of k = 24. then from 27.75
 # to 35.75 using a spacing of 1.00 and force constant of k = 4.0
 # here we simulate another 50ns as we assumed that the first 50 ns did
 # not reach covergence, at least regarding receptor rmsd in most cases.
+# previous continuation run failed as using node 54 did not work.
 ##################################################################
-tag: rep0_cnt
+tag: rep0_cnt2
 test: False
 
 cluster:
