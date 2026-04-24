@@ -81,7 +81,7 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
     # run tleap and HMR
-    create_box_and_prmtop(cfg, ctx, first_method)
+    # create_box_and_prmtop(cfg, ctx, first_method)
     
     # create restraint template files
     system_pdb = first_setup_dir / "system.pdb"
