@@ -24,7 +24,7 @@
   ntxo=2,
 
   ntpr=2500, !Every ntpr steps, energy information will be printed
-  ntwx=2500, !Every ntwx steps, the coordinates will be written to the mdcrd file
+  ntwx=50, !Every ntwx steps, the coordinates will be written to the mdcrd file
   ntwr=10000, !Every ntwr steps during dynamics, the “restrt” file will be written
 
   infe=1, ! enable colvar style restraints (i.e. pmd)

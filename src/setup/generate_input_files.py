@@ -59,6 +59,16 @@ def generate_eq(cfg, ctx) -> None:
     mdin_output_file = eq_input_dir/f"mdin4"
     mdin_output_file.write_text(mdin_text)
 
+    mdin_eq_file = eq_input_dir / "mdin_eq"
+    if mdin_eq_file.exists() and cfg.methods.eq.nstlim_eq is not None:
+        mdin_eq_text = (
+            mdin_eq_file.read_text()
+            .replace("{IN_PATH}", str(input_path))
+            .replace("{OUT_PATH}", str(output_path))
+            .replace("{NSTLIM}", str(cfg.methods.eq.nstlim_eq))
+        )
+        mdin_eq_file.write_text(mdin_eq_text)
+
 def generate_pull(cfg, ctx):
 
     pull_input_dir = ctx.paths["pull"]["input"]

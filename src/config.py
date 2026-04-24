@@ -111,6 +111,7 @@ class MethodCfgBase:
 class EqCfg(MethodCfgBase):
     execute: bool
     use_cpu: bool
+    nstlim_eq: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -209,10 +210,13 @@ class Config:
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
 
         if self.methods.eq is not None and self.methods.eq.execute:
-            if len(self.methods.eq.d) == 0 or len(self.methods.eq.e) == 0:
+            eq_cfg = self.methods.eq
+            if len(eq_cfg.d) == 0 or len(eq_cfg.e) == 0:
                 raise ValueError("eq requires non-empty d and e values.")
-            if self.methods.eq.nstlim <= 0:
+            if eq_cfg.nstlim <= 0:
                 raise ValueError("eq.nstlim must be > 0")
+            if eq_cfg.nstlim_eq is not None and eq_cfg.nstlim_eq <= 0:
+                raise ValueError("eq.nstlim_eq must be > 0 if specified")
 
         if self.methods.pull is not None:
             if len(self.methods.pull.d) == 0 or len(self.methods.pull.e) == 0:
@@ -356,6 +360,7 @@ def _load_eq(raw: dict) -> Optional[EqCfg]:
         d=_as_float_list(eq_raw.get("d", []), "eq.d"),
         e=_as_float_list(eq_raw.get("e", []), "eq.e"),
         nstlim=_as_int(eq_raw.get("nstlim", 250000), "eq.nstlim"),
+        nstlim_eq=_as_int(eq_raw["nstlim_eq"], "eq.nstlim_eq") if eq_raw.get("nstlim_eq") is not None else None,
     )
 
 

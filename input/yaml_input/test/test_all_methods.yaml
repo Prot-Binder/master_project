@@ -30,6 +30,8 @@ methods:
     execute: True
     use_cpu: False
     nstlim: 2500
+    # Optional additional eq-stage mdin_eq runtime if templates/eq/mdin_eq is present.
+    nstlim_eq: 1000
   pull:
     name: "pull"
     d: [0.28]
