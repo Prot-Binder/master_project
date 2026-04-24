@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
+from src.config import resolve_continuation_restart_file
 from src.methods import JobContext
 from src.methods.base_method import BaseMethod
 
@@ -92,15 +93,11 @@ class USMethod(BaseMethod):
         window_val = float(f"{float(window):.2f}")
         window_str = f"{window_val:.2f}"
         if self._is_continuation_enabled():
-            source_tag = self.cfg.methods.us.continuation.source_tag
-            coord_file = (
-                Path(self.cfg.system.output_prefix)
-                / self.cfg.system.name
-                / source_tag
-                / "us"
-                / "run_output"
-                / "amber"
-                / f"restrt6.w{window_str}"
+            coord_file = resolve_continuation_restart_file(
+                self.cfg,
+                self.cfg.methods.us.continuation,
+                current_method="us",
+                window=window_str,
             )
         else:
             if pull_amber_dir is None:

@@ -64,6 +64,21 @@ def _as_int(value: Any, ctx: str) -> int:
         raise ValueError(f"'{ctx}' must be an integer.") from exc
 
 
+def _normalize_window_str(value: Any, ctx: str) -> str:
+    try:
+        return f"{float(value):.2f}"
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"'{ctx}' must be a numeric window value.") from exc
+
+
+def _normalize_method_name(value: Any, ctx: str) -> str:
+    normalized = str(value).strip().lower().replace("-", "_")
+    allowed_methods = {"us", "us_remd"}
+    if normalized not in allowed_methods:
+        raise ValueError(f"'{ctx}' must be one of {sorted(allowed_methods)}.")
+    return normalized
+
+
 @dataclass(frozen=True)
 class SystemCfg:
     pdb: Path
@@ -125,6 +140,7 @@ class USIntervalCfg:
 class ContinuationCfg:
     enabled: bool
     source_tag: str
+    source_method: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -156,6 +172,7 @@ class USREMDCfg(MethodCfgBase):
     numexchg: int
     ngpu: int
     us_remd_intervals: list[USREMDIntervalCfg]
+    continuation: Optional[ContinuationCfg] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
 
@@ -203,25 +220,21 @@ class Config:
                 raise ValueError("pull.nstlim must be > 0")
 
         if self.methods.us is not None:
+            us_cfg = self.methods.us
             if len(self.methods.us.d) == 0 or len(self.methods.us.e) == 0:
                 raise ValueError("methods.us requires non-empty d and e values.")
-            if self.methods.us.nstlim <= 0:
+            if us_cfg.nstlim <= 0:
                 raise ValueError("methods.us.nstlim must be > 0")
-            if len(self.methods.us.us_intervals) == 0:
+            if len(us_cfg.us_intervals) == 0:
                 raise ValueError("methods.us.us_intervals must be a non-empty list.")
-            for idx, interval in enumerate(self.methods.us.us_intervals):
+            for idx, interval in enumerate(us_cfg.us_intervals):
                 if interval.k <= 0:
                     raise ValueError(f"methods.us.us_intervals[{idx}].k must be > 0")
                 if interval.step <= 0:
                     raise ValueError(f"methods.us.us_intervals[{idx}].step must be > 0")
                 if interval.start >= interval.end:
                     raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
-            if self.methods.us.continuation is not None and self.methods.us.continuation.enabled:
-                source_tag = self.methods.us.continuation.source_tag.strip()
-                if not source_tag:
-                    raise ValueError("methods.us.continuation.source_tag must be non-empty when continuation is enabled.")
-                if source_tag == self.tag:
-                    raise ValueError("methods.us.continuation.source_tag must differ from the current tag.")
+            self._validate_continuation_cfg(us_cfg.continuation, current_method="us", ctx="methods.us")
 
         if self.methods.rs_remd is not None:
             rs_cfg = self.methods.rs_remd
@@ -249,14 +262,39 @@ class Config:
                 raise ValueError("methods.rs_remd.constraint must not be empty if specified")
 
         if self.methods.us_remd is not None:
-            if len(self.methods.us_remd.us_remd_intervals) == 0:
+            us_remd_cfg = self.methods.us_remd
+            if len(us_remd_cfg.us_remd_intervals) == 0:
                 raise ValueError("methods.us_remd.us_remd_intervals must be a non-empty list.")
-            for idx, interval in enumerate(self.methods.us_remd.us_remd_intervals):
+            for idx, interval in enumerate(us_remd_cfg.us_remd_intervals):
                 if interval.step <= 0:
                     raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].step must be > 0")
                 if interval.start > interval.end:
                     raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].start must be <= end")
-                n_windows = int(round((interval.end - interval.start) / interval.step)) + 1
+            self._validate_continuation_cfg(
+                us_remd_cfg.continuation,
+                current_method="us_remd",
+                ctx="methods.us_remd",
+            )
+
+    def _validate_continuation_cfg(
+        self,
+        continuation: Optional[ContinuationCfg],
+        *,
+        current_method: str,
+        ctx: str,
+    ) -> None:
+        if continuation is None or not continuation.enabled:
+            return
+
+        source_tag = continuation.source_tag.strip()
+        if not source_tag:
+            raise ValueError(f"{ctx}.continuation.source_tag must be non-empty when continuation is enabled.")
+        if source_tag == self.tag:
+            raise ValueError(f"{ctx}.continuation.source_tag must differ from the current tag.")
+
+        source_method = get_continuation_source_method(continuation, current_method=current_method)
+        if source_method not in {"us", "us_remd"}:
+            raise ValueError(f"{ctx}.continuation.source_method must resolve to 'us' or 'us_remd'.")
 
 def _load_cluster(raw: dict) -> ClusterCfg:
     cluster_raw = raw.get("cluster", {})
@@ -360,6 +398,14 @@ def _load_continuation(raw: dict, ctx: str) -> Optional[ContinuationCfg]:
     return ContinuationCfg(
         enabled=enabled,
         source_tag=str(_require(continuation_raw, "source_tag", f"{ctx}.continuation")),
+        source_method=(
+            _normalize_method_name(
+                continuation_raw["source_method"],
+                f"{ctx}.continuation.source_method",
+            )
+            if continuation_raw.get("source_method") is not None
+            else None
+        ),
     )
 
 
@@ -466,6 +512,7 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
         numexchg=_as_int(_require(us_remd_raw, "numexchg", "methods.us_remd"), "methods.us_remd.numexchg"),
         ngpu=_as_int(_require(us_remd_raw, "ngpu", "methods.us_remd"), "methods.us_remd.ngpu"),
         us_remd_intervals=us_remd_intervals,
+        continuation=_load_continuation(us_remd_raw, "methods.us_remd"),
         partition=str(us_remd_raw["partition"]) if us_remd_raw.get("partition") is not None else None,
         constraint=str(us_remd_raw["constraint"]) if us_remd_raw.get("constraint") is not None else None,
     )
@@ -521,34 +568,105 @@ def _configured_us_windows(us_cfg: USCfg) -> list[str]:
     return windows
 
 
+def _configured_us_remd_windows(us_remd_cfg: USREMDCfg) -> list[str]:
+    windows: list[str] = []
+    for interval in us_remd_cfg.us_remd_intervals:
+        n_windows = int(round((interval.end - interval.start) / interval.step)) + 1
+        for idx in range(n_windows):
+            window = float(f"{interval.start + idx * interval.step:.2f}")
+            window_str = f"{window:.2f}"
+            if window_str not in windows:
+                windows.append(window_str)
+    return windows
+
+
+def get_continuation_source_method(continuation: ContinuationCfg, *, current_method: str) -> str:
+    if continuation.source_method is not None:
+        return continuation.source_method
+    return _normalize_method_name(current_method, "current_method")
+
+
+def _continuation_source_amber_dir(cfg: Config, continuation: ContinuationCfg, *, current_method: str) -> Path:
+    source_method = get_continuation_source_method(continuation, current_method=current_method)
+    return (
+        Path(cfg.system.output_prefix)
+        / cfg.system.name
+        / continuation.source_tag
+        / source_method
+        / "run_output"
+        / "amber"
+    )
+
+
+def resolve_continuation_restart_file(
+    cfg: Config,
+    continuation: ContinuationCfg,
+    *,
+    current_method: str,
+    window: float | str,
+) -> Path:
+    window_str = _normalize_window_str(window, f"{current_method}.continuation.window")
+    source_method = get_continuation_source_method(continuation, current_method=current_method)
+    source_amber_dir = _continuation_source_amber_dir(
+        cfg,
+        continuation,
+        current_method=current_method,
+    )
+
+    if source_method == "us":
+        restart_file = source_amber_dir / f"restrt6.w{window_str}"
+        if not restart_file.exists():
+            raise FileNotFoundError(
+                f"Missing continuation restart file for window {window_str}: {restart_file}"
+            )
+        return restart_file
+
+    candidates = sorted(source_amber_dir.glob(f"restrt_usremd_b*_rep{window_str}"))
+    if len(candidates) == 1:
+        return candidates[0]
+    if len(candidates) == 0:
+        raise FileNotFoundError(
+            "Missing continuation restart file for window "
+            f"{window_str} in {source_amber_dir} matching restrt_usremd_b*_rep{window_str}"
+        )
+    raise FileExistsError(
+        "Ambiguous continuation restart files for window "
+        f"{window_str} in {source_amber_dir}: {', '.join(str(path) for path in candidates)}"
+    )
+
+
 def validate_continuation_settings(cfg: Config) -> None:
     """
     Validate continuation inputs before compute_paths() creates the current tag directory.
     """
+    continuation_targets: list[tuple[str, ContinuationCfg, list[str]]] = []
+
     us_cfg = cfg.methods.us
-    if us_cfg is None or us_cfg.continuation is None or not us_cfg.continuation.enabled:
+    if us_cfg is not None and us_cfg.continuation is not None and us_cfg.continuation.enabled:
+        continuation_targets.append(("us", us_cfg.continuation, _configured_us_windows(us_cfg)))
+
+    us_remd_cfg = cfg.methods.us_remd
+    if us_remd_cfg is not None and us_remd_cfg.continuation is not None and us_remd_cfg.continuation.enabled:
+        continuation_targets.append(("us_remd", us_remd_cfg.continuation, _configured_us_remd_windows(us_remd_cfg)))
+
+    if not continuation_targets:
         return
 
     target_root = cfg.system.output_prefix / cfg.system.name / cfg.tag
     if target_root.exists():
         raise FileExistsError(
-            f"US continuation requires a new tag, but the target tag already exists: {target_root}"
+            "Continuation requires a new tag, but the target tag already exists: "
+            f"{target_root}"
         )
 
-    source_root = cfg.system.output_prefix / cfg.system.name / us_cfg.continuation.source_tag
-    source_amber_dir = source_root / "us" / "run_output" / "amber"
-    missing_restart_files = [
-        source_amber_dir / f"restrt6.w{window_str}"
-        for window_str in _configured_us_windows(us_cfg)
-        if not (source_amber_dir / f"restrt6.w{window_str}").exists()
-    ]
-
-    if missing_restart_files:
-        formatted_missing = "\n".join(str(path) for path in missing_restart_files)
-        raise FileNotFoundError(
-            "US continuation is enabled, but restart files are missing in the source tag:\n"
-            f"{formatted_missing}"
-        )
+    for current_method, continuation, windows in continuation_targets:
+        for window_str in windows:
+            resolve_continuation_restart_file(
+                cfg,
+                continuation,
+                current_method=current_method,
+                window=window_str,
+            )
 
 # TODO: possibly delete thsi
 def inject_paths(cfg: Config) -> Config:

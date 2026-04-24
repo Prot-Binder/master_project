@@ -14,9 +14,16 @@ def _interval_windows(start: float, end: float, step: float) -> list[float]:
     return windows
 
 
-def _collect_pull_dependencies(ctx: JobContext, windows: list[float]) -> list[str]:
+def _collect_pull_dependencies(cfg, ctx: JobContext, windows: list[float]) -> list[str]:
     dependency_ids: list[str] = []
     pull_amber_dir = ctx.paths["pull"]["amber"]
+    us_remd_cfg = cfg.methods.us_remd
+
+    if us_remd_cfg is None:
+        raise ValueError("_collect_pull_dependencies() requires cfg.methods.us_remd to be configured.")
+
+    if us_remd_cfg.continuation is not None and us_remd_cfg.continuation.enabled:
+        return []
 
     for window in windows:
         pull_job_id = None
@@ -56,7 +63,7 @@ class USREMDMethod(BaseMethod):
 
         for block_idx, interval in enumerate(method_cfg.us_remd_intervals):
             windows = _interval_windows(interval.start, interval.end, interval.step)
-            dependency_ids = _collect_pull_dependencies(ctx, windows)
+            dependency_ids = _collect_pull_dependencies(self.cfg, ctx, windows)
 
             n_windows = len(windows)
             block_dir = result_dir / f"log_block_{block_idx}"

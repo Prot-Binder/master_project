@@ -3,6 +3,7 @@ from dataclasses import fields
 from pathlib import Path
 
 import numpy as np
+from src.config import resolve_continuation_restart_file
 # TODO: change the way the directory paths are passed / created in this file
 
 
@@ -275,6 +276,20 @@ def generate_us_remd(cfg, ctx):
 
         for window in windows:
             window_str = f"{window:.2f}"
+            if (
+                cfg.methods.us_remd.continuation is not None
+                and cfg.methods.us_remd.continuation.enabled
+            ):
+                coord_file = str(
+                    resolve_continuation_restart_file(
+                        cfg,
+                        cfg.methods.us_remd.continuation,
+                        current_method="us_remd",
+                        window=window_str,
+                    ).resolve()
+                )
+            else:
+                coord_file = f"{pull_amber_dir_rel}/restrt5.w{window_str}"
 
             mdin_text = (
                 mdin_template.read_text()
@@ -297,7 +312,7 @@ def generate_us_remd(cfg, ctx):
 
             groupfile_lines.append(
                 f"-i {input_dir_rel}/mdin_usremd_w{window_str} "
-                f"-c {pull_amber_dir_rel}/restrt5.w{window_str} "
+                f"-c {coord_file} "
                 f"-p {top_dir_rel}/prmtop1 "
                 f"-r {amber_dir_rel}/restrt_usremd_b{block_idx}_rep{window_str} "
                 f"-o {amber_dir_rel}/mdout_usremd_b{block_idx}_rep{window_str} "
