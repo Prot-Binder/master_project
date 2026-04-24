@@ -32,7 +32,7 @@ do
 	cp $OUTDIR/restrt$n $MDINDIR/inpcrd$N
 done
 
-pmemd.cuda -O -i $MDINDIR/mdin_eq -c $MDINDIR/inpcrd$MAX -p $TOPDIR/prmtop1 -r $OUTDIR/restrt_eq -o $OUTDIR/mdout_eq -x $OUTDIR/traj_eq.nc -inf $OUTDIR/mdinfo_eq
+pmemd.cuda -O -i $MDINDIR/mdin_eq -c $MDINDIR/inpcrd$MAX -p $TOPDIR/prmtop1 -r $OUTDIR/restrt$MAX -o $OUTDIR/mdout_eq -x $OUTDIR/traj_eq.nc -inf $OUTDIR/mdinfo_eq
 cp $OUTDIR/restrt_eq $MDINDIR/inpcrd$MAX
 
 
