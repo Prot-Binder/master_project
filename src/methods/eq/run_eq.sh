@@ -12,6 +12,11 @@ TOPDIR=$6
 CPU_USAGE=$7
 RUN_EXTRA_EQ=$8
 
+echo "Job ID: $SLURM_JOB_ID"
+echo "SLURM local node: $SLURMD_NODENAME"
+echo "Node list: $SLURM_JOB_NODELIST"
+echo "Running on node: $(hostname)"
+
 for n in $(seq $MIN $STEP $MAX)
 do
 	# initialize N as the next step
