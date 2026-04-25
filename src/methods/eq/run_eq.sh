@@ -33,9 +33,13 @@ do
 	cp $OUTDIR/restrt$n $MDINDIR/inpcrd$N
 done
 
+FINAL_INPUT=$((MAX+STEP))
+FINAL_HANDOFF=$MDINDIR/inpcrd_eq
+
 if (( RUN_EXTRA_EQ == 1 ))
 then
-	FINAL_INPUT=$((MAX+STEP))
 	pmemd.cuda -O -i $MDINDIR/mdin_eq -c $MDINDIR/inpcrd$FINAL_INPUT -p $TOPDIR/prmtop1 -r $OUTDIR/restrt_eq -o $OUTDIR/mdout_eq -x $OUTDIR/traj_eq.nc -inf $OUTDIR/mdinfo_eq
-	cp $OUTDIR/restrt_eq $MDINDIR/inpcrd$MAX
+	cp $OUTDIR/restrt_eq $FINAL_HANDOFF
+else
+	cp $MDINDIR/inpcrd$FINAL_INPUT $FINAL_HANDOFF
 fi

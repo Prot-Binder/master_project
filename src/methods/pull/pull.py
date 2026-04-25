@@ -32,7 +32,7 @@ class PullMethod(BaseMethod):
             raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
         ctx.pull_job_ids = {}
-        prev_coordinate_file = ctx.paths["eq"]["input"] / "inpcrd4"
+        prev_coordinate_file = ctx.paths["eq"]["input"] / "inpcrd_eq"
 
         for interval in self.cfg.methods.pull.pull_intervals:
             w_start = float(f"{float(interval.start):.2f}")

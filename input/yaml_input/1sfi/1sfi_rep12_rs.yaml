@@ -1,8 +1,8 @@
 ##################################################################
 # Describe what this run is all about.
 # This helps your brain later (while writing your thesis).
-# Comment: TEST CONFIG FOR RS-REMD WITH AN ADDITIONAL SHORT
-# EQUILIBRATION AT EACH SCALING / REPLICA BEFORE PRODUCTION.
+# Comment: RS-REMD WITH AN ADDITIONAL SHORT EQUILIBRATION AT EACH SCALING.
+# d = 0.380, e = 0.820; i.e. rep12; 8 replicas, equally spaced
 ##################################################################
 tag: rep12_rsremd
 test: False
@@ -34,7 +34,8 @@ methods:
   rs_remd:
     name: "rs_remd"
     n_rep: 8
-    ngpu: 1
+    ngpu: 2
+    nodelist: "t38cn035"
     nstlim_eq: 250000
     nstlim_eq_each: 250000
     nstlim: 250

@@ -809,7 +809,7 @@ def validate_equilibration_settings(cfg: Config):
                 f"Equilibration directory does not exist: {eq_dir}"
             )
 
-        required_files = ["inpcrd0", "inpcrd1", "inpcrd2", "inpcrd3", "inpcrd4", "refc"]
+        required_files = ["inpcrd0", "inpcrd1", "inpcrd2", "inpcrd3", "inpcrd_eq", "refc"]
         missing_files = [f for f in required_files if not (eq_dir / f).is_file()]
         if len(missing_files) > 0:
             raise FileNotFoundError(
