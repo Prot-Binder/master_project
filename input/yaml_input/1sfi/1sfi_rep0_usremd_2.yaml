@@ -43,7 +43,7 @@ methods:
     d: [0.00]
     e: [1.00]
     us_remd_intervals:
-      - start: 27.25
-        end: 22.50
+      - start: 22.50
+        end: 27.25
         step: 0.25
         k: 24.0
