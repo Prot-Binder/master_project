@@ -39,7 +39,7 @@ methods:
       source_tag: rep0_intermediate
       source_method: us  # or us_remd
     nstlim: 250
-    numexchg: 37000
+    numexchg: 40000
     d: [0.00]
     e: [1.00]
     us_remd_intervals:
