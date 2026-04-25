@@ -2,15 +2,15 @@
 # Describe what this run is all about.
 # This helps your brain later (while writing your thesis).
 # Comment:
-# running us-remd for the 1sfi system. From 22.50.00 to 27.25 using
-# a spacing of 0.25 and force constant k = 24. Try to explicitly
+# running us-remd for the 1sfi system. From 27.25.00 to 35.75 using
+# a spacing of 0.50 and force constant k = 4. Try to explicitly
 # run it on t38cn048.
 ##################################################################
 tag: rep0_usremd_40ns_3
 test: False
 
 cluster:
-  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042]
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045]
 
 system:
   pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
@@ -31,15 +31,15 @@ methods:
     ngpu: 4
     # partition: "barracuda"
     # constraint: "rtx4090|rtx5090|rtxa5000"
-    nodelist: "t38cn043"
+    nodelist: "t38cn042"
     # Optional continuation from a previous tag.
     # If source_method is omitted, it defaults to the current method: us_remd.
     continuation:
       enabled: True
-      # source_tag: rep0_150ns
+      source_tag: rep0_intermediate
       source_method: us  # or us_remd
     nstlim: 250
-    numexchg: 40000
+    numexchg: 37000
     d: [0.00]
     e: [1.00]
     us_remd_intervals:
