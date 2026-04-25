@@ -42,6 +42,7 @@ class EqMethod(BaseMethod):
                     str(output_dir.resolve()),
                     str(ctx.paths["eq"]["top"].resolve()),
                     str(int(self.cfg.methods.eq.use_cpu)),
+                    str(int(self.cfg.methods.eq.nstlim_eq is not None)),
                 ]
 
         eq_result = subprocess.run(

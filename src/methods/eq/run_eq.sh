@@ -10,6 +10,7 @@ MDINDIR=$4
 OUTDIR=$5
 TOPDIR=$6
 CPU_USAGE=$7
+RUN_EXTRA_EQ=$8
 
 for n in $(seq $MIN $STEP $MAX)
 do
@@ -32,7 +33,9 @@ do
 	cp $OUTDIR/restrt$n $MDINDIR/inpcrd$N
 done
 
-FINAL_INPUT=$((MAX+STEP))
-pmemd.cuda -O -i $MDINDIR/mdin_eq -c $MDINDIR/inpcrd$FINAL_INPUT -p $TOPDIR/prmtop1 -r $OUTDIR/restrt_eq -o $OUTDIR/mdout_eq -x $OUTDIR/traj_eq.nc -inf $OUTDIR/mdinfo_eq
-cp $OUTDIR/restrt_eq $MDINDIR/inpcrd$MAX
-
+if (( RUN_EXTRA_EQ == 1 ))
+then
+	FINAL_INPUT=$((MAX+STEP))
+	pmemd.cuda -O -i $MDINDIR/mdin_eq -c $MDINDIR/inpcrd$FINAL_INPUT -p $TOPDIR/prmtop1 -r $OUTDIR/restrt_eq -o $OUTDIR/mdout_eq -x $OUTDIR/traj_eq.nc -inf $OUTDIR/mdinfo_eq
+	cp $OUTDIR/restrt_eq $MDINDIR/inpcrd$MAX
+fi

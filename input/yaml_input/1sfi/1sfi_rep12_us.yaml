@@ -34,7 +34,7 @@ methods:
     execute: True
     use_cpu: True
     nstlim: 250000
-    nstlim_eq_each: 125000
+    nstlim_eq: 125000
   pull:
     name: "pull"
     d: [0.380]
