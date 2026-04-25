@@ -32,6 +32,7 @@ class PullMethod(BaseMethod):
             raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
         ctx.pull_job_ids = {}
+        prev_coordinate_file = ctx.paths["eq"]["input"] / "inpcrd4"
 
         for interval in self.cfg.methods.pull.pull_intervals:
             w_start = float(f"{float(interval.start):.2f}")
@@ -68,7 +69,7 @@ class PullMethod(BaseMethod):
                     str(input_dir.resolve()),
                     str(amber_dir.resolve()),
                     str(ctx.paths["pull"]["top"].resolve()),
-                    str(ctx.paths["eq"]["input"].resolve()),
+                    str(prev_coordinate_file.resolve()),
                 ]
 
                 pull_result = subprocess.run(
@@ -87,3 +88,4 @@ class PullMethod(BaseMethod):
                 pull_job_id = pull_result.stdout.strip().split()[-1]
                 prev_job_id = pull_job_id
                 ctx.pull_job_ids[window_val] = pull_job_id
+                prev_coordinate_file = amber_dir / f"restrt5.w{window_str}"
