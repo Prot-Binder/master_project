@@ -163,6 +163,7 @@ class RSREMDMethod(BaseMethod):
             f"{script_dir.resolve()}/run_rsremd_eq_each.sh",
             str(self.cfg.methods.rs_remd.n_rep),
             str(input_file),
+            str(self.cfg.methods.rs_remd.ngpu),
         ]
 
         rsremd_eq_each_result = subprocess.run(
@@ -226,6 +227,7 @@ class RSREMDMethod(BaseMethod):
             f"{script_dir.resolve()}/run_rsremd_prod.sh",
             str(self.cfg.methods.rs_remd.n_rep),
             str(input_file),
+            str(self.cfg.methods.rs_remd.ngpu),
         ]
 
         rsremd_prod_result = subprocess.run(
