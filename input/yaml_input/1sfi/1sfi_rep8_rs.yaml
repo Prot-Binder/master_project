@@ -24,22 +24,15 @@ setup:
   setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
 
 methods:
-  eq:
-    name: "eq"
-    d: [0.000]
-    e: [1.000]
-    execute: True
-    use_cpu: True
-    nstlim: 250000
   rs_remd:
     name: "rs_remd"
     n_rep: 8
-    ngpu: 2
-    nodelist: "t38cn035"
+    ngpu: 1
+    nodelist: "t38cn044"
     nstlim_eq: 250000
     nstlim_eq_each: 250000
     nstlim: 250
-    numexchg: 25000
+    numexchg: 30000
     d: [0.000, 0.029, 0.057, 0.086, 0.114, 0.143, 0.171, 0.200]
     e: [1.000, 0.986, 0.971, 0.957, 0.943, 0.929, 0.914, 0.900]
     k: 5.0

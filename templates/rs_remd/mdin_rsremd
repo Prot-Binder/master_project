@@ -27,11 +27,11 @@
   ntwx=50, !Every ntwx steps, the coordinates will be written to the mdcrd file
   ntwr=10000, !Every ntwr steps during dynamics, the “restrt” file will be written
 
-  infe=1, ! enable colvar style restraints (i.e. pmd)
+ infe=1, ! enable colvar style restraints (i.e. pmd)
  /
  &pmd
-        output_file = {OUT_PATH}/rsremd_{REPLICA}.txt
+        output_file = '{OUT_PATH}/rsremd_{REPLICA}.txt'
         output_freq = 50
-        cv_file = {IN_PATH}/_lroaus_rs.r
+        cv_file = '{IN_PATH}/_lroaus_rs.r'
  /
 eof

@@ -27,12 +27,12 @@ methods:
   rs_remd:
     name: "rs_remd"
     n_rep: 8
-    ngpu: 2
-    nodelist: "t38cn035"
+    ngpu: 1
+    nodelist: "t38cn044"
     nstlim_eq: 250000
     nstlim_eq_each: 250000
     nstlim: 250
-    numexchg: 25000
+    numexchg: 30000
     d: [0.000, 0.054, 0.109, 0.163, 0.217, 0.271, 0.326, 0.380]
     e: [1.000, 0.974, 0.949, 0.923, 0.897, 0.871, 0.846, 0.820]
     k: 5.0
