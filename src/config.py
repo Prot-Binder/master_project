@@ -239,7 +239,7 @@ class Config:
                     raise ValueError(f"methods.us.us_intervals[{idx}].k must be > 0")
                 if interval.step <= 0:
                     raise ValueError(f"methods.us.us_intervals[{idx}].step must be > 0")
-                if interval.start >= interval.end:
+                if interval.start > interval.end:
                     raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
             self._validate_continuation_cfg(us_cfg.continuation, current_method="us", ctx="methods.us")
 
