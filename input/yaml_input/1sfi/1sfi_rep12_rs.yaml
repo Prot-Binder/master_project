@@ -2,9 +2,11 @@
 # Describe what this run is all about.
 # This helps your brain later (while writing your thesis).
 # Comment: RS-REMD WITH AN ADDITIONAL SHORT EQUILIBRATION AT EACH SCALING.
-# d = 0.380, e = 0.820; i.e. rep12; 8 replicas, equally spaced
+# d = 0.380, e = 0.820; i.e. rep12; 8 replicas, equally spaced.
+# here we like to use another restart file from the production run, to see if
+# this yields a different result.
 ##################################################################
-tag: rep12_rsremd
+tag: rep12_rs_rst
 test: False
 
 cluster:
@@ -28,7 +30,8 @@ methods:
     name: "rs_remd"
     n_rep: 8
     ngpu: 1
-    nodelist: "t38cn044"
+    eq_input_restart: ~/mp_results/1sfi/rep0_150ns/us/run_output/amber/restrt6.w15.50
+    nodelist: "t38cn056"
     nstlim_eq: 250000
     nstlim_eq_each: 250000
     nstlim: 250

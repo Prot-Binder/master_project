@@ -20,9 +20,10 @@ class RSREMDMethod(BaseMethod):
 
     def _submit_eq_simulation(self, ctx: JobContext):
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
+        eq_input_restart = self.cfg.methods.rs_remd.eq_input_restart
 
         prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
-        if prev_job_id is None and (not check_eq_exists(ctx.paths["eq"]["input"])):
+        if eq_input_restart is None and prev_job_id is None and (not check_eq_exists(ctx.paths["eq"]["input"])):
             raise RuntimeError(
                 "Equilibration output files not found. Please run equilibration before launching pull method.")
 
@@ -54,7 +55,7 @@ class RSREMDMethod(BaseMethod):
             str(input_dir.resolve()),
             str(output_dir.resolve()),
             str(ctx.paths["rs_remd"]["top"].resolve()),
-            str(ctx.paths["eq"]["input"].resolve()),
+            str((eq_input_restart if eq_input_restart is not None else ctx.paths["eq"]["input"] / "inpcrd_eq").resolve()),
             str(self.cfg.methods.rs_remd.n_rep)
         ]
 

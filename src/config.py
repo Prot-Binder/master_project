@@ -158,6 +158,7 @@ class RSREMDCfg(MethodCfgBase):
     numexchg: int
     ngpu: int
     nstlim_eq_each: Optional[int] = None
+    eq_input_restart: Optional[Path] = None
     nodelist: Optional[str] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
@@ -265,6 +266,10 @@ class Config:
                 raise ValueError("methods.rs_remd.ngpu must be > 0")
             if rs_cfg.ngpu > rs_cfg.n_rep:
                 raise ValueError("methods.rs_remd.ngpu must be <= methods.rs_remd.n_rep")
+            if rs_cfg.eq_input_restart is not None and not rs_cfg.eq_input_restart.exists():
+                raise ValueError(
+                    f"methods.rs_remd.eq_input_restart does not exist: {rs_cfg.eq_input_restart}"
+                )
             if rs_cfg.nodelist is not None and not rs_cfg.nodelist.strip():
                 raise ValueError("methods.rs_remd.nodelist must not be empty if specified")
             if rs_cfg.partition is not None and not rs_cfg.partition.strip():
@@ -486,6 +491,7 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         if rs_raw.get("nstlim_eq_each") is not None else None,
         numexchg=int(_require(rs_raw, "numexchg", "methods.rs_remd")),
         ngpu=int(_require(rs_raw, "ngpu", "methods.rs_remd")),
+        eq_input_restart=_as_path(rs_raw["eq_input_restart"]) if rs_raw.get("eq_input_restart") is not None else None,
         nodelist=str(rs_raw["nodelist"]) if rs_raw.get("nodelist") is not None else None,
         partition=str(rs_raw["partition"]) if rs_raw.get("partition") is not None else None,
         constraint=str(rs_raw["constraint"]) if rs_raw.get("constraint") is not None else None,
