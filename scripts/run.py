@@ -1,3 +1,5 @@
+import argparse
+
 from src.config import load_config, inject_paths, prepare_directories, validate_equilibration_settings, copy_yaml_input, \
     compute_paths, validate_continuation_settings
 from src.methods.JobContext import JobContext
@@ -56,7 +58,7 @@ def create_directories(paths: dict) -> None:
             value.mkdir(parents=True, exist_ok=True)
 
 
-def main(cfg_path: str):
+def main(cfg_path: str, dry_run: bool = False):
 
     # 1. load configuration from yaml file and copy yaml input file into setup dir
     cfg = load_config(cfg_path)
@@ -65,6 +67,10 @@ def main(cfg_path: str):
     # TODO: change this logic; validate_equilibration_settings(cfg)
     prepare_directories(cfg)
     print_yaml_config(cfg)
+
+    if dry_run:
+        print("\033[93m[dry-run] Configuration loaded and validated. No setup or submissions were started.\033[0m")
+        return
 
     # 2. perform setup step depending on setup_type and if setup for similar system was already performed
     paths = compute_paths(cfg)
@@ -97,5 +103,12 @@ def main(cfg_path: str):
 
 
 if __name__ == "__main__":
-    import sys
-    main(sys.argv[1])
+    parser = argparse.ArgumentParser(description="Load and run a simulation config.")
+    parser.add_argument("config", help="Path to the YAML config file.")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Load, validate, and print the config without running setup or submitting jobs.",
+    )
+    args = parser.parse_args()
+    main(args.config, dry_run=args.dry_run)

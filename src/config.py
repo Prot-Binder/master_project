@@ -64,6 +64,15 @@ def _as_int(value: Any, ctx: str) -> int:
         raise ValueError(f"'{ctx}' must be an integer.") from exc
 
 
+def _as_float(value: Any, ctx: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"'{ctx}' must be a float.")
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"'{ctx}' must be a float.") from exc
+
+
 def _normalize_window_str(value: Any, ctx: str) -> str:
     try:
         return f"{float(value):.2f}"
@@ -76,6 +85,14 @@ def _normalize_method_name(value: Any, ctx: str) -> str:
     allowed_methods = {"us", "us_remd"}
     if normalized not in allowed_methods:
         raise ValueError(f"'{ctx}' must be one of {sorted(allowed_methods)}.")
+    return normalized
+
+
+def _normalize_restraint_target_class(value: Any, ctx: str) -> str:
+    normalized = str(value).strip().lower()
+    allowed_classes = {"receptor", "ligand", "complex"}
+    if normalized not in allowed_classes:
+        raise ValueError(f"'{ctx}' must be one of {sorted(allowed_classes)}.")
     return normalized
 
 
@@ -182,6 +199,25 @@ class USREMDCfg(MethodCfgBase):
     constraint: Optional[str] = None
 
 @dataclass(frozen=True)
+class RestraintPointCfg:
+    index: int
+    kappa: float
+
+
+@dataclass(frozen=True)
+class RestraintContributionCfg:
+    name: str
+    target_class: str
+    points: list[RestraintPointCfg]
+    nstlim: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class RestraintsCfg:
+    contributions: list[RestraintContributionCfg]
+
+
+@dataclass(frozen=True)
 class MethodsCfg:
     eq: Optional[EqCfg]
     pull: Optional[PullCfg]
@@ -199,6 +235,7 @@ class Config:
     setup: SetupCfg
     paths: dict
     methods: MethodsCfg
+    restraints: Optional[RestraintsCfg] = None
 
     def validate(self) -> None:
         if not self.tag or not self.tag.strip():
@@ -209,6 +246,28 @@ class Config:
 
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
+
+        if self.restraints is not None:
+            for contribution_idx, contribution in enumerate(self.restraints.contributions):
+                if not contribution.name.strip():
+                    raise ValueError(f"restraints.contributions[{contribution_idx}].name must be non-empty.")
+                if contribution.target_class not in {"receptor", "ligand", "complex"}:
+                    raise ValueError(
+                        "restraints.contributions"
+                        f"[{contribution_idx}].target_class must be one of ['complex', 'ligand', 'receptor']."
+                    )
+                if contribution.nstlim is not None and contribution.nstlim <= 0:
+                    raise ValueError(f"restraints.contributions[{contribution_idx}].nstlim must be > 0.")
+
+                for point_idx, point in enumerate(contribution.points):
+                    if point.index < 0:
+                        raise ValueError(
+                            f"restraints.contributions[{contribution_idx}].points[{point_idx}].index must be >= 0."
+                        )
+                    if point.kappa <= 0:
+                        raise ValueError(
+                            f"restraints.contributions[{contribution_idx}].points[{point_idx}].kappa must be > 0."
+                        )
 
         if self.methods.eq is not None and self.methods.eq.execute:
             eq_cfg = self.methods.eq
@@ -346,6 +405,71 @@ def _load_system(raw: dict) -> SystemCfg:
         protein_residues=str(_require(sys_raw, "protein_residues", "system")),
         bond=str(sys_raw["bond"]) if sys_raw.get("bond") is not None else None,
     )
+
+
+def _load_restraints(raw: dict) -> Optional[RestraintsCfg]:
+    restraints_raw = raw.get("restraints")
+    if restraints_raw is None:
+        return None
+
+    restraints_raw = _ensure_mapping(restraints_raw, "restraints")
+    contributions: list[RestraintContributionCfg] = []
+
+    for contribution_name, contribution_raw in restraints_raw.items():
+        ctx = f"restraints.{contribution_name}"
+        contribution_raw = _ensure_mapping(contribution_raw, ctx)
+
+        points_raw = contribution_raw.get("points")
+        has_parallel_lists = "index" in contribution_raw or "kappa" in contribution_raw
+
+        if points_raw is not None and has_parallel_lists:
+            raise ValueError(f"{ctx} must define either 'points' or 'index'/'kappa', not both.")
+
+        points: list[RestraintPointCfg] = []
+        if points_raw is not None:
+            for point_idx, point_raw in enumerate(_ensure_list(points_raw, f"{ctx}.points")):
+                point_ctx = f"{ctx}.points[{point_idx}]"
+                point_raw = _ensure_mapping(point_raw, point_ctx)
+                points.append(
+                    RestraintPointCfg(
+                        index=_as_int(_require(point_raw, "index", point_ctx), f"{point_ctx}.index"),
+                        kappa=_as_float(_require(point_raw, "kappa", point_ctx), f"{point_ctx}.kappa"),
+                    )
+                )
+        else:
+            if not has_parallel_lists:
+                raise ValueError(f"{ctx} must define 'points' or both 'index' and 'kappa'.")
+
+            indices_raw = _ensure_list(_require(contribution_raw, "index", ctx), f"{ctx}.index")
+            kappas_raw = _ensure_list(_require(contribution_raw, "kappa", ctx), f"{ctx}.kappa")
+            if len(indices_raw) != len(kappas_raw):
+                raise ValueError(f"{ctx}.index and {ctx}.kappa must have the same length.")
+
+            for point_idx, (index_raw, kappa_raw) in enumerate(zip(indices_raw, kappas_raw, strict=True)):
+                points.append(
+                    RestraintPointCfg(
+                        index=_as_int(index_raw, f"{ctx}.index[{point_idx}]"),
+                        kappa=_as_float(kappa_raw, f"{ctx}.kappa[{point_idx}]"),
+                    )
+                )
+
+        contributions.append(
+            RestraintContributionCfg(
+                name=str(contribution_name),
+                target_class=_normalize_restraint_target_class(
+                    _require(contribution_raw, "class", ctx),
+                    f"{ctx}.class",
+                ),
+                points=points,
+                nstlim=(
+                    _as_int(contribution_raw["nstlim"], f"{ctx}.nstlim")
+                    if contribution_raw.get("nstlim") is not None
+                    else None
+                ),
+            )
+        )
+
+    return RestraintsCfg(contributions=contributions)
 
 
 def _load_eq(raw: dict) -> Optional[EqCfg]:
@@ -553,6 +677,7 @@ def load_config(path: str | Path) -> Config:
 
     cluster = _load_cluster(raw)
     system = _load_system(raw)
+    restraints = _load_restraints(raw)
     eq = _load_eq(raw)
     pull = _load_pull(raw)
     setup = _load_setup(raw)
@@ -575,6 +700,7 @@ def load_config(path: str | Path) -> Config:
         setup=setup,
         paths={},
         methods=methods,
+        restraints=restraints,
     )
     cfg.validate()
     return cfg
