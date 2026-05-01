@@ -128,8 +128,8 @@ def write_topology(parm, output_file, n=None):
 
 def generate_scaled_top_files(topology_file: Path, num_replicas: int, d_param: list[float],
                          e_param: list[float], coordinate_file: Path, output_file_basename: Path,
-                         protein_mask: str, ligand_mask: str, d_fixed: bool = False,
-                         e_fixed: bool = False, hMassRepartitioning: bool = True) -> None:
+                         protein_mask: str, ligand_mask: str, d_fixed: bool = True,
+                         e_fixed: bool = True, hMassRepartitioning: bool = True) -> None:
 
     not_ligand_mask = "!" + ligand_mask
 
