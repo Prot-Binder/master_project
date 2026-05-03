@@ -23,15 +23,6 @@ setup:
   # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
 
 methods:
-  eq:
-    name: "eq"
-    d: [0.000]
-    e: [1.00]
-    execute: True
-    use_cpu: True
-    nstlim: 250000
-    # Optional additional eq-stage mdin_eq runtime if templates/eq/mdin_eq is present.
-    nstlim_eq: 150000
   pull:
     name: "pull"
     d: [0.000]
