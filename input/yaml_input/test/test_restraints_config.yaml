@@ -16,6 +16,18 @@ setup:
   setup_type: cluster
 
 restraints:
+  systems:
+    complex:
+      pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
+      receptor_residues: 1-164
+      ligand_residues: 166-178
+    receptor:
+      pdb: input/pdb_files/1sfi/1sfi_cleaned.pdb
+      receptor_residues: 1-247
+    ligand:
+      pdb: input/pdb_files/2nwn/2nwn_cleaned.pdb
+      ligand_residues: 166-178
+
   lrmsd:
     class: ligand
     nstlim: 500000
