@@ -120,6 +120,21 @@ class SystemCfg:
     protein_residues: str
     bond: Optional[str] = None
 
+
+@dataclass(frozen=True)
+class RestraintSystemCfg:
+    pdb: Path
+    receptor_residues: Optional[str] = None
+    ligand_residues: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class RestraintSystemsCfg:
+    complex: Optional[RestraintSystemCfg] = None
+    receptor: Optional[RestraintSystemCfg] = None
+    ligand: Optional[RestraintSystemCfg] = None
+
+
 @dataclass(frozen=True)
 class ClusterCfg:
     exclude_ranks: list[str]
@@ -232,6 +247,7 @@ class RestraintContributionCfg:
 @dataclass(frozen=True)
 class RestraintsCfg:
     contributions: list[RestraintContributionCfg]
+    systems: Optional[RestraintSystemsCfg] = None
 
 
 @dataclass(frozen=True)
@@ -264,6 +280,15 @@ class Config:
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
 
+        if self.restraints is not None and self.restraints.systems is not None:
+            for target_class in ("complex", "receptor", "ligand"):
+                class_system = getattr(self.restraints.systems, target_class)
+                if class_system is None:
+                    continue
+                if not class_system.pdb.exists():
+                    raise ValueError(f"restraints.systems.{target_class}.pdb does not exist: {class_system.pdb}")
+                self._validate_restraint_system_cfg(class_system, target_class=target_class)
+
         if self.restraints is not None:
             for contribution_idx, contribution in enumerate(self.restraints.contributions):
                 if not contribution.name.strip():
@@ -275,6 +300,7 @@ class Config:
                     )
                 if contribution.nstlim is not None and contribution.nstlim <= 0:
                     raise ValueError(f"restraints.contributions[{contribution_idx}].nstlim must be > 0.")
+                self.get_restraint_system_for_class(contribution.target_class)
 
                 for point_idx, point in enumerate(contribution.points):
                     if point.index < 0:
@@ -433,6 +459,43 @@ class Config:
         if source_method not in {"us", "us_remd"}:
             raise ValueError(f"{ctx}.continuation.source_method must resolve to 'us' or 'us_remd'.")
 
+    def _validate_restraint_system_cfg(self, system_cfg: RestraintSystemCfg, *, target_class: str) -> None:
+        if target_class == "complex":
+            if system_cfg.receptor_residues is None:
+                raise ValueError("restraints.systems.complex.receptor_residues is required.")
+            if system_cfg.ligand_residues is None:
+                raise ValueError("restraints.systems.complex.ligand_residues is required.")
+            return
+
+        if target_class == "receptor":
+            if system_cfg.receptor_residues is None:
+                raise ValueError("restraints.systems.receptor.receptor_residues is required.")
+            if system_cfg.ligand_residues is not None:
+                raise ValueError("restraints.systems.receptor.ligand_residues must not be set.")
+            return
+
+        if target_class == "ligand":
+            if system_cfg.ligand_residues is None:
+                raise ValueError("restraints.systems.ligand.ligand_residues is required.")
+            if system_cfg.receptor_residues is not None:
+                raise ValueError("restraints.systems.ligand.receptor_residues must not be set.")
+            return
+
+    def get_restraint_system_for_class(self, target_class: str) -> RestraintSystemCfg:
+        normalized_class = _normalize_restraint_target_class(target_class, "target_class")
+        if self.restraints is not None and self.restraints.systems is not None:
+            class_system = getattr(self.restraints.systems, normalized_class)
+            if class_system is not None:
+                self._validate_restraint_system_cfg(class_system, target_class=normalized_class)
+                return class_system
+        fallback_system = RestraintSystemCfg(
+            pdb=self.system.pdb,
+            receptor_residues=self.system.protein_residues,
+            ligand_residues=self.system.ligand_residues,
+        )
+        self._validate_restraint_system_cfg(fallback_system, target_class=normalized_class)
+        return fallback_system
+
 def _load_cluster(raw: dict) -> ClusterCfg:
     cluster_raw = raw.get("cluster", {})
     if cluster_raw is None:
@@ -455,27 +518,111 @@ def _load_setup(raw: dict) -> SetupCfg:
     )
 
 
-def _load_system(raw: dict) -> SystemCfg:
-    sys_raw = _ensure_mapping(_require(raw, "system", "top-level"), "system")
+def _load_system_cfg(sys_raw: dict, *, ctx: str, defaults: SystemCfg | None = None) -> SystemCfg:
+    sys_raw = _ensure_mapping(sys_raw, ctx)
+    receptor_residues = sys_raw.get("receptor_residues")
+    protein_residues = sys_raw.get("protein_residues", receptor_residues)
     return SystemCfg(
-        pdb=_as_path(_require(sys_raw, "pdb", "system")),
-        output_prefix=_as_path(sys_raw.get("output_prefix", ".")),
-        name=str(_require(sys_raw, "name", "system")),
-        ligand_residues=str(_require(sys_raw, "ligand_residues", "system")),
-        protein_residues=str(_require(sys_raw, "protein_residues", "system")),
-        bond=str(sys_raw["bond"]) if sys_raw.get("bond") is not None else None,
+        pdb=_as_path(sys_raw["pdb"]) if "pdb" in sys_raw else defaults.pdb,
+        output_prefix=(
+            _as_path(sys_raw["output_prefix"])
+            if "output_prefix" in sys_raw
+            else (defaults.output_prefix if defaults is not None else Path("."))
+        ),
+        name=(
+            str(sys_raw["name"])
+            if "name" in sys_raw
+            else (defaults.name if defaults is not None else str(_require(sys_raw, "name", ctx)))
+        ),
+        ligand_residues=(
+            str(sys_raw["ligand_residues"])
+            if "ligand_residues" in sys_raw
+            else (
+                defaults.ligand_residues
+                if defaults is not None
+                else str(_require(sys_raw, "ligand_residues", ctx))
+            )
+        ),
+        protein_residues=(
+            str(protein_residues)
+            if protein_residues is not None
+            else (
+                defaults.protein_residues
+                if defaults is not None
+                else str(_require(sys_raw, "protein_residues", ctx))
+            )
+        ),
+        bond=(
+            str(sys_raw["bond"])
+            if sys_raw.get("bond") is not None
+            else (defaults.bond if defaults is not None else None)
+        ),
     )
 
 
-def _load_restraints(raw: dict) -> Optional[RestraintsCfg]:
+def _load_system(raw: dict) -> SystemCfg:
+    sys_raw = _ensure_mapping(_require(raw, "system", "top-level"), "system")
+    return _load_system_cfg(sys_raw, ctx="system")
+
+
+def _load_restraint_system_cfg(
+    sys_raw: dict,
+    *,
+    ctx: str,
+    defaults: SystemCfg,
+) -> RestraintSystemCfg:
+    sys_raw = _ensure_mapping(sys_raw, ctx)
+    return RestraintSystemCfg(
+        pdb=_as_path(sys_raw["pdb"]) if "pdb" in sys_raw else defaults.pdb,
+        receptor_residues=(
+            str(sys_raw["receptor_residues"])
+            if sys_raw.get("receptor_residues") is not None
+            else None
+        ),
+        ligand_residues=(
+            str(sys_raw["ligand_residues"])
+            if sys_raw.get("ligand_residues") is not None
+            else None
+        ),
+    )
+
+
+def _load_restraint_systems(restraints_raw: dict, default_system: SystemCfg) -> Optional[RestraintSystemsCfg]:
+    systems_raw = restraints_raw.get("systems")
+    if systems_raw is None:
+        return None
+
+    systems_raw = _ensure_mapping(systems_raw, "restraints.systems")
+
+    def _load_optional_class_system(target_class: str) -> Optional[RestraintSystemCfg]:
+        class_raw = systems_raw.get(target_class)
+        if class_raw is None:
+            return None
+        return _load_restraint_system_cfg(
+            class_raw,
+            ctx=f"restraints.systems.{target_class}",
+            defaults=default_system,
+        )
+
+    return RestraintSystemsCfg(
+        complex=_load_optional_class_system("complex"),
+        receptor=_load_optional_class_system("receptor"),
+        ligand=_load_optional_class_system("ligand"),
+    )
+
+
+def _load_restraints(raw: dict, default_system: SystemCfg) -> Optional[RestraintsCfg]:
     restraints_raw = raw.get("restraints")
     if restraints_raw is None:
         return None
 
     restraints_raw = _ensure_mapping(restraints_raw, "restraints")
+    restraint_systems = _load_restraint_systems(restraints_raw, default_system)
     contributions: list[RestraintContributionCfg] = []
 
     for contribution_name, contribution_raw in restraints_raw.items():
+        if contribution_name == "systems":
+            continue
         ctx = f"restraints.{contribution_name}"
         contribution_raw = _ensure_mapping(contribution_raw, ctx)
 
@@ -529,7 +676,7 @@ def _load_restraints(raw: dict) -> Optional[RestraintsCfg]:
             )
         )
 
-    return RestraintsCfg(contributions=contributions)
+    return RestraintsCfg(contributions=contributions, systems=restraint_systems)
 
 
 def _load_eq(raw: dict) -> Optional[EqCfg]:
@@ -764,7 +911,7 @@ def load_config(path: str | Path) -> Config:
 
     cluster = _load_cluster(raw)
     system = _load_system(raw)
-    restraints = _load_restraints(raw)
+    restraints = _load_restraints(raw, system)
     eq = _load_eq(raw)
     pull = _load_pull(raw)
     setup = _load_setup(raw)
