@@ -1043,6 +1043,26 @@ def compute_paths(cfg: Config) -> dict:
         result_dir = root_dir / method
         paths[method] = _method_paths(method, result_dir)
 
+    if cfg.restraints is not None:
+        restraint_classes = []
+        seen_classes: set[str] = set()
+        for contribution in cfg.restraints.contributions:
+            if contribution.target_class in seen_classes:
+                continue
+            restraint_classes.append(contribution.target_class)
+            seen_classes.add(contribution.target_class)
+
+        if len(restraint_classes) > 0:
+            paths["restraint_setups"] = {
+                "root": root_dir / "restraint_setups",
+            }
+            for target_class in restraint_classes:
+                class_root = root_dir / "restraint_setups" / target_class
+                paths["restraint_setups"][target_class] = {
+                    "root": class_root,
+                    "setup": class_root / "setup",
+                }
+
     return paths
 
 
