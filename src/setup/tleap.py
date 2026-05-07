@@ -73,6 +73,8 @@ def run_tleap(
     Returns (final_prmtop, final_rst, n_ions_each)
     """
 
+    pdb_path = pdb_path.resolve()
+
     # Copy FF resource(s) into setup_dir so this run is self-contained
     ff_dir = setup_dir / "ff"
     ff_dir.mkdir(exist_ok=True)
