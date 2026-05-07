@@ -20,4 +20,4 @@ restraints:
     complex:
       pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
       receptor_residues: 1-164
-      ligand_residues: 166-177
+      ligand_residues: 165-177
