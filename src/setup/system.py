@@ -172,8 +172,8 @@ def _restraint_setup_classes(cfg) -> list[str]:
     if cfg.restraints is None:
         return []
 
-    classes: list[str] = []
-    seen_classes: set[str] = set()
+    classes: list[str] = ["complex"]
+    seen_classes: set[str] = {"complex"}
     for contribution in cfg.restraints.contributions:
         if contribution.target_class in seen_classes:
             continue
