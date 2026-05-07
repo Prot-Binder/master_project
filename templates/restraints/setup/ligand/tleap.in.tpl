@@ -21,6 +21,6 @@ addIonsRand mol Cl- 0
 #Check & LOADOFF the topology and coordinate files
 check mol
 savepdb mol system_wb.pdb
-saveamberparm mol system_wb.prmtop system_wb.rst
+saveamberparm mol system.prmtop system.rst
 
 quit
