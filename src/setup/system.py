@@ -178,6 +178,16 @@ def _restraint_setup_classes(cfg) -> list[str]:
 
     classes: list[str] = ["complex"]
     seen_classes: set[str] = {"complex"}
+
+    if cfg.restraints.systems is not None:
+        for target_class in ("complex", "ligand", "receptor"):
+            if getattr(cfg.restraints.systems, target_class) is None:
+                continue
+            if target_class in seen_classes:
+                continue
+            classes.append(target_class)
+            seen_classes.add(target_class)
+
     for contribution in cfg.restraints.contributions:
         if contribution.target_class in seen_classes:
             continue
