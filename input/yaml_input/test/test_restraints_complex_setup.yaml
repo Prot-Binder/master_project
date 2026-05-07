@@ -23,7 +23,7 @@ restraints:
       ligand_residues: 165-177
     ligand:
       pdb: input/pdb_files/5h5q/5h5q_l.pdb
-      ligand_residues: 166-178
+      ligand_residues: 165-177
     receptor:
       pdb: input/pdb_files/5h5q/5h5q_r.pdb
       receptor_residues: 1-164
