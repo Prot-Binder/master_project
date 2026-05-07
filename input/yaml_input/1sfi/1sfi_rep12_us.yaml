@@ -54,7 +54,7 @@ methods:
       k: 4.0
   us:
     name: "us"
-    nstlim: 12500000
+    nstlim: 250000
     d: [0.380]
     e: [0.820]
     us_intervals:
