@@ -433,7 +433,7 @@ def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: st
     test1.write_restraint_file(f"{setup_path}/_lroaus.r",True, True, True, True,True)
     test1.write_pull_file(f'{setup_path}/pull.r', final_distance=None)
 
-def create_restraints_ligand(setup_path: Path, pdb_path: Path, protein):
+def create_restraints_receptor(setup_path: Path, pdb_path: Path, protein: str):
 
     r_start = protein.split('-')[0]
     r_end = protein.split('-')[1]
@@ -451,7 +451,7 @@ def create_restraints_ligand(setup_path: Path, pdb_path: Path, protein):
     test2.write_restraint_file(f"{setup_path}/_rB.r", None, True, None, None, None)
 
 
-def create_restraints_receptor(setup_path: Path, pdb_path: Path, ligand: str):
+def create_restraints_ligand(setup_path: Path, pdb_path: Path, ligand: str):
     test3 = ARW_setup(pdb_path, receptor=f'protein and not element H',
                       ligand=f'protein and not element H')
     try:
