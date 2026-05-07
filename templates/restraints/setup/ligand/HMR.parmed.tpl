@@ -1,4 +1,4 @@
-parm system_wb.prmtop
+parm system.prmtop
 HMassRepartition
 outparm ligand.prmtop
 quit
