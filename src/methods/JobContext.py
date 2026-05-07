@@ -16,3 +16,4 @@ class JobContext:
     rsremd_eq_each_job_id: str | None = None
     rsremd_prod_job_id: str | None = None
     com_distance: float | None = None
+    restraint_setup_artifacts: dict[str, dict[str, str]] | None = None
