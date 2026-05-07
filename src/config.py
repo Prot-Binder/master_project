@@ -1044,8 +1044,8 @@ def compute_paths(cfg: Config) -> dict:
         paths[method] = _method_paths(method, result_dir)
 
     if cfg.restraints is not None:
-        restraint_classes = []
-        seen_classes: set[str] = set()
+        restraint_classes: list[str] = ["complex"]
+        seen_classes: set[str] = {"complex"}
         for contribution in cfg.restraints.contributions:
             if contribution.target_class in seen_classes:
                 continue
