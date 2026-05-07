@@ -1,5 +1,5 @@
 #Load the Force Field
-source ./leaprc.cyclic.ff14SB
+source ./ff/leaprc.cyclic.ff14SB
 source leaprc.protein.ff14SB
 loadamberparams frcmod.ionsjc_tip3p
 source leaprc.water.tip3p
