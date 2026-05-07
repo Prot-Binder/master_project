@@ -7,7 +7,7 @@ source leaprc.water.tip3p
 mol=loadpdb {PDB_PATH}
 
 #Head to tail peptide bond
-# bond mol.1.N mol.14.C
+{BOND}
 
 #solvate the structure
 solvateoct mol TIP3PBOX 12.5

@@ -53,13 +53,65 @@ def _project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
-    setup_dir = ctx.paths[method_name]["setup"]
-
-    tleap_paths = TLeapPaths(
+def _shared_tleap_paths() -> TLeapPaths:
+    return TLeapPaths(
         template_tleap=Path("templates/tleap.in.tpl"),
         ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
     )
+
+
+def _shared_parmed_paths() -> ParmEdPaths:
+    return ParmEdPaths(template=Path("templates/HMR.parmed.tpl"))
+
+
+def _restraint_template_dir(target_class: str) -> Path:
+    return Path("templates/restraints/setup") / target_class
+
+
+def _require_existing_file(path: Path, description: str) -> Path:
+    if not path.exists():
+        raise FileNotFoundError(f"Missing {description}: {path}")
+    return path
+
+
+def _restraint_tleap_paths(target_class: str) -> TLeapPaths:
+    template_dir = _restraint_template_dir(target_class)
+    template_tleap = _require_existing_file(
+        template_dir / "tleap.in.tpl",
+        f"restraint tleap template for class '{target_class}'",
+    )
+
+    class_forcefield = template_dir / "leaprc.cyclic.ff14SB"
+    ff_leaprc_cyclic = (
+        class_forcefield
+        if class_forcefield.exists()
+        else Path("forcefield/leaprc.cyclic.ff14SB")
+    )
+    ff_leaprc_cyclic = _require_existing_file(
+        ff_leaprc_cyclic,
+        f"forcefield file for restraint class '{target_class}'",
+    )
+
+    return TLeapPaths(
+        template_tleap=template_tleap,
+        ff_leaprc_cyclic=ff_leaprc_cyclic,
+    )
+
+
+def _restraint_parmed_paths(target_class: str) -> ParmEdPaths:
+    template_dir = _restraint_template_dir(target_class)
+    return ParmEdPaths(
+        template=_require_existing_file(
+            template_dir / "HMR.parmed.tpl",
+            f"restraint HMR template for class '{target_class}'",
+        )
+    )
+
+
+def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
+    setup_dir = ctx.paths[method_name]["setup"]
+
+    tleap_paths = _shared_tleap_paths()
 
     if cfg.setup.setup_type == "cluster":
         cluster=""
@@ -73,7 +125,7 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
         paths=tleap_paths,
     )
 
-    parmed_paths = ParmEdPaths(template=Path("templates/HMR.parmed.tpl"))
+    parmed_paths = _shared_parmed_paths()
     run_hmr(
         setup_dir=setup_dir,
         in_prmtop=prmtop,
@@ -89,10 +141,7 @@ def create_restraint_class_box_and_prmtop(cfg, ctx, target_class: str) -> Restra
     class_paths = ctx.paths["restraint_setups"][target_class]
     setup_dir = class_paths["setup"]
 
-    tleap_paths = TLeapPaths(
-        template_tleap=Path("templates/tleap.in.tpl"),
-        ff_leaprc_cyclic=Path("forcefield/leaprc.cyclic.ff14SB"),
-    )
+    tleap_paths = _restraint_tleap_paths(target_class)
 
     cluster = "" if cfg.setup.setup_type == "cluster" else "cluster/"
     prmtop, rst, _ = run_tleap(
@@ -103,7 +152,7 @@ def create_restraint_class_box_and_prmtop(cfg, ctx, target_class: str) -> Restra
         paths=tleap_paths,
     )
 
-    parmed_paths = ParmEdPaths(template=Path("templates/HMR.parmed.tpl"))
+    parmed_paths = _restraint_parmed_paths(target_class)
     hmr_prmtop = run_hmr(
         setup_dir=setup_dir,
         in_prmtop=prmtop,
