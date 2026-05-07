@@ -1161,15 +1161,17 @@ def compute_paths(cfg: Config) -> dict:
             seen_classes.add(contribution.target_class)
 
         if len(restraint_classes) > 0:
-            paths["restraint_setups"] = {
-                "root": root_dir / "restraint_setups",
+            restraints_root = root_dir / "restraints"
+            restraint_setup_root = restraints_root / "setup"
+            paths["restraints"] = {
+                "root": restraints_root,
+                "setup": {
+                    "root": restraint_setup_root,
+                },
             }
             for target_class in restraint_classes:
-                class_root = root_dir / "restraint_setups" / target_class
-                paths["restraint_setups"][target_class] = {
-                    "root": class_root,
-                    "setup": class_root / "setup",
-                }
+                class_setup_dir = restraint_setup_root / target_class
+                paths["restraints"]["setup"][target_class] = class_setup_dir
 
     return paths
 

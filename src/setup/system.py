@@ -138,8 +138,7 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
 
 def create_restraint_class_box_and_prmtop(cfg, ctx, target_class: str) -> RestraintSetupArtifacts:
     class_system = cfg.get_restraint_system_for_class(target_class)
-    class_paths = ctx.paths["restraint_setups"][target_class]
-    setup_dir = class_paths["setup"]
+    setup_dir = ctx.paths["restraints"]["setup"][target_class]
 
     tleap_paths = _restraint_tleap_paths(target_class)
 
