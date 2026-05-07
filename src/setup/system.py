@@ -6,7 +6,11 @@ from dataclasses import dataclass, fields
 from pathlib import Path
 from src.setup.tleap import TLeapPaths, run_tleap
 from src.setup.hmr import ParmEdPaths, run_hmr
-from src.setup.restraints import create_restraints
+from src.setup.restraints import (
+    create_restraints,
+    create_restraints_ligand,
+    create_restraints_receptor,
+)
 from src.setup.generate_topology import generate_scaled_top_files
 from src.setup.generate_input_files import generate_inputs
 from src.utils.iterate_configured_methods import get_configured_method_names
@@ -200,6 +204,20 @@ def _run_restraint_setup_pipeline(cfg, ctx) -> dict[str, RestraintSetupArtifacts
                 class_system.receptor_residues,
                 class_system.ligand_residues,
             )
+        elif target_class == "ligand":
+            create_restraints_ligand(
+                artifact.setup_dir,
+                artifact.system_pdb,
+                class_system.ligand_residues,
+            )
+        elif target_class == "receptor":
+            create_restraints_receptor(
+                artifact.setup_dir,
+                artifact.system_pdb,
+                class_system.receptor_residues,
+            )
+        else:
+            raise ValueError(f"Unsupported restraint target class: {target_class}")
 
         print(
             f"\033[92m[setup] Prepared restraint setup for {target_class}: "
