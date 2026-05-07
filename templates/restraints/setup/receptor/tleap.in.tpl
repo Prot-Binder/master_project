@@ -20,7 +20,7 @@ addIonsRand mol Cl- 0
 
 #Check & LOADOFF the topology and coordinate files
 check mol
-savepdb mol system_wb.pdb
+savepdb mol system.pdb
 saveamberparm mol system.prmtop system.rst
 
 quit
