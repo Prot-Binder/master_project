@@ -432,3 +432,32 @@ def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: st
     test1.write_restraint_file(f"{setup_path}/_lroa.r",True, True, True, True, None)
     test1.write_restraint_file(f"{setup_path}/_lroaus.r",True, True, True, True,True)
     test1.write_pull_file(f'{setup_path}/pull.r', final_distance=None)
+
+def create_restraints_ligand(setup_path: Path, pdb_path: Path, protein: str, ligand: str):
+
+    r_start = protein.split('-')[0]
+    r_end = protein.split('-')[1]
+
+    # test2 = ARW_setup(pdb_path, receptor=f'resid {r_start} to {r_end} and not element H',
+    #                   ligand=f'resid {r_start} to {r_end} and not element H')
+
+    test2 = ARW_setup(pdb_path, receptor=f'protein and not element H', ligand=f'protein and not element H')
+    try:
+        test2.set_anchors()
+    except ValueError:
+        print(
+            "No anchors could be set for the receptor. This is likely because the receptor is too small. Ignore this message if this is intentional for the bulk simulations.")
+    test2.save_anchor_view(anchorsPDB=f'{setup_path}/rec_anchors.pdb', ligrecPDB=f'{setup_path}/rec.pdb')
+    test2.write_restraint_file(f"{setup_path}/_rB.r", None, True, None, None, None)
+
+
+def create_restraints_receptor(setup_path: Path, pdb_path: Path, protein: str, ligand: str):
+    test3 = ARW_setup(pdb_path, receptor=f'protein and not element H',
+                      ligand=f'protein and not element H')
+    try:
+        test3.set_anchors()
+    except ValueError:
+        print(
+            "No anchors could be set for the ligand. This is likely because the ligand is too small. Ignore this message if this is intentional for the bulk simulations.")
+    test3.save_anchor_view(anchorsPDB=f'{setup_path}/lig_anchors.pdb', ligrecPDB=f'{setup_path}/lig.pdb')
+    test3.write_restraint_file(f"{setup_path}/_lB.r", None, True, None, None, None)
