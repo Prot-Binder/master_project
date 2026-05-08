@@ -11,14 +11,13 @@ if TYPE_CHECKING:
 class RestraintCase:
     target_class: str
     contribution_name: str
-    index: int
     kappa: float
     nstlim: int | None = None
 
     @property
     def case_name(self) -> str:
         kappa_token = f"{self.kappa:.4f}".rstrip("0").rstrip(".").replace(".", "p")
-        return f"{self.contribution_name}_idx{self.index}_k{kappa_token}"
+        return f"{self.contribution_name}_k{kappa_token}"
 
 
 @dataclass(frozen=True)
@@ -33,13 +32,12 @@ def expand_restraint_cases(cfg: Config) -> list[RestraintCase]:
 
     cases: list[RestraintCase] = []
     for contribution in cfg.restraints.contributions:
-        for point in contribution.points:
+        for kappa in contribution.kappa:
             cases.append(
                 RestraintCase(
                     target_class=contribution.target_class,
                     contribution_name=contribution.name,
-                    index=point.index,
-                    kappa=point.kappa,
+                    kappa=kappa,
                     nstlim=contribution.nstlim,
                 )
             )

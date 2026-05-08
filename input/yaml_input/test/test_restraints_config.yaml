@@ -31,16 +31,12 @@ restraints:
   lrmsd:
     class: ligand
     nstlim: 500000
-    points:
-      - index: 0
-        kappa: 10.0
-      - index: 1
-        kappa: 20.0
+    kappa:
+      - 10.0
+      - 20.0
 
   rrmsd:
     class: receptor
-    points:
-      - index: 2
-        kappa: 15.0
-      - index: 3
-        kappa: 25.0
+    kappa:
+      - 15.0
+      - 25.0
