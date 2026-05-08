@@ -1,0 +1,7 @@
+restraints:
+  lrmsd: # optional
+    index: [] #list of indices
+    kappa: [] # list of force constants
+  rrmsd: # optional
+    index: [ ] #list of indices
+    kappa: [ ] # list of force constants
