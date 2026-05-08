@@ -30,6 +30,7 @@ restraints:
 
   lrmsd:
     class: ligand
+    restraint_file: _l.r
     nstlim: 500000
     kappa:
       - 10.0
@@ -37,6 +38,7 @@ restraints:
 
   rrmsd:
     class: receptor
+    restraint_file: _lr.r
     kappa:
       - 15.0
       - 25.0
