@@ -59,7 +59,7 @@ def print_restraint_setup_groups(cfg) -> None:
             print(
                 "  case = "
                 f"{case.case_name} "
-                f"(contribution={case.contribution_name}, index={case.index}, "
+                f"(contribution={case.contribution_name}, "
                 f"kappa={case.kappa}, nstlim={case.nstlim})"
             )
 

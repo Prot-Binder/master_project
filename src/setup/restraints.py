@@ -204,7 +204,7 @@ class ARW_setup(mda.core.universe.Universe):
         # output the torsion parameters for further use (e.g. by write_COM_TORSION method)
         return tors, tors_ni, tors_i0, tors_i1, tors_i2, tors_i3
     
-    def write_MULTI_RMSD(self, attr, file, k_rmsd=0, referenceRMSD=1.0):
+    def write_MULTI_RMSD(self, attr, file, k_rmsd=0, referenceRMSD=1.0, template=False):
         
         if referenceRMSD == None: referenceRMSD=1.0 
         lowerRMSD = np.round(referenceRMSD - 15, 3)
@@ -217,9 +217,12 @@ class ARW_setup(mda.core.universe.Universe):
         file.write('\tcv_i = {},\n'.format(cv_i))
         file.write('\tcv_r = {},\n'.format(cv_r))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(lowerRMSD,referenceRMSD,referenceRMSD,upperRMSD))
-        file.write('\tanchor_strength = {}, {},/\n'.format(k_rmsd,k_rmsd))
+        if template:
+            file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
+        else:
+            file.write('\tanchor_strength = {}, {},/\n'.format(k_rmsd,k_rmsd))
         
-    def write_COM_ANGLE(self, file, ang_name, k_ang=0):
+    def write_COM_ANGLE(self, file, ang_name, k_ang=0, template=False):
         if ang_name == 'Theta': 
             ang_type = 'Theta Orientational Restraints'
             ang, ang_ni, ang_i0, ang_i1, ang_i2 = self.parameterise_COM_ANGLE(self.lig_anchor['1'],
@@ -243,9 +246,13 @@ class ARW_setup(mda.core.universe.Universe):
         file.write('\tcv_ni = {},\n'.format(ang_ni))
         file.write('\tcv_i = {},0,{},0,{},0,\n'.format(ang_i0, ang_i1, ang_i2))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(low, ang, ang, up))
-        file.write('\tanchor_strength = {}, {},/\n'.format(k_ang,k_ang))
+
+        if template:
+            file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
+        else:
+            file.write('\tanchor_strength = {}, {},/\n'.format(k_ang,k_ang))
         
-    def write_COM_TORSION(self, file, tors_name, k_tors=0):
+    def write_COM_TORSION(self, file, tors_name, k_tors=0, template=False):
         # if else clauses to distinguish between the different torsions necessary for woo roux method
         if tors_name == 'Phi': 
             tors_type = 'Phi Orientational Restraints'
@@ -281,7 +288,10 @@ class ARW_setup(mda.core.universe.Universe):
         file.write('\tcv_ni = {},\n'.format(tors_ni))
         file.write('\tcv_i = {},0,{},0,{},0,{},0,\n'.format(tors_i0, tors_i1, tors_i2, tors_i3))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(low, tors, tors, up))
-        file.write('\tanchor_strength = {}, {},/\n'.format(k_tors,k_tors))
+        if template:
+            file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
+        else:
+            file.write('\tanchor_strength = {}, {},/\n'.format(k_tors,k_tors))
     
     
     def write_COM_DIST(self, file, k_dist=0):
@@ -365,38 +375,38 @@ class ARW_setup(mda.core.universe.Universe):
             file.write(f'\tigr2={lig_ids}\n')
             file.write('/\n')
     
-    def write_restraint_file(self,filename, lig=None, rec=None, ori=None, ang=None, com=None):
+    def write_restraint_file(self,filename, lig=None, rec=None, ori=None, ang=None, com=None, template=False):
         
         with open(filename, 'w') as file:
             match(lig):
-                case True : self.write_MULTI_RMSD('lig',file,self.klig, self.userSpecifiedRMSDlig)
-                case False: self.write_MULTI_RMSD('lig',file, referenceRMSD=self.userSpecifiedRMSDlig)
+                case True : self.write_MULTI_RMSD('lig',file,self.klig, self.userSpecifiedRMSDlig, template=template)
+                case False: self.write_MULTI_RMSD('lig',file, referenceRMSD=self.userSpecifiedRMSDlig, template=template)
                 case None : pass
 
             match(rec):
-                case True : self.write_MULTI_RMSD('rec',file, self.krec, self.userSpecifiedRMSDrec)
-                case False: self.write_MULTI_RMSD('rec',file, referenceRMSD=self.userSpecifiedRMSDrec)
+                case True : self.write_MULTI_RMSD('rec',file, self.krec, self.userSpecifiedRMSDrec, template=template)
+                case False: self.write_MULTI_RMSD('rec',file, referenceRMSD=self.userSpecifiedRMSDrec, template=template)
                 case None : pass
 
             match(ori):
                 case True:
-                    self.write_COM_ANGLE(file, 'Theta', k_ang=self.kTheta)
-                    self.write_COM_TORSION(file, 'Phi', k_tors=self.kPhi)
-                    self.write_COM_TORSION(file, 'Psi', k_tors=self.kPsi)
+                    self.write_COM_ANGLE(file, 'Theta', k_ang=self.kTheta, template=template)
+                    self.write_COM_TORSION(file, 'Phi', k_tors=self.kPhi, template=template)
+                    self.write_COM_TORSION(file, 'Psi', k_tors=self.kPsi, template=template)
                 case False:
-                    self.write_COM_ANGLE(file, 'Theta')
-                    self.write_COM_TORSION(file, 'Phi')
-                    self.write_COM_TORSION(file, 'Psi')
+                    self.write_COM_ANGLE(file, 'Theta', template=template)
+                    self.write_COM_TORSION(file, 'Phi', template=template)
+                    self.write_COM_TORSION(file, 'Psi', template=template)
                 case None:
                     pass
 
             match(ang):
                 case True:
-                    self.write_COM_ANGLE(file, 'theta', k_ang=self.ktheta)
-                    self.write_COM_TORSION(file, 'phi', k_tors=self.kphi)
+                    self.write_COM_ANGLE(file, 'theta', k_ang=self.ktheta, template=template)
+                    self.write_COM_TORSION(file, 'phi', k_tors=self.kphi, template=template)
                 case False:
-                    self.write_COM_ANGLE(file, 'theta')
-                    self.write_COM_TORSION(file, 'phi')
+                    self.write_COM_ANGLE(file, 'theta', template=template)
+                    self.write_COM_TORSION(file, 'phi', template=template)
                 case None:
                     pass
 
@@ -433,6 +443,25 @@ def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: st
     test1.write_restraint_file(f"{setup_path}/_lroaus.r",True, True, True, True,True)
     test1.write_pull_file(f'{setup_path}/pull.r', final_distance=None)
 
+
+def create_restraints_complex(setup_path: Path, pdb_path: Path, protein: str, ligand: str):
+    if ('-' not in protein) or ('-' not in ligand):
+        raise ValueError("Receptor or ligand interval string is not properly formated. Try to use: \"1-123\"")
+
+    r_start = protein.split('-')[0]
+    r_end = protein.split('-')[1]
+    l_start = ligand.split('-')[0]
+    l_end = ligand.split('-')[1]
+    test1 = ARW_setup(pdb_path, receptor=f'resid {r_start} to {r_end} and not element H', ligand=f'resid {l_start} to {l_end} and not element H')
+
+    test1.set_anchors()
+    test1.save_anchor_view(anchorsPDB=f'{setup_path}/anchors.pdb', ligrecPDB=f'{setup_path}/lig_rec.pdb')
+    test1.write_restraint_file(f"{setup_path}/_.r",False, False, False, False, None, template=True) #measure colvars
+    test1.write_restraint_file(f"{setup_path}/_l.r",True, False, False, False, None, template=True)
+    test1.write_restraint_file(f"{setup_path}/_lr.r",True, True, False, False, None, template=True)
+    test1.write_restraint_file(f"{setup_path}/_lro.r",True, True, True, False, None, template=True)
+    test1.write_restraint_file(f"{setup_path}/_lroa.r",True, True, True, True, None, template=True)
+
 def create_restraints_receptor(setup_path: Path, pdb_path: Path, protein: str):
 
     r_start = protein.split('-')[0]
@@ -448,7 +477,7 @@ def create_restraints_receptor(setup_path: Path, pdb_path: Path, protein: str):
         print(
             "No anchors could be set for the receptor. This is likely because the receptor is too small. Ignore this message if this is intentional for the bulk simulations.")
     test2.save_anchor_view(anchorsPDB=f'{setup_path}/rec_anchors.pdb', ligrecPDB=f'{setup_path}/rec.pdb')
-    test2.write_restraint_file(f"{setup_path}/_rB.r", None, True, None, None, None)
+    test2.write_restraint_file(f"{setup_path}/_rB.r", None, True, None, None, None, template=True)
 
 
 def create_restraints_ligand(setup_path: Path, pdb_path: Path, ligand: str):
@@ -460,4 +489,4 @@ def create_restraints_ligand(setup_path: Path, pdb_path: Path, ligand: str):
         print(
             "No anchors could be set for the ligand. This is likely because the ligand is too small. Ignore this message if this is intentional for the bulk simulations.")
     test3.save_anchor_view(anchorsPDB=f'{setup_path}/lig_anchors.pdb', ligrecPDB=f'{setup_path}/lig.pdb')
-    test3.write_restraint_file(f"{setup_path}/_lB.r", None, True, None, None, None)
+    test3.write_restraint_file(f"{setup_path}/_lB.r", None, True, None, None, None, template=True)

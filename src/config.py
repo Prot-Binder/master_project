@@ -231,16 +231,10 @@ class USREMDCfg(MethodCfgBase):
     constraint: Optional[str] = None
 
 @dataclass(frozen=True)
-class RestraintPointCfg:
-    index: int
-    kappa: float
-
-
-@dataclass(frozen=True)
 class RestraintContributionCfg:
     name: str
     target_class: str
-    points: list[RestraintPointCfg]
+    kappa: list[float]
     nstlim: Optional[int] = None
 
 
@@ -302,14 +296,10 @@ class Config:
                     raise ValueError(f"restraints.contributions[{contribution_idx}].nstlim must be > 0.")
                 self.get_restraint_system_for_class(contribution.target_class)
 
-                for point_idx, point in enumerate(contribution.points):
-                    if point.index < 0:
+                for point_idx, kappa in enumerate(contribution.kappa):
+                    if kappa <= 0:
                         raise ValueError(
-                            f"restraints.contributions[{contribution_idx}].points[{point_idx}].index must be >= 0."
-                        )
-                    if point.kappa <= 0:
-                        raise ValueError(
-                            f"restraints.contributions[{contribution_idx}].points[{point_idx}].kappa must be > 0."
+                            f"restraints.contributions[{contribution_idx}].kappa[{point_idx}] must be > 0."
                         )
 
         if self.methods.eq is not None and self.methods.eq.execute:
@@ -627,38 +617,23 @@ def _load_restraints(raw: dict, default_system: SystemCfg) -> Optional[Restraint
         contribution_raw = _ensure_mapping(contribution_raw, ctx)
 
         points_raw = contribution_raw.get("points")
-        has_parallel_lists = "index" in contribution_raw or "kappa" in contribution_raw
+        kappas_raw = contribution_raw.get("kappa")
 
-        if points_raw is not None and has_parallel_lists:
-            raise ValueError(f"{ctx} must define either 'points' or 'index'/'kappa', not both.")
+        if points_raw is not None and kappas_raw is not None:
+            raise ValueError(f"{ctx} must define either 'points' or 'kappa', not both.")
 
-        points: list[RestraintPointCfg] = []
+        kappas: list[float] = []
         if points_raw is not None:
             for point_idx, point_raw in enumerate(_ensure_list(points_raw, f"{ctx}.points")):
                 point_ctx = f"{ctx}.points[{point_idx}]"
                 point_raw = _ensure_mapping(point_raw, point_ctx)
-                points.append(
-                    RestraintPointCfg(
-                        index=_as_int(_require(point_raw, "index", point_ctx), f"{point_ctx}.index"),
-                        kappa=_as_float(_require(point_raw, "kappa", point_ctx), f"{point_ctx}.kappa"),
-                    )
-                )
+                kappas.append(_as_float(_require(point_raw, "kappa", point_ctx), f"{point_ctx}.kappa"))
         else:
-            if not has_parallel_lists:
-                raise ValueError(f"{ctx} must define 'points' or both 'index' and 'kappa'.")
+            if kappas_raw is None:
+                raise ValueError(f"{ctx} must define 'points' or 'kappa'.")
 
-            indices_raw = _ensure_list(_require(contribution_raw, "index", ctx), f"{ctx}.index")
-            kappas_raw = _ensure_list(_require(contribution_raw, "kappa", ctx), f"{ctx}.kappa")
-            if len(indices_raw) != len(kappas_raw):
-                raise ValueError(f"{ctx}.index and {ctx}.kappa must have the same length.")
-
-            for point_idx, (index_raw, kappa_raw) in enumerate(zip(indices_raw, kappas_raw, strict=True)):
-                points.append(
-                    RestraintPointCfg(
-                        index=_as_int(index_raw, f"{ctx}.index[{point_idx}]"),
-                        kappa=_as_float(kappa_raw, f"{ctx}.kappa[{point_idx}]"),
-                    )
-                )
+            for point_idx, kappa_raw in enumerate(_ensure_list(kappas_raw, f"{ctx}.kappa")):
+                kappas.append(_as_float(kappa_raw, f"{ctx}.kappa[{point_idx}]"))
 
         contributions.append(
             RestraintContributionCfg(
@@ -667,7 +642,7 @@ def _load_restraints(raw: dict, default_system: SystemCfg) -> Optional[Restraint
                     _require(contribution_raw, "class", ctx),
                     f"{ctx}.class",
                 ),
-                points=points,
+                kappa=kappas,
                 nstlim=(
                     _as_int(contribution_raw["nstlim"], f"{ctx}.nstlim")
                     if contribution_raw.get("nstlim") is not None

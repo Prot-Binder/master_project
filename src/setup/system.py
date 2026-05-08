@@ -10,6 +10,7 @@ from src.setup.restraints import (
     create_restraints,
     create_restraints_ligand,
     create_restraints_receptor,
+    create_restraints_complex,
 )
 from src.setup.generate_topology import generate_scaled_top_files
 from src.setup.generate_input_files import generate_inputs
@@ -208,7 +209,7 @@ def _run_restraint_setup_pipeline(cfg, ctx) -> dict[str, RestraintSetupArtifacts
 
         class_system = cfg.get_restraint_system_for_class(target_class)
         if target_class == "complex":
-            create_restraints(
+            create_restraints_complex(
                 artifact.setup_dir,
                 artifact.system_pdb,
                 class_system.receptor_residues,
