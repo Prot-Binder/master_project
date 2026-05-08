@@ -13,7 +13,7 @@ system:
 
 setup:
   setup: False
-  setup_type: cluster
+  setup_type: local
 
 restraints:
   systems:
