@@ -65,11 +65,11 @@ def generate_restraint_contribution_inputs(cfg, ctx) -> None:
 
     for contribution in cfg.restraints.contributions:
         class_setup_dir = ctx.paths["restraints"]["setup"][contribution.target_class].resolve()
-        class_output_dir = ctx.paths["restraints"]["classes"][contribution.target_class]["pmd"].resolve()
-        class_output_dir.mkdir(parents=True, exist_ok=True)
         contribution_paths = ctx.paths["restraints"]["contributions"][contribution.name]
         contribution_input_dir = contribution_paths["input"].resolve()
+        contribution_output_dir = contribution_paths["pmd"].resolve()
         contribution_input_dir.mkdir(parents=True, exist_ok=True)
+        contribution_output_dir.mkdir(parents=True, exist_ok=True)
 
         source_restraint_file = class_setup_dir / contribution.restraint_file
         if not source_restraint_file.is_file():
@@ -114,7 +114,7 @@ def generate_restraint_contribution_inputs(cfg, ctx) -> None:
                     {
                         "NSTLIM": contribution.nstlim if contribution.nstlim is not None else "",
                         "RESTRAINT_PATH": str(rendered_restraint_path.resolve()),
-                        "OUTPUT_PATH": str(class_output_dir),
+                        "OUTPUT_PATH": str(contribution_output_dir),
                         "CASE_INDEX": case_index,
                     },
                 )
