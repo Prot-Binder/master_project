@@ -29,7 +29,7 @@ restraints:
       ligand_residues: 166-178
 
   lrmsd:
-    class: ligand
+    class: complex
     restraint_file: _l.r
     nstlim: 500000
     kappa:
@@ -37,8 +37,22 @@ restraints:
       - 20.0
 
   rrmsd:
-    class: receptor
+    class: complex
     restraint_file: _lr.r
+    kappa:
+      - 15.0
+      - 25.0
+
+  lB:
+    class: ligand
+    restraint_file: _lB.r
+    kappa:
+      - 15.0
+      - 25.0
+
+  rB:
+    class: receptor
+    restraint_file: _rB.r
     kappa:
       - 15.0
       - 25.0
