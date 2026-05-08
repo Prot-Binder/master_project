@@ -17,6 +17,31 @@ def _interval_windows(start: float, end: float, step: float) -> list[float]:
         windows.append(float(f"{float(window):.2f}"))
     return windows
 
+
+def _format_kappa_token(kappa: float) -> str:
+    return f"{float(kappa):.2f}"
+
+
+def _restraint_case_index(contribution_name: str, kappa: float) -> str:
+    return f"{contribution_name}_k{_format_kappa_token(kappa).replace('.', 'p')}"
+
+
+def _render_template_text(text: str, values: dict[str, object]) -> str:
+    rendered = text
+    for key, value in values.items():
+        rendered = rendered.replace("{" + key + "}", str(value))
+    return rendered
+
+
+def _append_before_suffix(filename: str, token: str) -> str:
+    path = Path(filename)
+    return f"{path.stem}{token}{path.suffix}"
+
+
+def _insert_before_suffix(filename: str, token: str) -> str:
+    path = Path(filename)
+    return f"{path.stem}.{token}{path.suffix}"
+
 def copy_template_files(ctx, method: str, clean: bool = True) -> None:
 
     template_dir = ctx.paths["templates"].resolve() / method
@@ -36,6 +61,68 @@ def copy_template_files(ctx, method: str, clean: bool = True) -> None:
         if item.is_file():
             shutil.copy2(item, dest_dir)
     print(f"[{method}] copied templates {template_dir} -> {dest_dir}")
+
+
+def generate_restraint_contribution_inputs(cfg, ctx) -> None:
+    if cfg.restraints is None or len(cfg.restraints.contributions) == 0:
+        return
+
+    for contribution in cfg.restraints.contributions:
+        class_setup_dir = ctx.paths["restraints"]["setup"][contribution.target_class].resolve()
+        class_output_dir = ctx.paths["restraints"]["classes"][contribution.target_class]["pmd"].resolve()
+        class_output_dir.mkdir(parents=True, exist_ok=True)
+        contribution_paths = ctx.paths["restraints"]["contributions"][contribution.name]
+        contribution_input_dir = contribution_paths["input"].resolve()
+        contribution_input_dir.mkdir(parents=True, exist_ok=True)
+
+        source_restraint_file = class_setup_dir / contribution.restraint_file
+        if not source_restraint_file.is_file():
+            raise FileNotFoundError(
+                f"Source restraint file for contribution '{contribution.name}' not found: {source_restraint_file}"
+            )
+
+        template_dir = ctx.paths["templates"].resolve() / "restraints" / contribution.name
+        if not template_dir.is_dir():
+            raise FileNotFoundError(
+                f"Template directory for restraint contribution '{contribution.name}' not found: {template_dir}"
+            )
+
+        mdin_templates = sorted(path for path in template_dir.iterdir() if path.is_file())
+        if len(mdin_templates) == 0:
+            raise FileNotFoundError(
+                f"No mdin template files found for restraint contribution '{contribution.name}' in {template_dir}"
+            )
+
+        source_restraint_text = source_restraint_file.read_text()
+        for kappa in contribution.kappa:
+            kappa_token = _format_kappa_token(kappa)
+            case_index = _restraint_case_index(contribution.name, kappa)
+            rendered_restraint_name = _append_before_suffix(source_restraint_file.name, kappa_token)
+            rendered_restraint_path = contribution_input_dir / rendered_restraint_name
+            rendered_restraint_text = _render_template_text(
+                source_restraint_text,
+                {
+                    "KAPPA": kappa_token,
+                },
+            )
+            rendered_restraint_path.write_text(rendered_restraint_text)
+
+            for mdin_template in mdin_templates:
+                rendered_mdin_name = _insert_before_suffix(
+                    mdin_template.name,
+                    f"{kappa_token}.{case_index}",
+                )
+                rendered_mdin_path = contribution_input_dir / rendered_mdin_name
+                rendered_mdin_text = _render_template_text(
+                    mdin_template.read_text(),
+                    {
+                        "NSTLIM": contribution.nstlim if contribution.nstlim is not None else "",
+                        "RESTRAINT_PATH": str(rendered_restraint_path.resolve()),
+                        "OUTPUT_PATH": str(class_output_dir),
+                        "CASE_INDEX": case_index,
+                    },
+                )
+                rendered_mdin_path.write_text(rendered_mdin_text)
 
 
 def generate_eq(cfg, ctx) -> None:

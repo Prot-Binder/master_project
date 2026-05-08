@@ -234,6 +234,7 @@ class USREMDCfg(MethodCfgBase):
 class RestraintContributionCfg:
     name: str
     target_class: str
+    restraint_file: str
     kappa: list[float]
     nstlim: Optional[int] = None
 
@@ -291,6 +292,10 @@ class Config:
                     raise ValueError(
                         "restraints.contributions"
                         f"[{contribution_idx}].target_class must be one of ['complex', 'ligand', 'receptor']."
+                    )
+                if not contribution.restraint_file.strip():
+                    raise ValueError(
+                        f"restraints.contributions[{contribution_idx}].restraint_file must be non-empty."
                     )
                 if contribution.nstlim is not None and contribution.nstlim <= 0:
                     raise ValueError(f"restraints.contributions[{contribution_idx}].nstlim must be > 0.")
@@ -642,6 +647,7 @@ def _load_restraints(raw: dict, default_system: SystemCfg) -> Optional[Restraint
                     _require(contribution_raw, "class", ctx),
                     f"{ctx}.class",
                 ),
+                restraint_file=str(_require(contribution_raw, "restraint_file", ctx)),
                 kappa=kappas,
                 nstlim=(
                     _as_int(contribution_raw["nstlim"], f"{ctx}.nstlim")
@@ -1153,10 +1159,33 @@ def compute_paths(cfg: Config) -> dict:
                 "setup": {
                     "root": restraint_setup_root,
                 },
+                "classes": {
+                    "root": restraints_root / "classes",
+                },
+                "contributions": {
+                    "root": restraints_root / "contributions",
+                },
             }
             for target_class in restraint_classes:
                 class_setup_dir = restraint_setup_root / target_class
                 paths["restraints"]["setup"][target_class] = class_setup_dir
+                class_root = paths["restraints"]["classes"]["root"] / target_class
+                paths["restraints"]["classes"][target_class] = {
+                    "root": class_root,
+                    "setup": class_setup_dir,
+                    "amber": class_root / "run_output" / "amber",
+                    "pmd": class_root / "run_output" / "pmd",
+                    "slurm": class_root / "run_output" / "slurm",
+                }
+            for contribution in cfg.restraints.contributions:
+                contribution_root = paths["restraints"]["contributions"]["root"] / contribution.name
+                paths["restraints"]["contributions"][contribution.name] = {
+                    "root": contribution_root,
+                    "input": contribution_root / "input",
+                    "amber": contribution_root / "run_output" / "amber",
+                    "pmd": contribution_root / "run_output" / "pmd",
+                    "slurm": contribution_root / "run_output" / "slurm",
+                }
 
     return paths
 

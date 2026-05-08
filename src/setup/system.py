@@ -13,7 +13,7 @@ from src.setup.restraints import (
     create_restraints_complex,
 )
 from src.setup.generate_topology import generate_scaled_top_files
-from src.setup.generate_input_files import generate_inputs
+from src.setup.generate_input_files import generate_inputs, generate_restraint_contribution_inputs
 from src.utils.iterate_configured_methods import get_configured_method_names
 
 
@@ -244,6 +244,8 @@ def _run_restraint_setup_pipeline(cfg, ctx) -> dict[str, RestraintSetupArtifacts
         }
         for target_class, artifact in artifacts.items()
     }
+
+    generate_restraint_contribution_inputs(cfg, ctx)
 
     return artifacts
 
