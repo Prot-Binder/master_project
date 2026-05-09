@@ -7,7 +7,7 @@
 # As the unscaled replica plateaued after approx. 25 A pull distance,
 # we assume that the plateau may be visible way earlier in this case.
 ##################################################################
-tag: rep8_us
+tag: rep8_usxch
 test: False
 
 cluster:
