@@ -40,7 +40,7 @@ methods:
     # If source_method is omitted, it defaults to the current method: us_remd.
     continuation:
       enabled: True
-      source_tag: rep0_usremd_40ns
+      source_tag: 1sfi_rep0_rst_p1
       source_method: us_remd  # or us_remd
     nstlim: 250
     numexchg: 40000
