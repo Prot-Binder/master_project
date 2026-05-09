@@ -1159,6 +1159,9 @@ def compute_paths(cfg: Config) -> dict:
                 "setup": {
                     "root": restraint_setup_root,
                 },
+                "eq": {
+                    "root": restraints_root / "eq",
+                },
                 "contributions": {
                     "root": restraints_root / "contributions",
                 },
@@ -1166,6 +1169,14 @@ def compute_paths(cfg: Config) -> dict:
             for target_class in restraint_classes:
                 class_setup_dir = restraint_setup_root / target_class
                 paths["restraints"]["setup"][target_class] = class_setup_dir
+                class_eq_root = paths["restraints"]["eq"]["root"] / target_class
+                paths["restraints"]["eq"][target_class] = {
+                    "root": class_eq_root,
+                    "input": class_eq_root / "input",
+                    "amber": class_eq_root / "run_output" / "amber",
+                    "pmd": class_eq_root / "run_output" / "pmd",
+                    "slurm": class_eq_root / "run_output" / "slurm",
+                }
             for contribution in cfg.restraints.contributions:
                 contribution_root = paths["restraints"]["contributions"]["root"] / contribution.name
                 paths["restraints"]["contributions"][contribution.name] = {

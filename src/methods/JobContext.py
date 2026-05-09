@@ -9,6 +9,8 @@ class JobContext:
     setup_job_id: str | None = None
     eq_job_id: str | None = None
     restraint_eq_job_ids: dict[str, str] | None = None
+    restraint_pre_job_ids: dict[str, str] | None = None
+    restraint_prod_job_ids: dict[str, str] | None = None
     pull_job_ids: dict[float, str] | None = None
     us_job_ids: dict[float, str] | None = None
     us_remd_job_ids: dict[int, str] | None = None

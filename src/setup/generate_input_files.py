@@ -30,6 +30,16 @@ def _render_template_text(text: str, values: dict[str, object]) -> str:
     return rendered
 
 
+def _restraint_equilibration_filename(target_class: str) -> str:
+    if target_class == "complex":
+        return "_lroa.r"
+    if target_class == "ligand":
+        return "_lB.r"
+    if target_class == "receptor":
+        return "_rB.r"
+    raise ValueError(f"Unsupported restraint target class: {target_class}")
+
+
 def copy_template_files(ctx, method: str, clean: bool = True) -> None:
 
     template_dir = ctx.paths["templates"].resolve() / method
@@ -54,6 +64,54 @@ def copy_template_files(ctx, method: str, clean: bool = True) -> None:
 def generate_restraint_contribution_inputs(cfg, ctx) -> None:
     if cfg.restraints is None or len(cfg.restraints.contributions) == 0:
         return
+
+    seen_classes: set[str] = set()
+    for contribution in cfg.restraints.contributions:
+        target_class = contribution.target_class
+        if target_class in seen_classes:
+            continue
+        seen_classes.add(target_class)
+
+        class_setup_dir = ctx.paths["restraints"]["setup"][target_class].resolve()
+        class_eq_paths = ctx.paths["restraints"]["eq"][target_class]
+        class_input_dir = class_eq_paths["input"].resolve()
+        class_output_dir = class_eq_paths["pmd"].resolve()
+        class_input_dir.mkdir(parents=True, exist_ok=True)
+        class_output_dir.mkdir(parents=True, exist_ok=True)
+
+        class_restraint_name = _restraint_equilibration_filename(target_class)
+        source_class_restraint = class_setup_dir / class_restraint_name
+        if not source_class_restraint.is_file():
+            raise FileNotFoundError(
+                f"Source class restraint file for '{target_class}' not found: {source_class_restraint}"
+            )
+
+        rendered_class_restraint = class_input_dir / source_class_restraint.name
+        shutil.copy2(source_class_restraint, rendered_class_restraint)
+
+        class_template_dir = ctx.paths["templates"].resolve() / "restraints" / target_class
+        if not class_template_dir.is_dir():
+            raise FileNotFoundError(
+                f"Class restraint template directory not found for '{target_class}': {class_template_dir}"
+            )
+
+        class_templates = sorted(path for path in class_template_dir.iterdir() if path.is_file())
+        if len(class_templates) == 0:
+            raise FileNotFoundError(
+                f"No class equilibration templates found for '{target_class}' in {class_template_dir}"
+            )
+
+        for class_template in class_templates:
+            rendered_class_template = class_input_dir / class_template.name
+            rendered_class_text = _render_template_text(
+                class_template.read_text(),
+                {
+                    "RESTRAINT_PATH": str(rendered_class_restraint.resolve()),
+                    "OUTPUT_PATH": str(class_output_dir),
+                    "CASE_INDEX": target_class,
+                },
+            )
+            rendered_class_template.write_text(rendered_class_text)
 
     for contribution in cfg.restraints.contributions:
         class_setup_dir = ctx.paths["restraints"]["setup"][contribution.target_class].resolve()
