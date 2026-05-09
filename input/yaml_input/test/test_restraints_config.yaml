@@ -15,6 +15,15 @@ setup:
   setup: False
   setup_type: cluster
 
+methods:
+  eq:
+    name: "eq"
+    d: 0.20
+    e: 0.90
+    execute: True
+    use_cpu: True
+    nstlim: 250000
+
 restraints:
   systems:
     complex:
