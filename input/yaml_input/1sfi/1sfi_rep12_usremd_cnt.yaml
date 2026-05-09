@@ -37,7 +37,7 @@ methods:
     continuation:
       enabled: True
       source_tag: rep12_us_rst
-      source_method: us  # or us_remd
+      source_method: us_remd  # or us_remd
     nstlim: 250
     numexchg: 40000
     d: [0.380]
