@@ -1,0 +1,32 @@
+NPT equilibration for restraint contribution preparation
+ &cntrl
+	imin=0,
+	irest=1,
+	ntx=5,
+	ntwx=1000,
+	ntxo=2,
+	ntpr=500,
+	iwrap=0,
+	ntr=1,
+	restraint_wt=0.1,
+	restraintmask='(!:WAT & !@H=)',
+	nstlim=10000,
+	dt=0.001,
+	ntt=3,
+	gamma_ln=1.0,
+	temp0=300.0,
+	ntp=1,
+	barostat=2,
+	taup=2.0,
+	ntc=2,
+	ntf=2,
+	ntb=2,
+	cut=8.5,
+	infe=1,
+ &end
+ &pmd
+	output_file = '{OUTPUT_PATH}/pmd_npt_{CASE_INDEX}.txt'
+	output_freq = 50
+	cv_file = '{RESTRAINT_PATH}'
+ /
+eof

@@ -1,0 +1,13 @@
+Minimisation for restraint contribution preparation
+ &cntrl
+	imin=1,
+	ntxo=2,
+	ntpr=500,
+	maxcyc=2000,
+	ntmin=2,
+	dielc=1.0,
+	cut=9.0,
+	nsnb=20,
+	igb=0,
+ &end
+eof

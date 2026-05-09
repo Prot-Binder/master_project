@@ -1,0 +1,38 @@
+Heating for restraint contribution preparation
+ &cntrl
+	imin=0,
+	irest=0,
+	ntx=1,
+	ntxo=2,
+	ntpr=500,
+	iwrap=0,
+	ntwx=1000,
+	ntr=1,
+	restraint_wt=1.0,
+	restraintmask='(!:WAT & !@H=)',
+	nstlim=80000,
+	dt=0.001,
+	ntt=3,
+	gamma_ln=1.0,
+	temp0=300.0,
+	ntp=0,
+	ntc=2,
+	ntf=2,
+	ntb=1,
+	cut=8.5,
+	infe=1,
+ &end
+ &pmd
+	output_file = '{OUTPUT_PATH}/pmd_heat_{CASE_INDEX}.txt'
+	output_freq = 50
+	cv_file = '{RESTRAINT_PATH}'
+ /
+&wt
+    type='TEMP0',
+    istep1=0,
+    istep2=80000,
+    value1=0,
+    value2=300,
+&end
+&wt type='END', &end
+eof
