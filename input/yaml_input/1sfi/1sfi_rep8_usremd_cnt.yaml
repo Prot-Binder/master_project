@@ -7,7 +7,7 @@
 # As the unscaled replica plateaued after approx. 25 A pull distance,
 # we assume that the plateau may be visible way earlier in this case.
 ##################################################################
-tag: rep8_usxch2
+tag: rep8_usxch3
 test: False
 
 cluster:
@@ -37,7 +37,7 @@ methods:
     continuation:
       enabled: True
       source_tag: 1sfi_test_rst2
-      source_method: us  # us or us_remd
+      source_method: us_remd  # us or us_remd
     nstlim: 250
     numexchg: 40000
     d: [0.200]
