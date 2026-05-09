@@ -13,7 +13,7 @@ mol=loadpdb {PDB_PATH}
 solvateoct mol TIP3PBOX 40
 
 #Add ions for right salt concentration 2842014.733  A^3 * 0.00009 = 255.78
-addionsRand mol Na+ 256 Cl- 256
+addionsRand mol Na+ 170 Cl- 170
 addIonsRand mol Na+ {N_NA}
 addIonsRand mol Cl- {N_CL}
 
