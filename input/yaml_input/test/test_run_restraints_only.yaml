@@ -1,0 +1,61 @@
+tag: test_run_restraints_only
+test: True
+
+cluster:
+  exclude_ranks: []
+
+system:
+  pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
+  output_prefix: ./tmp_results_sim
+  name: testing
+  ligand_residues: 165-177
+  protein_residues: 1-164
+
+setup:
+  setup: False
+  setup_type: local
+
+restraints:
+  systems:
+    complex:
+      pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
+      receptor_residues: 1-164
+      ligand_residues: 165-177
+    ligand:
+      pdb: input/pdb_files/5h5q/5h5q_l.pdb
+      ligand_residues: 165-177
+    receptor:
+      pdb: input/pdb_files/5h5q/5h5q_r.pdb
+      receptor_residues: 1-164
+
+  lrmsd:
+    class: complex
+    restraint_file: _l.r
+    nstlim: 10000
+    kappa:
+      - 10.0
+      - 20.0
+
+  rrmsd:
+    class: complex
+    restraint_file: _lr.r
+    nstlim: 10000
+    kappa:
+      - 15.0
+      - 25.0
+
+  lB:
+    class: ligand
+    restraint_file: _lB.r
+    nstlim: 10000
+    kappa:
+      - 10.0
+      - 20.0
+
+  rB:
+    class: receptor
+    restraint_file: _rB.r
+    nstlim: 10000
+    kappa:
+      - 12.0
+      - 33.0
