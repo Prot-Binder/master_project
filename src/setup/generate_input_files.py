@@ -4,6 +4,12 @@ from pathlib import Path
 
 import numpy as np
 from src.config import resolve_continuation_restart_file
+from src.setup.restraint_cases import (
+    build_restraint_case_name,
+    format_restraint_kappa_token,
+    rendered_restraint_filename,
+    rendered_restraint_mdin_filename,
+)
 # TODO: change the way the directory paths are passed / created in this file
 
 
@@ -13,30 +19,12 @@ def _interval_windows(start: float, end: float, step: float) -> list[float]:
         windows.append(float(f"{float(window):.2f}"))
     return windows
 
-
-def _format_kappa_token(kappa: float) -> str:
-    return f"{float(kappa):.2f}"
-
-
-def _restraint_case_index(contribution_name: str, kappa: float) -> str:
-    return f"{contribution_name}_k{_format_kappa_token(kappa).replace('.', 'p')}"
-
-
 def _render_template_text(text: str, values: dict[str, object]) -> str:
     rendered = text
     for key, value in values.items():
         rendered = rendered.replace("{" + key + "}", str(value))
     return rendered
 
-
-def _append_before_suffix(filename: str, token: str) -> str:
-    path = Path(filename)
-    return f"{path.stem}{token}{path.suffix}"
-
-
-def _insert_before_suffix(filename: str, token: str) -> str:
-    path = Path(filename)
-    return f"{path.stem}.{token}{path.suffix}"
 
 def copy_template_files(ctx, method: str, clean: bool = True) -> None:
 
@@ -91,9 +79,9 @@ def generate_restraint_contribution_inputs(cfg, ctx) -> None:
 
         source_restraint_text = source_restraint_file.read_text()
         for kappa in contribution.kappa:
-            kappa_token = _format_kappa_token(kappa)
-            case_index = _restraint_case_index(contribution.name, kappa)
-            rendered_restraint_name = _append_before_suffix(source_restraint_file.name, kappa_token)
+            kappa_token = format_restraint_kappa_token(kappa)
+            case_index = build_restraint_case_name(contribution.name, kappa)
+            rendered_restraint_name = rendered_restraint_filename(source_restraint_file.name, kappa)
             rendered_restraint_path = contribution_input_dir / rendered_restraint_name
             rendered_restraint_text = _render_template_text(
                 source_restraint_text,
@@ -104,9 +92,10 @@ def generate_restraint_contribution_inputs(cfg, ctx) -> None:
             rendered_restraint_path.write_text(rendered_restraint_text)
 
             for mdin_template in mdin_templates:
-                rendered_mdin_name = _insert_before_suffix(
+                rendered_mdin_name = rendered_restraint_mdin_filename(
                     mdin_template.name,
-                    f"{kappa_token}.{case_index}",
+                    contribution.name,
+                    kappa,
                 )
                 rendered_mdin_path = contribution_input_dir / rendered_mdin_name
                 rendered_mdin_text = _render_template_text(

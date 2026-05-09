@@ -6,13 +6,13 @@ from pathlib import Path
 from src.config import compute_paths, load_config
 from src.methods.JobContext import JobContext
 from src.methods.rs_remd.rs_remd_setup import setup_rs_remd
-from src.utils.create_directories import _create_directories
+from src.utils.create_directories import create_directories
 
 
 def main(cfg_path: str) -> None:
     cfg = load_config(cfg_path)
     cfg.paths = compute_paths(cfg)
-    _create_directories(cfg.paths)
+    create_directories(cfg.paths)
 
     ctx = JobContext()
     ctx.paths = cfg.paths
