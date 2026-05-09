@@ -37,7 +37,7 @@ methods:
     continuation:
       enabled: True
       source_tag: 1sfi_rep8_rst_p1
-      source_method: us  # or us_remd
+      source_method: usremd  # or us_remd
     nstlim: 250
     numexchg: 40000
     d: [0.200]
