@@ -71,6 +71,21 @@ def _normalize_window_str(value: Any, ctx: str) -> str:
         raise ValueError(f"'{ctx}' must be a numeric window value.") from exc
 
 
+def _normalize_window_value(value: Any, ctx: str) -> float:
+    try:
+        return float(f"{float(value):.2f}")
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"'{ctx}' must be a numeric window value.") from exc
+
+
+def _expand_interval_windows(start: float, end: float, step: float) -> list[float]:
+    n_windows = int(round((end - start) / step)) + 1
+    return [
+        _normalize_window_value(start + idx * step, "interval window")
+        for idx in range(n_windows)
+    ]
+
+
 def _normalize_method_name(value: Any, ctx: str) -> str:
     normalized = str(value).strip().lower().replace("-", "_")
     allowed_methods = {"us", "us_remd"}
@@ -165,10 +180,12 @@ class RSREMDCfg(MethodCfgBase):
 
 @dataclass(frozen=True)
 class USREMDIntervalCfg:
-    start: float
-    end: float
-    step: float
-    k: float
+    k: Optional[float] = None
+    start: Optional[float] = None
+    end: Optional[float] = None
+    step: Optional[float] = None
+    windows: Optional[list[float]] = None
+    kappas: Optional[list[float]] = None
 
 
 @dataclass(frozen=True)
@@ -282,10 +299,53 @@ class Config:
             if len(us_remd_cfg.us_remd_intervals) == 0:
                 raise ValueError("methods.us_remd.us_remd_intervals must be a non-empty list.")
             for idx, interval in enumerate(us_remd_cfg.us_remd_intervals):
-                if interval.step <= 0:
-                    raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].step must be > 0")
-                if interval.start > interval.end:
-                    raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].start must be <= end")
+                if interval.windows is not None:
+                    if len(interval.windows) == 0:
+                        raise ValueError(
+                            f"methods.us_remd.us_remd_intervals[{idx}].windows must be a non-empty list"
+                        )
+                    if len(interval.windows) != len({f"{window:.2f}" for window in interval.windows}):
+                        raise ValueError(
+                            f"methods.us_remd.us_remd_intervals[{idx}].windows must not contain duplicates"
+                        )
+                    if interval.k is not None and interval.k <= 0:
+                        raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].k must be > 0")
+                    if interval.kappas is not None:
+                        if interval.k is not None:
+                            raise ValueError(
+                                f"methods.us_remd.us_remd_intervals[{idx}] must define either 'k' or 'kappas', not both"
+                            )
+                        if len(interval.kappas) != len(interval.windows):
+                            raise ValueError(
+                                f"methods.us_remd.us_remd_intervals[{idx}].kappas must have the same length as windows"
+                            )
+                        for kappa_idx, kappa in enumerate(interval.kappas):
+                            if kappa <= 0:
+                                raise ValueError(
+                                    f"methods.us_remd.us_remd_intervals[{idx}].kappas[{kappa_idx}] must be > 0"
+                                )
+                    elif interval.k is None:
+                        raise ValueError(
+                            f"methods.us_remd.us_remd_intervals[{idx}] with explicit windows must define either 'k' or 'kappas'"
+                        )
+                else:
+                    if interval.step is None or interval.start is None or interval.end is None:
+                        raise ValueError(
+                            f"methods.us_remd.us_remd_intervals[{idx}] must define either "
+                            "'windows' or 'start', 'end', and 'step'"
+                        )
+                    if interval.kappas is not None:
+                        raise ValueError(
+                            f"methods.us_remd.us_remd_intervals[{idx}].kappas requires explicit 'windows'"
+                        )
+                    if interval.k is None:
+                        raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].k must be specified")
+                    if interval.step <= 0:
+                        raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].step must be > 0")
+                    if interval.start > interval.end:
+                        raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].start must be <= end")
+                    if interval.k <= 0:
+                        raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].k must be > 0")
             if us_remd_cfg.nodelist is not None and not us_remd_cfg.nodelist.strip():
                 raise ValueError("methods.us_remd.nodelist must not be empty if specified")
             self._validate_continuation_cfg(
@@ -510,7 +570,9 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
     us_remd_raw = _ensure_mapping(us_remd_raw, "methods.us_remd")
 
     interval_source = us_remd_raw.get("us_remd_intervals")
-    if interval_source is None and {"start", "end", "step"}.issubset(us_remd_raw):
+    if interval_source is None and (
+        {"start", "end", "step"}.issubset(us_remd_raw) or "windows" in us_remd_raw
+    ):
         interval_source = [us_remd_raw]
     if interval_source is None:
         raise ValueError("methods.us_remd must contain 'us_remd_intervals'.")
@@ -518,12 +580,37 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
     us_remd_intervals = []
     for index, item in enumerate(_ensure_list(interval_source, "methods.us_remd.us_remd_intervals")):
         item = _ensure_mapping(item, f"methods.us_remd.us_remd_intervals[{index}]")
+        interval_ctx = f"methods.us_remd.us_remd_intervals[{index}]"
+        windows_raw = item.get("windows")
+        if windows_raw is not None:
+            windows = [
+                _normalize_window_value(window, f"{interval_ctx}.windows[{window_idx}]")
+                for window_idx, window in enumerate(
+                    _ensure_list(windows_raw, f"{interval_ctx}.windows")
+                )
+            ]
+            kappas_raw = item.get("kappas")
+            kappas = None
+            if kappas_raw is not None:
+                kappas = [
+                    float(kappa)
+                    for kappa in _ensure_list(kappas_raw, f"{interval_ctx}.kappas")
+                ]
+            us_remd_intervals.append(
+                USREMDIntervalCfg(
+                    k=float(item["k"]) if item.get("k") is not None else None,
+                    windows=windows,
+                    kappas=kappas,
+                )
+            )
+            continue
+
         us_remd_intervals.append(
             USREMDIntervalCfg(
-                start=float(_require(item, "start", f"methods.us_remd.us_remd_intervals[{index}]")),
-                end=float(_require(item, "end", f"methods.us_remd.us_remd_intervals[{index}]")),
-                step=float(_require(item, "step", f"methods.us_remd.us_remd_intervals[{index}]")),
-                k=float(_require(item, "k", f"methods.us_remd.us_remd_intervals[{index}]")),
+                k=float(_require(item, "k", interval_ctx)),
+                start=float(_require(item, "start", interval_ctx)),
+                end=float(_require(item, "end", interval_ctx)),
+                step=float(_require(item, "step", interval_ctx)),
             )
         )
 
@@ -595,13 +682,34 @@ def _configured_us_windows(us_cfg: USCfg) -> list[str]:
 def _configured_us_remd_windows(us_remd_cfg: USREMDCfg) -> list[str]:
     windows: list[str] = []
     for interval in us_remd_cfg.us_remd_intervals:
-        n_windows = int(round((interval.end - interval.start) / interval.step)) + 1
-        for idx in range(n_windows):
-            window = float(f"{interval.start + idx * interval.step:.2f}")
+        for window in us_remd_interval_windows(interval):
             window_str = f"{window:.2f}"
             if window_str not in windows:
                 windows.append(window_str)
     return windows
+
+
+def us_remd_interval_windows(interval: USREMDIntervalCfg) -> list[float]:
+    if interval.windows is not None:
+        return [
+            _normalize_window_value(window, "methods.us_remd.us_remd_intervals.windows")
+            for window in interval.windows
+        ]
+    if interval.start is None or interval.end is None or interval.step is None:
+        raise ValueError("US-REMD interval must define either explicit windows or start/end/step.")
+    return _expand_interval_windows(interval.start, interval.end, interval.step)
+
+
+def us_remd_interval_window_kappas(interval: USREMDIntervalCfg) -> list[tuple[float, float]]:
+    windows = us_remd_interval_windows(interval)
+    if interval.kappas is not None:
+        return [
+            (window, float(kappa))
+            for window, kappa in zip(windows, interval.kappas, strict=True)
+        ]
+    if interval.k is None:
+        raise ValueError("US-REMD interval must define either a shared 'k' or explicit 'kappas'.")
+    return [(window, interval.k) for window in windows]
 
 
 def get_continuation_source_method(continuation: ContinuationCfg, *, current_method: str) -> str:

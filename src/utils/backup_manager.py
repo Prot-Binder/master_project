@@ -6,6 +6,7 @@ import shutil
 
 import numpy as np
 
+from src.config import us_remd_interval_windows
 from src.utils.iterate_configured_methods import get_configured_method_names
 
 
@@ -137,10 +138,7 @@ class BackupManager:
         backup_method_root = self.paths["root"] / "_backup" / timestamp / "us_remd"
 
         for block_idx, interval in enumerate(self.cfg.methods.us_remd.us_remd_intervals):
-            windows = [
-                self._format_window(window)
-                for window in np.arange(interval.start, interval.end + interval.step, interval.step)
-            ]
+            windows = [self._format_window(window) for window in us_remd_interval_windows(interval)]
             overlap_detected = False
 
             block_specific_candidates = [

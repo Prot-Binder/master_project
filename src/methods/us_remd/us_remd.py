@@ -1,17 +1,8 @@
 import subprocess
-from pathlib import Path
-
-import numpy as np
 
 from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
-
-
-def _interval_windows(start: float, end: float, step: float) -> list[float]:
-    windows = []
-    for window in np.arange(start, end + step, step):
-        windows.append(float(f"{float(window):.2f}"))
-    return windows
+from src.config import us_remd_interval_windows
 
 
 def _collect_pull_dependencies(cfg, ctx: JobContext, windows: list[float]) -> list[str]:
@@ -62,7 +53,7 @@ class USREMDMethod(BaseMethod):
         ctx.us_remd_job_ids = {}
 
         for block_idx, interval in enumerate(method_cfg.us_remd_intervals):
-            windows = _interval_windows(interval.start, interval.end, interval.step)
+            windows = us_remd_interval_windows(interval)
             dependency_ids = _collect_pull_dependencies(self.cfg, ctx, windows)
 
             n_windows = len(windows)

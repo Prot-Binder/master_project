@@ -3,7 +3,11 @@ from dataclasses import fields
 from pathlib import Path
 
 import numpy as np
-from src.config import resolve_continuation_restart_file
+from src.config import (
+    resolve_continuation_restart_file,
+    us_remd_interval_window_kappas,
+    us_remd_interval_windows,
+)
 # TODO: change the way the directory paths are passed / created in this file
 
 
@@ -311,7 +315,8 @@ def generate_us_remd(cfg, ctx):
     pull_amber_dir_rel = ctx.paths['pull']['amber']# "../pull/run_output/amber"
 
     for block_idx, interval in enumerate(cfg.methods.us_remd.us_remd_intervals):
-        windows = _interval_windows(interval.start, interval.end, interval.step)
+        windows = us_remd_interval_windows(interval)
+        window_kappas = dict(us_remd_interval_window_kappas(interval))
         groupfile_lines = [
             "# Example US-REMD groupfile\n",
             "# Replace the exact line structure in generate_us_remd() when needed.\n",
@@ -344,7 +349,7 @@ def generate_us_remd(cfg, ctx):
             )
             mdin_output_file = us_remd_input_dir / f"mdin_usremd_w{window_str}"
             mdin_output_file.write_text(mdin_text)
-            kappa = str(cfg.methods.us_remd.us_remd_intervals[block_idx].k)
+            kappa = str(window_kappas[window])
             restraint_text = (
                 restraint_template.read_text()
                 .replace("{WINDOW}", window_str)
