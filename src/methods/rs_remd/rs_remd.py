@@ -61,7 +61,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_eq_result = subprocess.run(
             rsremd_eq,
-            check=True,
             capture_output=True,
             text=True,
             cwd=result_dir.resolve(),
@@ -107,7 +106,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_setup_result = subprocess.run(
             rsremd_setup_cmd,
-            check=True,
             capture_output=True,
             text=True,
             cwd=result_dir.resolve(),
@@ -169,7 +167,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_eq_each_result = subprocess.run(
             rsremd_eq_each,
-            check=True,
             capture_output=True,
             text=True,
             cwd=log_dir.resolve(),
@@ -233,7 +230,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_prod_result = subprocess.run(
             rsremd_prod,
-            check=True,
             capture_output=True,
             text=True,
             cwd=log_dir.resolve(),

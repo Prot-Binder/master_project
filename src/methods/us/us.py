@@ -70,7 +70,6 @@ class USMethod(BaseMethod):
 
                 us_result = subprocess.run(
                     us_cmd,
-                    check=True,
                     capture_output=True,
                     text=True,
                     cwd=result_dir.resolve(),

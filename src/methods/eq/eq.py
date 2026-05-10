@@ -47,7 +47,6 @@ class EqMethod(BaseMethod):
 
         eq_result = subprocess.run(
             eq_cmd,
-            check=True,
             capture_output=True,
             text=True,
             cwd=eq_dir.resolve(),

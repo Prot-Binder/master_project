@@ -148,11 +148,14 @@ def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
 
     result = subprocess.run(
         sbatch_cmd,
-        check=True,
         capture_output=True,
         text=True,
         cwd=project_root,
     )
+    if result.returncode != 0:
+        print("STDOUT:\n", result.stdout)
+        print("STDERR:\n", result.stderr)
+        raise RuntimeError("sbatch failed")
     job_id = result.stdout.strip()
     ctx.setup_job_id = job_id
     print(f"\033[92m[setup] Cluster setup finished via Slurm job {job_id}\033[0m")

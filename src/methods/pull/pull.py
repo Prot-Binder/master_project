@@ -74,7 +74,6 @@ class PullMethod(BaseMethod):
 
                 pull_result = subprocess.run(
                     pull_cmd,
-                    check=True,
                     capture_output=True,
                     text=True,
                     cwd=result_dir.resolve(),
