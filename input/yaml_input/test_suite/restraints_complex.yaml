@@ -1,0 +1,47 @@
+tag: test_suite_restraints_complex
+test: True
+
+cluster:
+  exclude_ranks: []
+
+system:
+  pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
+  output_prefix: ./tmp_results/test_suite
+  name: testing
+  ligand_residues: 165-177
+  protein_residues: 1-164
+
+setup:
+  setup: False
+  setup_type: local
+
+restraints:
+  systems:
+    complex:
+      pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
+      receptor_residues: 1-164
+      ligand_residues: 165-177
+
+  lrmsd:
+    class: complex
+    restraint_file: _l.r
+    nstlim: 10000
+    kappa: [10.0, 20.0]
+
+  rrmsd:
+    class: complex
+    restraint_file: _lr.r
+    nstlim: 10000
+    kappa: [10.0, 20.0]
+
+  ori:
+    class: complex
+    restraint_file: _lro.r
+    nstlim: 10000
+    kappa: [10.0, 20.0]
+
+  ang:
+    class: complex
+    restraint_file: _lroa.r
+    nstlim: 10000
+    kappa: [10.0, 20.0]

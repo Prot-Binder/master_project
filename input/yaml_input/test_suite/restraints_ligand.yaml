@@ -1,0 +1,28 @@
+tag: test_suite_restraints_ligand
+test: True
+
+cluster:
+  exclude_ranks: []
+
+system:
+  pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
+  output_prefix: ./tmp_results/test_suite
+  name: testing
+  ligand_residues: 165-177
+  protein_residues: 1-164
+
+setup:
+  setup: False
+  setup_type: local
+
+restraints:
+  systems:
+    ligand:
+      pdb: input/pdb_files/5h5q/5h5q_l.pdb
+      ligand_residues: 165-177
+
+  lB:
+    class: ligand
+    restraint_file: _lB.r
+    nstlim: 10000
+    kappa: [10.0, 20.0]
