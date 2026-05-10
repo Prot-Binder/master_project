@@ -42,7 +42,7 @@ methods:
       source_tag: 1sfi_rep0_rst_p1
       source_method: us_remd  # or us_remd
     nstlim: 250
-    numexchg: 40000
+    numexchg: 60000
     d: [0.00]
     e: [1.00]
     us_remd_intervals:
