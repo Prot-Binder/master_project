@@ -16,7 +16,7 @@ system:
   pdb: ~/master_project/input/pdb_files/5h5q/5h5q_cleaned.pdb
   output_prefix: ~/mp_results/
   name: 5h5q
-  ligand_residues: 166-178
+  ligand_residues: 165-177
   protein_residues: 1-164
   # bond: "377.N-390.C"
 
@@ -39,17 +39,15 @@ methods:
     e: [0.86]
     mode: "serial"
     stride: 1
-    nstlim: 500000
+    nstlim: 250000
     pull_intervals:
     - start: 19.00
-      end: 24.50
+      end: 25.50
       step: 0.50
-      replica_scaling: 1
       k: 12.0
-    - start: 24.75
-      end: 40.75
-      step: 1.00
-      replica_scaling: 1
+    - start: 25.75
+      end: 37.00
+      step: 0.75
       k: 4.0
 
   us_remd:
@@ -58,32 +56,32 @@ methods:
     partition: "barracuda"
     constraint: "rtx4090|rtx5090|rtx2080ti"
     nstlim: 250
-    numexchg: 25000
+    numexchg: 35000
     d: [0.28]
     e: [0.86]
     us_remd_intervals:
-      - start: 21.00
-        end: 24.50
+      - start: 22.00
+        end: 25.50
         step: 0.50
         k: 12.0
-      - start: 24.75
-        end: 31.75
-        step: 1.0
+      - start: 25.75
+        end: 31.00
+        step: 0.75
         k: 4.0
 
   us:
     name: "us"
-    nstlim: 12500000000
+    nstlim: 12500000
     d: [0.28]
     e: [0.86]
     us_intervals:
       - start: 19.00
-        end: 20.50
+        end: 21.50
         step: 0.50
         k: 12.00
-      - start: 32.75
-        end: 40.75
-        step: 1.00
+      - start: 31.75
+        end: 37.00
+        step: 0.75
         k: 4.0
 
   rs_remd:
@@ -91,10 +89,10 @@ methods:
     n_rep: 8
     ngpu: 2
     partition: "barracuda"
-    constraint: "rtx4090|rtx5090|rtx2080ti"
-    nstlim_eq: 1000000
+    constraint: "rtx4090|rtxa5000|rtx5090|rtx2080ti"
+    nstlim_eq: 250000
     nstlim: 250
-    numexchg: 20000
+    numexchg: 30000
     d: [0.000, 0.040, 0.080, 0.120, 0.160, 0.200, 0.240, 0.280]
     e: [1.000, 0.980, 0.960, 0.940, 0.920, 0.900, 0.880, 0.860]
     k: 12.0
