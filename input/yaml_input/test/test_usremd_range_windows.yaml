@@ -1,0 +1,30 @@
+tag: test_usremd_range_windows
+test: True
+
+cluster:
+  exclude_ranks: []
+
+system:
+  pdb: input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: .
+  name: testing
+  ligand_residues: 224-237
+  protein_residues: 1-223
+
+setup:
+  setup: False
+  setup_type: local
+
+methods:
+  us_remd:
+    name: us_remd
+    ngpu: 1
+    nstlim: 250
+    numexchg: 30
+    d: [0.28]
+    e: [0.86]
+    us_remd_intervals:
+      - start: 15.00
+        end: 16.00
+        step: 0.50
+        k: 12.0
