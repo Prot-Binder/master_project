@@ -96,7 +96,6 @@ class USREMDMethod(BaseMethod):
 
             result = subprocess.run(
                 usremd_cmd,
-                check=True,
                 capture_output=True,
                 text=True,
                 cwd=block_dir.resolve(),
