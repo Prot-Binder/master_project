@@ -176,8 +176,8 @@ def generate_eq(cfg, ctx) -> None:
 
     # path definitions
     eq_input_dir = ctx.paths["eq"]["input"]
-    input_path = ctx.paths["eq"]["input"]
-    output_path = ctx.paths["eq"]["pmd"]
+    input_path = ctx.paths["eq"]["input"].resolve()
+    output_path = ctx.paths["eq"]["pmd"].resolve()
 
     # copy template files from templates to results
     copy_template_files(ctx, method="eq")
@@ -317,9 +317,9 @@ def generate_rs_remd_eq(cfg, ctx):
     shutil.copy2(setup_dir / "_lroa.r", rs_remd_input_dir)
 
     # define input path for restraints file
-    input_path = ctx.paths["rs_remd"]["input"]
+    input_path = ctx.paths["rs_remd"]["input"].resolve()
     # define output path for amber output files
-    output_path = ctx.paths["rs_remd"]["eq"]
+    output_path = ctx.paths["rs_remd"]["eq"].resolve()
 
     if cfg.methods.rs_remd is None:
         raise ValueError("generate_us requires cfg.methods.rs_remd to be configured.")
