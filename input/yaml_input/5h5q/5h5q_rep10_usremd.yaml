@@ -6,7 +6,7 @@
 # we like to show which value do we get for stronger scaling; compared to
 # rep4 and rep8
 ##################################################################
-tag: rep10_usremd
+tag: rep10
 test: False
 
 cluster:
