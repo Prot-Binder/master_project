@@ -77,6 +77,7 @@ def run_tleap(
 
     # Copy FF resource(s) into setup_dir so this run is self-contained
     ff_dir = setup_dir / "ff"
+    ff_dir = ff_dir.resolve()
     ff_dir.mkdir(exist_ok=True)
     shutil.copy2(paths.ff_leaprc_cyclic, ff_dir / "leaprc.cyclic.ff14SB")
 
