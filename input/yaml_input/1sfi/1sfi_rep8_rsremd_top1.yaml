@@ -21,14 +21,6 @@ setup:
   setup_type: cluster
 
 methods:
-  eq:
-    name: "eq"
-    d: [ 0.000 ]
-    e: [ 1.00 ]
-    execute: True
-    use_cpu: True
-    nstlim: 250000
-
   rs_remd:
     name: "rs_remd"
     n_rep: 8
