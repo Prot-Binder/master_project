@@ -1,0 +1,50 @@
+##################################################################
+# Comment:
+# RS-REMD for 1sfi with rep8 scaling. The com distance is calculated
+# from unscaled equilibrated structure.
+##################################################################
+tag: rep12_rsremd_cnt
+test: False
+
+cluster:
+  exclude_ranks: [t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn042]
+
+system:
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 1sfi
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+setup:
+  setup: True
+  setup_type: cluster
+
+methods:
+  rs_remd:
+    name: "rs_remd"
+    n_rep: 8
+    ngpu: 4
+
+    # Optional scheduler settings
+    nodelist: "t38cn037"
+    # partition: "<partition>"
+    # constraint: "<constraint>"
+
+    # Optional: choose which replica/scaling would be used for the
+    # initial single RS-REMD equilibration in non-restart mode.
+    # In restart mode below, that equilibration is skipped anyway.
+    eq_replica: 8
+
+    # Restart mode: production starts directly from previous restrt_rs_rep*
+    restart:
+      enabled: True
+      path: ~/mp_results/1sfi/rep12_rsremd/rs_remd/run_output/amber
+
+    # Do not combine with restart:
+    # eq_input_restart: /path/to/restart.rst7
+
+    nstlim_eq: 250000
+    nstlim_eq_each: 250000
+    nstlim: 250
+    numexchg: 30000
