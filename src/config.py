@@ -189,6 +189,7 @@ class RSREMDCfg(MethodCfgBase):
     nstlim_eq: int
     numexchg: int
     ngpu: int
+    eq_replica: Optional[int] = None
     nstlim_eq_each: Optional[int] = None
     eq_input_restart: Optional[Path] = None
     restart: Optional["RSREMDRestartCfg"] = None
@@ -345,6 +346,8 @@ class Config:
                 raise ValueError("methods.rs_remd.nstlim must be > 0")
             if rs_cfg.nstlim_eq <= 0:
                 raise ValueError("methods.rs_remd.nstlim_eq must be > 0")
+            if rs_cfg.eq_replica is not None and not (1 <= rs_cfg.eq_replica <= rs_cfg.n_rep):
+                raise ValueError("methods.rs_remd.eq_replica must be between 1 and methods.rs_remd.n_rep")
             if rs_cfg.nstlim_eq_each is not None and rs_cfg.nstlim_eq_each <= 0:
                 raise ValueError("methods.rs_remd.nstlim_eq_each must be > 0 if specified")
             if rs_cfg.numexchg <= 0:
@@ -766,6 +769,8 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         n_rep=int(_require(rs_raw, "n_rep", "methods.rs_remd")),
         k=float(_require(rs_raw, "k", "methods.rs_remd")),
         nstlim_eq=int(_require(rs_raw, "nstlim_eq", "methods.rs_remd")),
+        eq_replica=_as_int(rs_raw["eq_replica"], "methods.rs_remd.eq_replica")
+        if rs_raw.get("eq_replica") is not None else None,
         nstlim_eq_each=_as_int(rs_raw["nstlim_eq_each"], "methods.rs_remd.nstlim_eq_each")
         if rs_raw.get("nstlim_eq_each") is not None else None,
         numexchg=int(_require(rs_raw, "numexchg", "methods.rs_remd")),
@@ -969,6 +974,15 @@ def resolve_rs_remd_restart_restraint_file(cfg: Config) -> Path:
     if rs_cfg is None or rs_cfg.restart is None or not rs_cfg.restart.enabled:
         raise ValueError("resolve_rs_remd_restart_restraint_file() requires methods.rs_remd.restart to be enabled.")
     return rs_cfg.restart.path.parent.parent / "input" / "_lroaus_rs.r"
+
+
+def resolve_rs_remd_eq_replica(cfg: Config) -> int:
+    rs_cfg = cfg.methods.rs_remd
+    if rs_cfg is None:
+        raise ValueError("resolve_rs_remd_eq_replica() requires methods.rs_remd to be configured.")
+    if rs_cfg.eq_replica is not None:
+        return rs_cfg.eq_replica
+    return rs_cfg.n_rep
 
 
 def validate_continuation_settings(cfg: Config) -> None:

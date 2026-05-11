@@ -3,6 +3,7 @@ import shlex
 import sys
 from pathlib import Path
 
+from src.config import resolve_rs_remd_eq_replica
 from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
 from src.utils.check_eq_exists import check_eq_exists
@@ -24,6 +25,7 @@ class RSREMDMethod(BaseMethod):
     def _submit_eq_simulation(self, ctx: JobContext):
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
         eq_input_restart = self.cfg.methods.rs_remd.eq_input_restart
+        eq_replica = resolve_rs_remd_eq_replica(self.cfg)
 
         prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
         if eq_input_restart is None and prev_job_id is None and (not check_eq_exists(ctx.paths["eq"]["input"])):
@@ -59,7 +61,7 @@ class RSREMDMethod(BaseMethod):
             str(output_dir.resolve()),
             str(ctx.paths["rs_remd"]["top"].resolve()),
             str((eq_input_restart if eq_input_restart is not None else ctx.paths["eq"]["input"] / "inpcrd_eq").resolve()),
-            str(self.cfg.methods.rs_remd.n_rep)
+            str(eq_replica),
         ]
 
         rsremd_eq_result = subprocess.run(
