@@ -45,9 +45,16 @@ def calculate_com_distance(ctx, cfg) -> float:
     return avg_com_dist
 
 def setup_rs_remd(cfg, ctx):
-    # calculate com distance from eq trajectory and store in ctx for use in generating mdin files for us simulations
-    avg_com_dist = calculate_com_distance(ctx, cfg)
-    ctx.com_distance = avg_com_dist
+    restart_enabled = (
+        cfg.methods.rs_remd is not None
+        and cfg.methods.rs_remd.restart is not None
+        and cfg.methods.rs_remd.restart.enabled
+    )
+
+    if not restart_enabled:
+        # calculate com distance from eq trajectory and store in ctx for use in generating mdin files for us simulations
+        avg_com_dist = calculate_com_distance(ctx, cfg)
+        ctx.com_distance = avg_com_dist
 
     # generate input files for rs_remd after calculating com distance
     generate_rs_remd_prod(cfg, ctx)

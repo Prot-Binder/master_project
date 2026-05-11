@@ -39,6 +39,13 @@ methods:
     # constraint: "rtx4090|rtx5090|rtx2080ti"
     # Optional override for the first RS-REMD equilibration input restart.
     # eq_input_restart: /path/to/restart.rst7
+    # Optional production restart from a previous RS-REMD amber directory.
+    # When enabled, the production groupfile uses:
+    #   <path>/restrt_rs_rep1, <path>/restrt_rs_rep2, ...
+    # and reuses the sibling input/_lroaus_rs.r from that previous run.
+    # restart:
+    #   enabled: True
+    #   path: /path/to/previous/rs_remd/run_output/amber
     nstlim_eq: 1000
     # Optional short equilibration for every scaling / replica after the initial special-scaling eq.
     # nstlim_eq_each: 250

@@ -11,12 +11,15 @@ from src.utils.check_eq_exists import check_eq_exists
 class RSREMDMethod(BaseMethod):
 
     def launch(self, ctx: JobContext) -> None:
-
-        self._submit_eq_simulation(ctx)
+        if not self._is_restart_enabled():
+            self._submit_eq_simulation(ctx)
         self._submit_setup_job(ctx)
         self._submit_replica_eq_simulation(ctx)
         self._submit_prod_simulation(ctx)
 
+    def _is_restart_enabled(self) -> bool:
+        rs_cfg = self.cfg.methods.rs_remd
+        return rs_cfg is not None and rs_cfg.restart is not None and rs_cfg.restart.enabled
 
     def _submit_eq_simulation(self, ctx: JobContext):
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
@@ -61,7 +64,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_eq_result = subprocess.run(
             rsremd_eq,
-            check=True,
             capture_output=True,
             text=True,
             cwd=result_dir.resolve(),
@@ -78,7 +80,8 @@ class RSREMDMethod(BaseMethod):
     def _submit_setup_job(self, ctx: JobContext) -> None:
         if ctx.cfg_path is None:
             raise ValueError("ctx.cfg_path is required to submit the RS-REMD setup job.")
-        if ctx.rsremd_eq_job_id is None:
+        dependency_job_id = ctx.setup_job_id if self._is_restart_enabled() else ctx.rsremd_eq_job_id
+        if dependency_job_id is None and not self._is_restart_enabled():
             raise ValueError("ctx.rsremd_eq_job_id is required before submitting the RS-REMD setup job.")
 
         project_root = Path(__file__).resolve().parents[3]
@@ -95,7 +98,10 @@ class RSREMDMethod(BaseMethod):
         rsremd_setup_cmd = [
             "sbatch",
             f"--job-name={self.cfg.system.name}_{self.cfg.tag}_rsremd_setup",
-            f"--dependency=afterok:{ctx.rsremd_eq_job_id}",
+        ]
+        if dependency_job_id is not None:
+            rsremd_setup_cmd.append(f"--dependency=afterok:{dependency_job_id}")
+        rsremd_setup_cmd += [
             "--nodes=1",
             "--ntasks=1",
             "--cpus-per-task=1",
@@ -107,7 +113,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_setup_result = subprocess.run(
             rsremd_setup_cmd,
-            check=True,
             capture_output=True,
             text=True,
             cwd=result_dir.resolve(),
@@ -121,7 +126,7 @@ class RSREMDMethod(BaseMethod):
         ctx.rsremd_setup_job_id = rsremd_setup_result.stdout.strip().split()[-1]
 
     def _submit_replica_eq_simulation(self, ctx: JobContext) -> None:
-        if self.cfg.methods.rs_remd.nstlim_eq_each is None:
+        if self._is_restart_enabled() or self.cfg.methods.rs_remd.nstlim_eq_each is None:
             ctx.rsremd_eq_each_job_id = None
             return
 
@@ -169,7 +174,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_eq_each_result = subprocess.run(
             rsremd_eq_each,
-            check=True,
             capture_output=True,
             text=True,
             cwd=log_dir.resolve(),
@@ -233,7 +237,6 @@ class RSREMDMethod(BaseMethod):
 
         rsremd_prod_result = subprocess.run(
             rsremd_prod,
-            check=True,
             capture_output=True,
             text=True,
             cwd=log_dir.resolve(),

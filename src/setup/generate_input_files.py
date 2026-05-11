@@ -3,7 +3,11 @@ from dataclasses import fields
 from pathlib import Path
 
 import numpy as np
-from src.config import resolve_continuation_restart_file
+from src.config import (
+    resolve_continuation_restart_file,
+    resolve_rs_remd_restart_file,
+    resolve_rs_remd_restart_restraint_file,
+)
 from src.setup.restraint_cases import (
     build_restraint_case_name,
     format_restraint_kappa_token,
@@ -350,7 +354,11 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     mdin_file = rs_remd_input_dir / "mdin_rsremd"
     mdin_eq_each_file = rs_remd_input_dir / "mdin_rsremd_eq_each"
     restraint_file = rs_remd_input_dir / "_lroaus.r"
-    com_window = float(f"{ctx.com_distance:.2f}")
+    restart_enabled = (
+        cfg.methods.rs_remd.restart is not None
+        and cfg.methods.rs_remd.restart.enabled
+    )
+    com_window = None if restart_enabled else float(f"{ctx.com_distance:.2f}")
 
     # generate mdin files for each replica with correct number of steps and exchange frequency
     for rep in range(1,cfg.methods.rs_remd.n_rep+1):
@@ -378,7 +386,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     top_dir = ctx.paths["rs_remd"]["top"].resolve()
     coord_init = str(ctx.paths["rs_remd"]["eq"] / "restrt_rsremd_eq")
 
-    if cfg.methods.rs_remd.nstlim_eq_each is not None:
+    if cfg.methods.rs_remd.nstlim_eq_each is not None and not restart_enabled:
         eq_each_lines = ["# RS-REMD short equilibration at each scaling\n"]
         for rep in range(1, cfg.methods.rs_remd.n_rep+1):
             eq_each_line = (
@@ -397,11 +405,14 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     # generate rsremd production group file
     lines = ["# RS-REMD groupfile (Hamiltonian Replica Exchange Molecular Dynamics)\n"]
     for rep in range(1, cfg.methods.rs_remd.n_rep+1):
-        coord_path = (
-            f"{out_dir}/restrt_rs_eq_each_rep{rep}"
-            if cfg.methods.rs_remd.nstlim_eq_each is not None
-            else coord_init
-        )
+        if restart_enabled:
+            coord_path = str(resolve_rs_remd_restart_file(cfg, rep).resolve())
+        else:
+            coord_path = (
+                f"{out_dir}/restrt_rs_eq_each_rep{rep}"
+                if cfg.methods.rs_remd.nstlim_eq_each is not None
+                else coord_init
+            )
         line = (
             f"-i {in_dir}/mdin_rsremd_rep{rep} "
             f"-c {coord_path} "
@@ -415,12 +426,15 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     groupfile_path = rs_remd_input_dir / "rs_remd.groupfile"
     groupfile_path.write_text("".join(lines))
 
-    # adjust _lroaus.r file for rs_remd production run
-    restraint_text = (restraint_file.read_text()
-                      .replace("{WINDOW}", str(f"{com_window:.2f}"))
-                      .replace("{KAPPA}", str(cfg.methods.rs_remd.k)))
     restraint_output_file = rs_remd_input_dir / f"_lroaus_rs.r"
-    restraint_output_file.write_text(restraint_text)
+    if restart_enabled:
+        shutil.copy2(resolve_rs_remd_restart_restraint_file(cfg), restraint_output_file)
+    else:
+        # adjust _lroaus.r file for rs_remd production run
+        restraint_text = (restraint_file.read_text()
+                          .replace("{WINDOW}", str(f"{com_window:.2f}"))
+                          .replace("{KAPPA}", str(cfg.methods.rs_remd.k)))
+        restraint_output_file.write_text(restraint_text)
 
 
 def generate_us_remd(cfg, ctx):
