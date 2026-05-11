@@ -274,9 +274,9 @@ def generate_us(cfg, ctx):
     shutil.copy2(setup_dir / "_lroaus.r", us_input_dir)
 
     # define input path for restraints file
-    input_path = ctx.paths["us"]["input"]
+    input_path = ctx.paths["us"]["input"].resolve()
     # define output path for amber output files
-    output_path = ctx.paths["us"]["pmd"]
+    output_path = ctx.paths["us"]["pmd"].resolve()
 
     if cfg.methods.us is None:
         raise ValueError("generate_us requires cfg.methods.us to be configured.")
@@ -386,7 +386,7 @@ def generate_rs_remd_prod(cfg: dict, ctx):
     in_dir = ctx.paths["rs_remd"]["input"].resolve()
     out_dir = ctx.paths["rs_remd"]["amber"].resolve()
     top_dir = ctx.paths["rs_remd"]["top"].resolve()
-    coord_init = str(ctx.paths["rs_remd"]["eq"] / "restrt_rsremd_eq")
+    coord_init = str((ctx.paths["rs_remd"]["eq"] / "restrt_rsremd_eq").resolve())
 
     if cfg.methods.rs_remd.nstlim_eq_each is not None and not restart_enabled:
         eq_each_lines = ["# RS-REMD short equilibration at each scaling\n"]
@@ -455,10 +455,10 @@ def generate_us_remd(cfg, ctx):
 
     mdin_template = us_remd_input_dir / "mdin_usremd"
     restraint_template = us_remd_input_dir / "_lroaus.r"
-    input_dir_rel = ctx.paths['us_remd']['input'] # "./input"
-    top_dir_rel = ctx.paths['us_remd']['top']# "./top"
-    amber_dir_rel = ctx.paths['us_remd']['amber']# "./run_output/amber"
-    pull_amber_dir_rel = ctx.paths['pull']['amber']# "../pull/run_output/amber"
+    input_dir_rel = ctx.paths['us_remd']['input'].resolve()
+    top_dir_rel = ctx.paths['us_remd']['top'].resolve()
+    amber_dir_rel = ctx.paths['us_remd']['amber'].resolve()
+    pull_amber_dir_rel = ctx.paths['pull']['amber'].resolve()
 
     for block_idx, interval in enumerate(cfg.methods.us_remd.us_remd_intervals):
         windows = us_remd_interval_windows(interval)
