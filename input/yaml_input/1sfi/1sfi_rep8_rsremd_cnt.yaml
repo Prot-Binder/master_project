@@ -3,7 +3,7 @@
 # RS-REMD for 1sfi with rep8 scaling. The com distance is calculated
 # from unscaled equilibrated structure.
 ##################################################################
-tag: rep8_rsremd_cnt
+tag: rep8_rsremd_cnt2
 test: False
 
 cluster:
