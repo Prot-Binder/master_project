@@ -39,7 +39,7 @@ methods:
     # Restart mode: production starts directly from previous restrt_rs_rep*
     restart:
       enabled: True
-      path: ~/cluster/mp_results/1sfi/rep8_rsremd_top1/rs_remd/run_output/amber
+      path: ~/mp_results/1sfi/rep8_rsremd_top1/rs_remd/run_output/amber
 
     # Do not combine with restart:
     # eq_input_restart: /path/to/restart.rst7
