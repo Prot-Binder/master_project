@@ -5,6 +5,7 @@
 # d = 0.380, e = 0.820; i.e. rep12; 8 replicas, equally spaced.
 # here, we run the equilibration at the unscaled replica and
 # then start the production rs-remd run from there.
+# adjusted the path to the restart files.
 ##################################################################
 tag: rep12_rs_top1_cnt
 test: False
@@ -41,7 +42,7 @@ methods:
     # In restart mode below, that equilibration is skipped anyway.
     restart:
       enabled: True
-      path: ~/mp_results/1sfi/rep12_rs_top1/rs_remd/run_output/amber
+      path: ~/mp_results/1sfi/1sfi_rep12_rsremd_rst
     eq_replica: 1
 
     nstlim_eq: 250000
