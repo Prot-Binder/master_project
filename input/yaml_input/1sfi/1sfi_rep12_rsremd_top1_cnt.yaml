@@ -41,7 +41,7 @@ methods:
     # In restart mode below, that equilibration is skipped anyway.
     restart:
       enabled: True
-      path: ~/cluster/mp_results/1sfi/rep12_rs_top1/rs_remd/run_output/amber
+      path: /home/simonhang/cluster/mp_results/1sfi/1sfi_rep12_rsremd_rst
     eq_replica: 1
 
     nstlim_eq: 250000
