@@ -42,7 +42,10 @@ methods:
     restart:
       enabled: True
       path: ~/mp_results/1sfi/rep12_rs_top1/rs_remd/run_output/amber
+    eq_replica: 1
 
+    nstlim_eq: 250000
+    nstlim_eq_each: 250000
     nstlim: 250
     numexchg: 16000
     d: [0.000, 0.054, 0.109, 0.163, 0.217, 0.271, 0.326, 0.380]
