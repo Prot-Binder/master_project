@@ -5,9 +5,10 @@
 # We like to perform US on a scaled replica with d = 0.200, e = 0.0900
 # we call it rep8 internally. We continue us-remd a second time on this scaled
 # replica. We hope that this time the run converges to the same PMF for
-# all 10 ns blocks
+# all 10 ns blocks. Previous run (rep8_usxch20_2) failed, and all
+# rep8_usxch20_tm runs are for testing purposes.
 ##################################################################
-tag: rep8_usxch20_2
+tag: rep8_usxch20_2p2
 test: False
 
 cluster:
@@ -37,7 +38,7 @@ methods:
     # If source_method is omitted, it defaults to the current method: us_remd.
     continuation:
       enabled: True
-      source_tag: 1sfi_test_rst3
+      source_tag: 1sfi_test_rst33
       source_method: us_remd  # us or us_remd
     nstlim: 250
     numexchg: 40000
