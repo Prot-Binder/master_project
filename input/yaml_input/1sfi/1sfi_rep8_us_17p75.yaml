@@ -1,0 +1,42 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# We like to perform US on a scaled replica with d = 0.380, e = 0.820
+# we call it rep12 internally.
+# As the unscaled replica plateaued after approx. 25 A pull distance,
+# we assume that the plateau may be visible way earlier in this case.
+##################################################################
+tag: rep8_us
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn049]
+
+system:
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 1sfi
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  pull:
+    name: "pull"
+    d: [0.200]
+    e: [0.900]
+    mode: "serial"
+    stride: 1
+    nstlim: 350000
+    pull_intervals:
+    - start: 17.75
+      end: 17.75
+      step: 0.50
+      k: 12.0
+
