@@ -1,0 +1,47 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# We like to perform US-REMD on a scaled replica with d = 0.200, e = 0.0900
+# we call it rep8 internally. We continue us-remd on the last part of
+# the simulation and hope that to increase the convergence here.
+##################################################################
+tag: rep8_usxch_lb
+test: False
+
+cluster:
+  exclude_ranks: [t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045]
+
+system:
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 1sfi
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  us_remd:
+    name: "us_remd"
+    ngpu: 4
+    # partition: "barracuda"
+    # constraint: "rtx4090|rtx5090|rtxa5000"
+    nodelist: "t38cn035"
+    # Optional continuation from a previous tag.
+    # If source_method is omitted, it defaults to the current method: us_remd.
+    continuation:
+      enabled: True
+      source_tag: rep8_us
+      source_method: us  # us or us_remd
+    nstlim: 250
+    numexchg: 40000
+    d: [0.200]
+    e: [0.900]
+    us_remd_intervals:
+      - windows: [24.00, 24.75, 25.50, 26.25, 27.00, 27.75, 28.50, 29.25, 30.00, 30.75, 31.50, 32.25, 33.00, 33.75, 34.50, 35.25]
+        kappas:  [04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
