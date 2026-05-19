@@ -206,9 +206,16 @@ class RSREMDCfg(MethodCfgBase):
     ngpu: int
     nstlim_eq_each: Optional[int] = None
     eq_input_restart: Optional[Path] = None
+    restart: Optional["RSREMDRestartCfg"] = None
     nodelist: Optional[str] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class RSREMDRestartCfg:
+    enabled: bool
+    path: Path
 
 @dataclass(frozen=True)
 class USREMDIntervalCfg:
@@ -363,10 +370,30 @@ class Config:
                 raise ValueError("methods.rs_remd.ngpu must be > 0")
             if rs_cfg.ngpu > rs_cfg.n_rep:
                 raise ValueError("methods.rs_remd.ngpu must be <= methods.rs_remd.n_rep")
+            if rs_cfg.restart is not None and rs_cfg.restart.enabled and rs_cfg.eq_input_restart is not None:
+                raise ValueError("methods.rs_remd.restart and methods.rs_remd.eq_input_restart cannot be used together.")
             if rs_cfg.eq_input_restart is not None and not rs_cfg.eq_input_restart.exists():
                 raise ValueError(
                     f"methods.rs_remd.eq_input_restart does not exist: {rs_cfg.eq_input_restart}"
                 )
+            if rs_cfg.restart is not None and rs_cfg.restart.enabled:
+                if not rs_cfg.restart.path.is_dir():
+                    raise ValueError(
+                        "methods.rs_remd.restart.path must point to a directory containing "
+                        f"restart files: {rs_cfg.restart.path}"
+                    )
+                for rep in range(1, rs_cfg.n_rep + 1):
+                    restart_file = resolve_rs_remd_restart_file(self, rep)
+                    if not restart_file.exists():
+                        raise ValueError(
+                            f"Missing methods.rs_remd restart file for replica {rep}: {restart_file}"
+                        )
+                restart_restraint_file = resolve_rs_remd_restart_restraint_file(self)
+                if not restart_restraint_file.exists():
+                    raise ValueError(
+                        "Missing methods.rs_remd restart restraint file "
+                        f"(expected sibling input/_lroaus_rs.r): {restart_restraint_file}"
+                    )
             if rs_cfg.nodelist is not None and not rs_cfg.nodelist.strip():
                 raise ValueError("methods.rs_remd.nodelist must not be empty if specified")
             if rs_cfg.partition is not None and not rs_cfg.partition.strip():
@@ -804,9 +831,26 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         numexchg=int(_require(rs_raw, "numexchg", "methods.rs_remd")),
         ngpu=int(_require(rs_raw, "ngpu", "methods.rs_remd")),
         eq_input_restart=_as_path(rs_raw["eq_input_restart"]) if rs_raw.get("eq_input_restart") is not None else None,
+        restart=_load_rs_remd_restart(rs_raw, "methods.rs_remd"),
         nodelist=str(rs_raw["nodelist"]) if rs_raw.get("nodelist") is not None else None,
         partition=str(rs_raw["partition"]) if rs_raw.get("partition") is not None else None,
         constraint=str(rs_raw["constraint"]) if rs_raw.get("constraint") is not None else None,
+    )
+
+
+def _load_rs_remd_restart(raw: dict, ctx: str) -> Optional[RSREMDRestartCfg]:
+    restart_raw = raw.get("restart")
+    if restart_raw is None:
+        return None
+
+    restart_raw = _ensure_mapping(restart_raw, f"{ctx}.restart")
+    enabled = _as_bool(restart_raw.get("enabled", False), f"{ctx}.restart.enabled")
+    if not enabled:
+        return None
+
+    return RSREMDRestartCfg(
+        enabled=enabled,
+        path=_as_path(_require(restart_raw, "path", f"{ctx}.restart")),
     )
 
 def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
@@ -1019,6 +1063,20 @@ def resolve_continuation_restart_file(
         "Ambiguous continuation restart files for window "
         f"{window_str} in {source_amber_dir}: {', '.join(str(path) for path in candidates)}"
     )
+
+
+def resolve_rs_remd_restart_file(cfg: Config, replica: int) -> Path:
+    rs_cfg = cfg.methods.rs_remd
+    if rs_cfg is None or rs_cfg.restart is None or not rs_cfg.restart.enabled:
+        raise ValueError("resolve_rs_remd_restart_file() requires methods.rs_remd.restart to be enabled.")
+    return rs_cfg.restart.path / f"restrt_rs_rep{replica}"
+
+
+def resolve_rs_remd_restart_restraint_file(cfg: Config) -> Path:
+    rs_cfg = cfg.methods.rs_remd
+    if rs_cfg is None or rs_cfg.restart is None or not rs_cfg.restart.enabled:
+        raise ValueError("resolve_rs_remd_restart_restraint_file() requires methods.rs_remd.restart to be enabled.")
+    return rs_cfg.restart.path.parent.parent / "input" / "_lroaus_rs.r"
 
 
 def validate_continuation_settings(cfg: Config) -> None:
