@@ -8,7 +8,7 @@
 # all 10 ns blocks. Previous run (rep8_usxch20_2) failed, and all
 # rep8_usxch20_tm runs are for testing purposes.
 ##################################################################
-tag: rep8_usxch20_2p2
+tag: rep8_usxch20_2p3
 test: False
 
 cluster:
@@ -41,7 +41,7 @@ methods:
       source_tag: 1sfi_test_rst33
       source_method: us_remd  # us or us_remd
     nstlim: 250
-    numexchg: 40000
+    numexchg: 20000
     d: [0.200]
     e: [0.900]
     us_remd_intervals:
