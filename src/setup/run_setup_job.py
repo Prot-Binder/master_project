@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
-from scripts.run import create_directories
 from src.config import compute_paths, load_config
 from src.methods.JobContext import JobContext
 from src.setup.system import _run_setup_pipeline
+from src.utils.create_directories import create_directories
 
 
 def main(cfg_path: str) -> None:

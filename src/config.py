@@ -1178,14 +1178,6 @@ def compute_paths(cfg: Config) -> dict:
 
     return paths
 
-
-def prepare_directories(cfg: Config) -> None:
-    for key, path in cfg.paths.items():
-        if "dir" in key:
-            # TODO: maybe make exist_ok=False later
-            path.mkdir(parents=True, exist_ok=True)
-
-
 def copy_yaml_input(cfg: Config, cfg_path: str | Path):
     for method_field in fields(cfg.methods):
         method_cfg = getattr(cfg.methods, method_field.name)

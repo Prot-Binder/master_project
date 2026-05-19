@@ -299,10 +299,6 @@ def _run_setup_pipeline(cfg, ctx) -> None:
 
 
 def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
-    method_names = get_configured_method_names(cfg)
-    if len(method_names) == 0:
-        raise ValueError("No methods configured in cfg.methods.")
-
     slurm_dir = ctx.paths["root"]
 
     project_root = _project_root().resolve()

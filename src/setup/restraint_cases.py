@@ -1,10 +1,34 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.config import Config
+
+
+def format_restraint_kappa_token(kappa: float) -> str:
+    return f"{float(kappa):.2f}"
+
+
+def build_restraint_case_name(contribution_name: str, kappa: float) -> str:
+    return f"{contribution_name}_k{format_restraint_kappa_token(kappa).replace('.', 'p')}"
+
+
+def rendered_restraint_filename(source_filename: str, kappa: float) -> str:
+    path = Path(source_filename)
+    return f"{path.stem}{format_restraint_kappa_token(kappa)}{path.suffix}"
+
+
+def rendered_restraint_mdin_filename(template_filename: str, contribution_name: str, kappa: float) -> str:
+    path = Path(template_filename)
+    return (
+        f"{path.stem}."
+        f"{format_restraint_kappa_token(kappa)}."
+        f"{build_restraint_case_name(contribution_name, kappa)}"
+        f"{path.suffix}"
+    )
 
 
 @dataclass(frozen=True)
@@ -16,8 +40,7 @@ class RestraintCase:
 
     @property
     def case_name(self) -> str:
-        kappa_token = f"{self.kappa:.4f}".rstrip("0").rstrip(".").replace(".", "p")
-        return f"{self.contribution_name}_k{kappa_token}"
+        return build_restraint_case_name(self.contribution_name, self.kappa)
 
 
 @dataclass(frozen=True)
