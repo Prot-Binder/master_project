@@ -95,6 +95,38 @@ def _expand_interval_windows(start: float, end: float, step: float) -> list[floa
     ]
 
 
+def _normalize_nodelist(value: Any, ctx: str) -> str:
+    if isinstance(value, str):
+        nodes = [item.strip() for item in value.split(",") if item.strip()]
+    elif isinstance(value, list):
+        nodes = [str(item).strip() for item in value if str(item).strip()]
+    else:
+        raise ValueError(f"'{ctx}' must be a comma-separated string or a list of node names.")
+
+    if len(nodes) == 0:
+        raise ValueError(f"'{ctx}' must not be empty if specified")
+    if len(nodes) != len(set(nodes)):
+        raise ValueError(f"'{ctx}' must not contain duplicate node names")
+    return ",".join(nodes)
+
+
+def count_nodelist_nodes(nodelist: str) -> int:
+    return len([item for item in nodelist.split(",") if item.strip()])
+
+
+def resolve_scheduler_nodes(*, nodelist: Optional[str], nodes: Optional[int]) -> int:
+    if nodelist is not None:
+        nodelist_count = count_nodelist_nodes(nodelist)
+        if nodes is not None and nodes != nodelist_count:
+            raise ValueError(
+                f"Configured nodes ({nodes}) must match the nodelist length ({nodelist_count})."
+            )
+        return nodelist_count
+    if nodes is None:
+        return 1
+    return nodes
+
+
 def _normalize_method_name(value: Any, ctx: str) -> str:
     normalized = str(value).strip().lower().replace("-", "_")
     allowed_methods = {"us", "us_remd"}
@@ -209,6 +241,7 @@ class RSREMDCfg(MethodCfgBase):
     eq_input_restart: Optional[Path] = None
     restart: Optional["RSREMDRestartCfg"] = None
     nodelist: Optional[str] = None
+    nodes: Optional[int] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
 
@@ -235,6 +268,7 @@ class USREMDCfg(MethodCfgBase):
     us_remd_intervals: list[USREMDIntervalCfg]
     continuation: Optional[ContinuationCfg] = None
     nodelist: Optional[str] = None
+    nodes: Optional[int] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
 
@@ -399,6 +433,9 @@ class Config:
                     )
             if rs_cfg.nodelist is not None and not rs_cfg.nodelist.strip():
                 raise ValueError("methods.rs_remd.nodelist must not be empty if specified")
+            if rs_cfg.nodes is not None and rs_cfg.nodes <= 0:
+                raise ValueError("methods.rs_remd.nodes must be > 0 if specified")
+            resolve_scheduler_nodes(nodelist=rs_cfg.nodelist, nodes=rs_cfg.nodes)
             if rs_cfg.partition is not None and not rs_cfg.partition.strip():
                 raise ValueError("methods.rs_remd.partition must not be empty if specified")
             if rs_cfg.constraint is not None and not rs_cfg.constraint.strip():
@@ -458,6 +495,9 @@ class Config:
                         raise ValueError(f"methods.us_remd.us_remd_intervals[{idx}].k must be > 0")
             if us_remd_cfg.nodelist is not None and not us_remd_cfg.nodelist.strip():
                 raise ValueError("methods.us_remd.nodelist must not be empty if specified")
+            if us_remd_cfg.nodes is not None and us_remd_cfg.nodes <= 0:
+                raise ValueError("methods.us_remd.nodes must be > 0 if specified")
+            resolve_scheduler_nodes(nodelist=us_remd_cfg.nodelist, nodes=us_remd_cfg.nodes)
             self._validate_continuation_cfg(
                 us_remd_cfg.continuation,
                 current_method="us_remd",
@@ -837,7 +877,10 @@ def _load_rs_remd(raw: dict) -> Optional[RSREMDCfg]:
         ngpu=int(_require(rs_raw, "ngpu", "methods.rs_remd")),
         eq_input_restart=_as_path(rs_raw["eq_input_restart"]) if rs_raw.get("eq_input_restart") is not None else None,
         restart=_load_rs_remd_restart(rs_raw, "methods.rs_remd"),
-        nodelist=str(rs_raw["nodelist"]) if rs_raw.get("nodelist") is not None else None,
+        nodelist=_normalize_nodelist(rs_raw["nodelist"], "methods.rs_remd.nodelist")
+        if rs_raw.get("nodelist") is not None else None,
+        nodes=_as_int(rs_raw["nodes"], "methods.rs_remd.nodes")
+        if rs_raw.get("nodes") is not None else None,
         partition=str(rs_raw["partition"]) if rs_raw.get("partition") is not None else None,
         constraint=str(rs_raw["constraint"]) if rs_raw.get("constraint") is not None else None,
     )
@@ -924,7 +967,10 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
         ngpu=_as_int(_require(us_remd_raw, "ngpu", "methods.us_remd"), "methods.us_remd.ngpu"),
         us_remd_intervals=us_remd_intervals,
         continuation=_load_continuation(us_remd_raw, "methods.us_remd"),
-        nodelist=str(us_remd_raw["nodelist"]) if us_remd_raw.get("nodelist") is not None else None,
+        nodelist=_normalize_nodelist(us_remd_raw["nodelist"], "methods.us_remd.nodelist")
+        if us_remd_raw.get("nodelist") is not None else None,
+        nodes=_as_int(us_remd_raw["nodes"], "methods.us_remd.nodes")
+        if us_remd_raw.get("nodes") is not None else None,
         partition=str(us_remd_raw["partition"]) if us_remd_raw.get("partition") is not None else None,
         constraint=str(us_remd_raw["constraint"]) if us_remd_raw.get("constraint") is not None else None,
     )

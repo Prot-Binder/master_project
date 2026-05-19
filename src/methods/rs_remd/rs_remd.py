@@ -3,7 +3,7 @@ import shlex
 import sys
 from pathlib import Path
 
-from src.config import resolve_rs_remd_eq_replica
+from src.config import resolve_rs_remd_eq_replica, resolve_scheduler_nodes
 from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
 from src.utils.check_eq_exists import check_eq_exists
@@ -136,6 +136,10 @@ class RSREMDMethod(BaseMethod):
             raise ValueError("ctx.rsremd_setup_job_id is required before submitting the RS-REMD replica equilibration job.")
 
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
+        requested_nodes = resolve_scheduler_nodes(
+            nodelist=self.cfg.methods.rs_remd.nodelist,
+            nodes=self.cfg.methods.rs_remd.nodes,
+        )
         script_dir = ctx.paths["rs_remd"]["script"]
         result_dir = ctx.paths["rs_remd"]["root"]
         log_dir = result_dir / "log_eq_each"
@@ -162,7 +166,7 @@ class RSREMDMethod(BaseMethod):
         input_file = input_dir.resolve() / "rs_remd_eq_each.groupfile"
         rsremd_eq_each += [
             f"--gres=gpu:{self.cfg.methods.rs_remd.ngpu}",
-            "--nodes=1",
+            f"--nodes={requested_nodes}",
             "--time=2-00:00:00",
             f"--ntasks={self.cfg.methods.rs_remd.n_rep}",
             "--cpus-per-task=1",
@@ -190,6 +194,10 @@ class RSREMDMethod(BaseMethod):
 
     def _submit_prod_simulation(self, ctx: JobContext):
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
+        requested_nodes = resolve_scheduler_nodes(
+            nodelist=self.cfg.methods.rs_remd.nodelist,
+            nodes=self.cfg.methods.rs_remd.nodes,
+        )
 
         prev_job_id = (
             ctx.rsremd_eq_each_job_id
@@ -225,7 +233,7 @@ class RSREMDMethod(BaseMethod):
         input_file = input_dir.resolve() / "rs_remd.groupfile"
         rsremd_prod += [
             f"--gres=gpu:{self.cfg.methods.rs_remd.ngpu}",
-            f"--nodes=1",
+            f"--nodes={requested_nodes}",
             f"--time=2-00:00:00",
             f"--ntasks={self.cfg.methods.rs_remd.n_rep}",
             f"--cpus-per-task=1",

@@ -2,7 +2,7 @@ import subprocess
 
 from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
-from src.config import us_remd_interval_windows
+from src.config import resolve_scheduler_nodes, us_remd_interval_windows
 
 
 def _collect_pull_dependencies(cfg, ctx: JobContext, windows: list[float]) -> list[str]:
@@ -43,6 +43,10 @@ class USREMDMethod(BaseMethod):
             raise ValueError("USREMDMethod.launch() requires cfg.methods.us_remd to be configured.")
 
         method_cfg = self.cfg.methods.us_remd
+        requested_nodes = resolve_scheduler_nodes(
+            nodelist=method_cfg.nodelist,
+            nodes=method_cfg.nodes,
+        )
 
         script_dir = ctx.paths["us_remd"]["script"]
         result_dir = ctx.paths["us_remd"]["root"]
@@ -83,7 +87,7 @@ class USREMDMethod(BaseMethod):
 
             usremd_cmd += [
                 f"--gres=gpu:{method_cfg.ngpu}",
-                "--nodes=1",
+                f"--nodes={requested_nodes}",
                 "--time=2-00:00:00",
                 f"--ntasks={n_windows}",
                 "--cpus-per-task=1",
