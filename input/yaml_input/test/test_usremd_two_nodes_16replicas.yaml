@@ -5,7 +5,7 @@
 # Requested resources: 2 nodes, 4 GPUs per node
 # Replica layout: 16 total replicas / windows (~2 replicas per GPU)
 ##################################################################
-tag: test_usremd_2nodes_16replicas
+tag: test_usremd_2nodes_16replicas3
 test: True
 
 cluster:
@@ -32,8 +32,8 @@ methods:
     # constraint: "rtx4090|rtx5090|rtx2080ti"
     continuation:
       enabled: True
-      source_tag: rep0_150ns
-      source_method: us
+      source_tag: 1sfi_test_rst33
+      source_method: us_remd
     nstlim: 250
     numexchg: 30
     d: [0.00]
