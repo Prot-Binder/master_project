@@ -45,6 +45,6 @@ Prod HREUS-Run for Adv-FE-Calculation
  &pmd
  	output_file = '{OUT_PATH}/pmd_gauss_rank{REP}.txt'
  	output_freq = 50
-	cv_file = '{IN_PATH}/_lroa.r'
+	cv_file = '{IN_PATH}/_lroaus.r'
  /
 eof
