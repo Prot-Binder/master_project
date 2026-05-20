@@ -8,7 +8,7 @@
 # all 10 ns blocks. Previous run (rep8_usxch20_2) failed, and all
 # rep8_usxch20_tm runs are for testing purposes.
 ##################################################################
-tag: rep8_usxch20_2p5
+tag: rep8_usxch20_b3
 test: False
 
 cluster:
