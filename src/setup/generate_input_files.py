@@ -551,6 +551,8 @@ def generate_gauss_rank(cfg, ctx) -> None:
             },
         )
         (gauss_rank_input_dir / f"mdin_rep{replicate_idx}").write_text(rendered_mdin_text)
+    
+    
 
 
 def generate_inputs(method: str, cfg: dict, ctx) -> None:
