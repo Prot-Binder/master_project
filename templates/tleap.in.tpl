@@ -10,7 +10,7 @@ mol=loadpdb {PDB_PATH}
 {BOND}
 
 #solvate the structure
-solvateoct mol TIP3PBOX 12.5
+solvateoct mol TIP3PBOX 40
 
 #Add ions for right salt concentration 2842014.733  A^3 * 0.00009 = 255.78
 addionsRand mol Na+ 256 Cl- 256
