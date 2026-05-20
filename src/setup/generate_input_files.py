@@ -533,9 +533,9 @@ def generate_gauss_rank(cfg, ctx) -> None:
     if not mdin_template.exists():
         raise FileNotFoundError(f"gauss_rank mdin template not found after copy: {mdin_template}")
 
-    shutil.copy2(gauss_rank_setup_dir / "_lroaus.r", gauss_rank_input_dir)
+    shutil.copy2(gauss_rank_setup_dir / "_lroa.r", gauss_rank_input_dir)
 
-    restraint_file = gauss_rank_input_dir / "_lroaus.r"
+    restraint_file = gauss_rank_input_dir / "_lroa.r"
     if not restraint_file.exists():
         raise FileNotFoundError(f"gauss_rank restraint file not found after copy: {restraint_file}")
 
@@ -550,14 +550,6 @@ def generate_gauss_rank(cfg, ctx) -> None:
             },
         )
         (gauss_rank_input_dir / f"mdin_rep{replicate_idx}").write_text(rendered_mdin_text)
-
-    rendered_restraint_text = _render_template_text(
-        restraint_file.read_text(),
-        {
-            "KAPPA": f"{float(method_cfg.kappa):.2f}",
-        },
-    )
-    restraint_file.write_text(rendered_restraint_text)
 
 
 def generate_inputs(method: str, cfg: dict, ctx) -> None:
