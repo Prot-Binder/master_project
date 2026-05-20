@@ -525,6 +525,7 @@ def generate_gauss_rank(cfg, ctx) -> None:
     method_cfg = cfg.methods.gauss_rank
     gauss_rank_input_dir = ctx.paths["gauss_rank"]["input"]
     gauss_rank_pmd_dir = ctx.paths["gauss_rank"]["pmd"].resolve()
+    gauss_rank_setup_dir = ctx.paths["gauss_rank"]["setup"].resolve()
 
     copy_template_files(ctx, method="gauss_rank")
 
@@ -532,9 +533,11 @@ def generate_gauss_rank(cfg, ctx) -> None:
     if not mdin_template.exists():
         raise FileNotFoundError(f"gauss_rank mdin template not found after copy: {mdin_template}")
 
+    shutil.copy2(gauss_rank_setup_dir / "_lroaus.r", gauss_rank_input_dir)
+
     restraint_file = gauss_rank_input_dir / "_lroaus.r"
     if not restraint_file.exists():
-        raise FileNotFoundError(f"gauss_rank restraint template not found after copy: {restraint_file}")
+        raise FileNotFoundError(f"gauss_rank restraint file not found after copy: {restraint_file}")
 
     mdin_template_text = mdin_template.read_text()
     for replicate_idx in range(method_cfg.n_reps):
