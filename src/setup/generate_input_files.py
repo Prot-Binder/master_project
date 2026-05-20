@@ -547,6 +547,7 @@ def generate_gauss_rank(cfg, ctx) -> None:
                 "REP": str(replicate_idx),
                 "OUT_PATH": str(gauss_rank_pmd_dir),
                 "IN_PATH": str(gauss_rank_input_dir.resolve()),
+                "NSTLIM": str(method_cfg.nstlim),
             },
         )
         (gauss_rank_input_dir / f"mdin_rep{replicate_idx}").write_text(rendered_mdin_text)

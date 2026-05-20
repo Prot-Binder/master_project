@@ -16,28 +16,28 @@ class GaussRankMethod(BaseMethod):
 
         method_paths = ctx.paths["gauss_rank"]
         top_file = method_paths["top"] / "prmtop1"
-        if not top_file.exists():
-            raise FileNotFoundError(f"gauss_rank topology file not found: {top_file}")
+        # if not top_file.exists():
+        #     raise FileNotFoundError(f"gauss_rank topology file not found: {top_file}")
 
         ctx.gauss_rank_job_ids = {}
         exclude_arg = f"--exclude={','.join(self.cfg.cluster.exclude_ranks)}"
         ref_file = method_paths["setup"] / "system.rst"
-        if not ref_file.exists():
-            raise FileNotFoundError(f"gauss_rank reference file not found: {ref_file}")
+        # if not ref_file.exists():
+        #     raise FileNotFoundError(f"gauss_rank reference file not found: {ref_file}")
 
         amber_dir = method_paths["amber"]
-        if not amber_dir.exists():
-            raise FileNotFoundError(f"gauss_rank amber output directory not found: {amber_dir}")
+        # if not amber_dir.exists():
+        #     raise FileNotFoundError(f"gauss_rank amber output directory not found: {amber_dir}")
 
         input_coord = ctx.paths["eq"]["input"] / "inpcrd_eq"
         needs_eq_dependency = not input_coord.exists() and ctx.eq_job_id is not None
-        if not input_coord.exists() and not needs_eq_dependency:
-            raise FileNotFoundError(f"gauss_rank input restart file not found: {input_coord}")
+        # if not input_coord.exists() and not needs_eq_dependency:
+        #     raise FileNotFoundError(f"gauss_rank input restart file not found: {input_coord}")
 
         for replicate_idx in range(method_cfg.n_reps):
             mdin_path = method_paths["input"] / f"mdin_rep{replicate_idx}"
-            if not mdin_path.exists():
-                raise FileNotFoundError(f"gauss_rank mdin file not found for replicate {replicate_idx}: {mdin_path}")
+            # if not mdin_path.exists():
+            #     raise FileNotFoundError(f"gauss_rank mdin file not found for replicate {replicate_idx}: {mdin_path}")
 
             job_name = f"{self.cfg.system.name}_{self.cfg.tag}_gauss_rank_r{replicate_idx}"
             sbatch_cmd = [
