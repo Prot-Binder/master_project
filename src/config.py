@@ -230,6 +230,12 @@ class USCfg(MethodCfgBase):
 
 
 @dataclass(frozen=True)
+class GaussRankCfg(MethodCfgBase):
+    n_reps: int
+    kappa: float = 0.0
+
+
+@dataclass(frozen=True)
 class RSREMDCfg(MethodCfgBase):
     n_rep: int
     k: float
@@ -290,6 +296,7 @@ class RestraintsCfg:
 @dataclass(frozen=True)
 class MethodsCfg:
     eq: Optional[EqCfg]
+    gauss_rank: Optional[GaussRankCfg]
     pull: Optional[PullCfg]
     us: Optional[USCfg]
     us_remd: Optional[USREMDCfg]
@@ -357,6 +364,15 @@ class Config:
                 raise ValueError("eq.nstlim must be > 0")
             if eq_cfg.nstlim_eq is not None and eq_cfg.nstlim_eq <= 0:
                 raise ValueError("eq.nstlim_eq must be > 0 if specified")
+
+        if self.methods.gauss_rank is not None:
+            gauss_rank_cfg = self.methods.gauss_rank
+            if len(gauss_rank_cfg.d) == 0 or len(gauss_rank_cfg.e) == 0:
+                raise ValueError("methods.gauss_rank requires non-empty d and e values.")
+            if gauss_rank_cfg.n_reps <= 0:
+                raise ValueError("methods.gauss_rank.n_reps must be > 0")
+            if gauss_rank_cfg.nstlim <= 0:
+                raise ValueError("methods.gauss_rank.nstlim must be > 0")
 
         if self.methods.pull is not None:
             if len(self.methods.pull.d) == 0 or len(self.methods.pull.e) == 0:
@@ -810,6 +826,27 @@ def _load_continuation(raw: dict, ctx: str) -> Optional[ContinuationCfg]:
     )
 
 
+def _load_gauss_rank(raw: dict) -> Optional[GaussRankCfg]:
+    methods_raw = raw.get("methods", {})
+    if methods_raw is None:
+        methods_raw = {}
+    methods_raw = _ensure_mapping(methods_raw, "methods")
+
+    method_raw = methods_raw.get("gauss_rank")
+    if method_raw is None:
+        return None
+
+    method_raw = _ensure_mapping(method_raw, "methods.gauss_rank")
+    return GaussRankCfg(
+        name=str(method_raw.get("name", "gauss_rank")),
+        d=_as_float_list(method_raw.get("d", [0.0]), "methods.gauss_rank.d"),
+        e=_as_float_list(method_raw.get("e", [1.0]), "methods.gauss_rank.e"),
+        nstlim=_as_int(method_raw.get("nstlim", 1000000), "methods.gauss_rank.nstlim"),
+        n_reps=_as_int(method_raw.get("n_reps", 1), "methods.gauss_rank.n_reps"),
+        kappa=_as_float(method_raw.get("kappa", 0.0), "methods.gauss_rank.kappa"),
+    )
+
+
 def _load_us(raw: dict) -> Optional[USCfg]:
     methods_raw = raw.get("methods", {})
     if methods_raw is None:
@@ -989,6 +1026,7 @@ def load_config(path: str | Path) -> Config:
     system = _load_system(raw)
     restraints = _load_restraints(raw, system)
     eq = _load_eq(raw)
+    gauss_rank = _load_gauss_rank(raw)
     pull = _load_pull(raw)
     setup = _load_setup(raw)
     us = _load_us(raw)
@@ -996,6 +1034,7 @@ def load_config(path: str | Path) -> Config:
     rs_remd = _load_rs_remd(raw)
     methods = MethodsCfg(
         eq=eq,
+        gauss_rank=gauss_rank,
         pull=pull,
         us=us,
         us_remd=us_remd,

@@ -1,0 +1,35 @@
+##################################################################
+# Comment:
+# Test configuration for gauss_rank.
+##################################################################
+tag: test_gauss_rank
+test: True
+
+cluster:
+  exclude_ranks: []
+
+system:
+  pdb: ~/cluster/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/cluster/mp_results/
+  name: testing
+  ligand_residues: 224-237
+  protein_residues: 1-223
+
+setup:
+  setup: True
+  setup_type: cluster
+
+methods:
+  eq:
+    name: "eq"
+    d: [0.00]
+    e: [1.00]
+    execute: True
+    use_cpu: False
+    nstlim: 2500
+
+  gauss_rank:
+    name: "gauss_rank"
+    n_reps: 3
+    nstlim: 1000000
+    kappa: 0.0

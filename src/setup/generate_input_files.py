@@ -518,9 +518,50 @@ def generate_us_remd(cfg, ctx):
         groupfile_path.write_text("".join(groupfile_lines))
 
 
+def generate_gauss_rank(cfg, ctx) -> None:
+    if cfg.methods.gauss_rank is None:
+        raise ValueError("generate_gauss_rank requires cfg.methods.gauss_rank to be configured.")
+
+    method_cfg = cfg.methods.gauss_rank
+    gauss_rank_input_dir = ctx.paths["gauss_rank"]["input"]
+    gauss_rank_pmd_dir = ctx.paths["gauss_rank"]["pmd"].resolve()
+
+    copy_template_files(ctx, method="gauss_rank")
+
+    mdin_template = gauss_rank_input_dir / "mdin"
+    if not mdin_template.exists():
+        raise FileNotFoundError(f"gauss_rank mdin template not found after copy: {mdin_template}")
+
+    restraint_file = gauss_rank_input_dir / "_lroaus.r"
+    if not restraint_file.exists():
+        raise FileNotFoundError(f"gauss_rank restraint template not found after copy: {restraint_file}")
+
+    mdin_template_text = mdin_template.read_text()
+    for replicate_idx in range(method_cfg.n_reps):
+        rendered_mdin_text = _render_template_text(
+            mdin_template_text,
+            {
+                "REP": str(replicate_idx),
+                "OUT_PATH": str(gauss_rank_pmd_dir),
+                "IN_PATH": str(gauss_rank_input_dir.resolve()),
+            },
+        )
+        (gauss_rank_input_dir / f"mdin_rep{replicate_idx}").write_text(rendered_mdin_text)
+
+    rendered_restraint_text = _render_template_text(
+        restraint_file.read_text(),
+        {
+            "KAPPA": f"{float(method_cfg.kappa):.2f}",
+        },
+    )
+    restraint_file.write_text(rendered_restraint_text)
+
+
 def generate_inputs(method: str, cfg: dict, ctx) -> None:
     if method == "eq":
         generate_eq(cfg, ctx)
+    elif method == "gauss_rank":
+        generate_gauss_rank(cfg, ctx)
     elif method == "pull":
         generate_pull(cfg, ctx)
     elif method == "us":

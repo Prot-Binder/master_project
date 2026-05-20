@@ -8,6 +8,7 @@ class JobContext:
     cfg_path: str | None = None
     setup_job_id: str | None = None
     eq_job_id: str | None = None
+    gauss_rank_job_ids: dict[int, str] | None = None
     restraint_eq_job_ids: dict[str, str] | None = None
     restraint_pre_job_ids: dict[str, str] | None = None
     restraint_prod_job_ids: dict[str, str] | None = None
