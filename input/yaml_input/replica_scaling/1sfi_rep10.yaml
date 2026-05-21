@@ -34,6 +34,7 @@ methods:
   pull:
     name: "pull"
     nstlim: 350000
+    mode: "serial"
     d: [ 0.28 ]
     e: [ 0.86 ]
     stride: 1
