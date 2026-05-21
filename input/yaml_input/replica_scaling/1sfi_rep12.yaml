@@ -1,0 +1,45 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# some short pull simulations to get a rough estimate of the PMF. I.e. how steep it is.
+# We will run US-REMD on a scaled replica with d = 0.380, e = 0.820
+##################################################################
+tag: rep12_scaling_test
+test: False
+
+cluster:
+  exclude_ranks: []
+
+system:
+  pdb: ~/cluster/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/cluster/mp_results/
+  name: scaling_test
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+
+methods:
+  eq:
+    name: "eq"
+    d: [ 0.38 ]
+    e: [ 0.82 ]
+    execute: True
+    use_cpu: True
+    nstlim: 250000
+  pull:
+    name: "pull"
+    nstlim: 350000
+    mode: "serial"
+    d: [ 0.38 ]
+    e: [ 0.82 ]
+    stride: 1
+    pull_intervals:
+      - start: 17.00
+        end: 25.00
+        step: 1.00
+        k: 4.0
