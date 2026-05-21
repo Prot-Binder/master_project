@@ -11,11 +11,6 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     norm = None
 
-try:
-    from scipy.signal import find_peaks
-except ImportError:  # pragma: no cover - optional dependency
-    find_peaks = None
-
 
 k_B = 0.0019872041  # kcal/mol/K
 
@@ -62,63 +57,6 @@ def _clean_distances(distances) -> np.ndarray:
     return values
 
 
-def detect_multimodality(
-    distances,
-    bins="auto",
-    peak_height_fraction=0.2,
-    min_peak_distance_bins=2,
-):
-    distances = _clean_distances(distances)
-
-    counts, edges = np.histogram(distances, bins=bins)
-    centers = 0.5 * (edges[:-1] + edges[1:])
-
-    if counts.size == 0 or counts.max() <= 0:
-        peak_indices = np.asarray([], dtype=int)
-    else:
-        min_height = float(peak_height_fraction) * float(counts.max())
-        min_distance = max(1, int(min_peak_distance_bins))
-
-        if find_peaks is not None:
-            peak_indices, properties = find_peaks(
-                counts,
-                height=min_height,
-                distance=min_distance,
-            )
-            peak_heights = properties.get("peak_heights", counts[peak_indices])
-        else:
-            peak_index_list: list[int] = []
-            for idx in range(1, len(counts) - 1):
-                is_peak = counts[idx] > counts[idx - 1] and counts[idx] > counts[idx + 1]
-                is_tall_enough = counts[idx] >= min_height
-                is_far_enough = (
-                    len(peak_index_list) == 0
-                    or idx - peak_index_list[-1] >= min_distance
-                )
-                if is_peak and is_tall_enough and is_far_enough:
-                    peak_index_list.append(idx)
-            peak_indices = np.asarray(peak_index_list, dtype=int)
-            peak_heights = counts[peak_indices]
-
-        return {
-            "n_major_peaks": int(len(peak_indices)),
-            "major_peak_positions": centers[peak_indices].tolist(),
-            "major_peak_heights": np.asarray(peak_heights, dtype=float).tolist(),
-            "is_multimodal": bool(len(peak_indices) > 1),
-            "hist_counts": counts.tolist(),
-            "hist_edges": edges.tolist(),
-        }
-
-    return {
-        "n_major_peaks": 0,
-        "major_peak_positions": [],
-        "major_peak_heights": [],
-        "is_multimodal": False,
-        "hist_counts": counts.tolist(),
-        "hist_edges": edges.tolist(),
-    }
-
-
 def fit_gaussian_distance(distances, temperature=300.0):
     distances = _clean_distances(distances)
 
@@ -157,16 +95,6 @@ def fit_gaussian_distance(distances, temperature=300.0):
         "kBT": kBT,
         "k_eff": k_eff,
     }
-
-    multimodal_result = detect_multimodality(distances)
-    result.update(multimodal_result)
-    result["warning"] = ""
-    if result["is_multimodal"]:
-        result["warning"] = (
-            "WARNING: COM-distance distribution appears multimodal. "
-            "A single Gaussian fit may not be meaningful."
-        )
-
     return result
 
 
@@ -189,11 +117,6 @@ def write_gaussian_results(
         "fit_sigma",
         "kBT",
         "k_eff",
-        "n_major_peaks",
-        "major_peak_positions",
-        "major_peak_heights",
-        "is_multimodal",
-        "warning",
     ]
 
     lines = ["replica\t" + "\t".join(columns)]
@@ -207,11 +130,6 @@ def write_gaussian_results(
                 fields.append(str(int(value)))
             elif isinstance(value, str):
                 fields.append(value)
-            elif isinstance(value, list):
-                if len(value) == 0:
-                    fields.append("")
-                else:
-                    fields.append(",".join(f"{float(item):.6f}" for item in value))
             elif np.isnan(value):
                 fields.append("nan")
             else:
@@ -254,17 +172,11 @@ def plot_gaussian_distance(distances, result, output_file="gaussian_fit.png"):
             y_values,
             color="crimson",
             linewidth=2.0,
-            label=f"Gaussian fit ($\\mu$={fit_mu:.3f}, $\\sigma$={fit_sigma:.3f})",
-        )
-
-    for peak_idx, peak_position in enumerate(result.get("major_peak_positions", [])):
-        label = "Major peak" if peak_idx == 0 else None
-        ax.axvline(
-            float(peak_position),
-            color="darkgreen",
-            linestyle="--",
-            linewidth=1.5,
-            label=label,
+            label=(
+                f"Gaussian fit ($\\mu$={fit_mu:.3f}, "
+                f"$\\sigma$={fit_sigma:.3f}, "
+                f"$k_{{eff}}$={float(result['k_eff']):.3f})"
+            ),
         )
 
     ax.set_xlabel("COM distance (Å)")

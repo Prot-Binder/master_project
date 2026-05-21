@@ -58,6 +58,7 @@ def main() -> None:
     )
 
     replica_files = _collect_replica_files(input_dir)
+    print(f"processing the following files: {replica_files}")
     result = analyze_gauss_rank_replica_files(
         replica_files,
         output_dir=output_dir,
