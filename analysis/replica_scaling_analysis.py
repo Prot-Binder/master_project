@@ -154,7 +154,18 @@ def plot_replica_scaling_histograms(
     for idx, result in enumerate(histogram_results):
         color = cmap(idx % cmap.N)
         bin_centers = np.asarray(result["bin_centers"], dtype=float)
+        bin_edges = np.asarray(result["bin_edges"], dtype=float)
+        raw_counts = np.asarray(result["hist_counts"], dtype=float)
         smoothed_counts = smooth_histogram_counts(result["hist_counts"], window=smooth_window)
+
+        ax.stairs(
+            raw_counts,
+            bin_edges,
+            fill=True,
+            alpha=0.18,
+            color=color,
+            linewidth=1.0,
+        )
 
         ax.plot(
             bin_centers,
@@ -262,6 +273,7 @@ def analyze_replica_scaling_files(
                 "n_tail": int(len(result["tail_values"])),
                 "hist_counts": counts,
                 "bin_centers": bin_centers,
+                "bin_edges": bin_edges,
             }
         )
 
