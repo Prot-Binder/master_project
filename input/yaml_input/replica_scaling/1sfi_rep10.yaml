@@ -5,7 +5,7 @@
 # some short pull simulations to get a rough estimate of the PMF. I.e. how steep it is.
 # We will run US-REMD on a scaled replica with d = 0.380, e = 0.820
 ##################################################################
-tag: rep0
+tag: rep10_scaling_test
 test: False
 
 cluster:
@@ -14,7 +14,7 @@ cluster:
 system:
   pdb: ~/cluster/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
   output_prefix: ~/cluster/mp_results/
-  name: 1sfi
+  name: scaling_test
   ligand_residues: 224-237
   protein_residues: 1-223
   bond: 224.N-237.C
