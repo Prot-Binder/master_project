@@ -7,6 +7,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
+try:
+    from scipy.stats import gaussian_kde
+except ImportError:  # pragma: no cover - optional dependency
+    gaussian_kde = None
+
 
 def load_replica_scaling_series(file_path: str | Path) -> np.ndarray:
     path = Path(file_path)
@@ -87,6 +92,35 @@ def smooth_histogram_counts(counts, window: int = 5) -> np.ndarray:
     return np.convolve(values, kernel, mode="same")
 
 
+def compute_kde_curve(values, bin_edges, fallback_window: int = 5) -> tuple[np.ndarray, np.ndarray]:
+    sample_values = np.asarray(values, dtype=float)
+    sample_values = sample_values[np.isfinite(sample_values)]
+    if sample_values.size == 0:
+        return np.asarray([], dtype=float), np.asarray([], dtype=float)
+
+    x_min = float(np.min(sample_values))
+    x_max = float(np.max(sample_values))
+    if x_min == x_max:
+        x_values = np.array([x_min], dtype=float)
+        y_values = np.array([float(sample_values.size)], dtype=float)
+        return x_values, y_values
+
+    x_values = np.linspace(x_min, x_max, 400)
+
+    if gaussian_kde is not None and sample_values.size > 1:
+        kde = gaussian_kde(sample_values)
+        bin_widths = np.diff(np.asarray(bin_edges, dtype=float))
+        scale = float(sample_values.size) * float(np.mean(bin_widths))
+        y_values = kde(x_values) * scale
+        return x_values, np.asarray(y_values, dtype=float)
+
+    counts, edges = np.histogram(sample_values, bins=bin_edges)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    smoothed_counts = smooth_histogram_counts(counts, window=fallback_window)
+    y_values = np.interp(x_values, centers, smoothed_counts, left=0.0, right=0.0)
+    return x_values, y_values
+
+
 def compute_histogram_center(counts, bin_centers) -> float:
     counts = np.asarray(counts, dtype=float)
     bin_centers = np.asarray(bin_centers, dtype=float)
@@ -147,16 +181,23 @@ def plot_replica_scaling_histograms(
 
     global_max = 0.0
     for result in histogram_results:
-        smoothed_counts = smooth_histogram_counts(result["hist_counts"], window=smooth_window)
-        if smoothed_counts.size > 0:
-            global_max = max(global_max, float(np.max(smoothed_counts)))
+        _, smooth_y = compute_kde_curve(
+            result["tail_values"],
+            result["bin_edges"],
+            fallback_window=smooth_window,
+        )
+        if smooth_y.size > 0:
+            global_max = max(global_max, float(np.max(smooth_y)))
 
     for idx, result in enumerate(histogram_results):
         color = cmap(idx % cmap.N)
-        bin_centers = np.asarray(result["bin_centers"], dtype=float)
         bin_edges = np.asarray(result["bin_edges"], dtype=float)
         raw_counts = np.asarray(result["hist_counts"], dtype=float)
-        smoothed_counts = smooth_histogram_counts(result["hist_counts"], window=smooth_window)
+        smooth_x, smooth_y = compute_kde_curve(
+            result["tail_values"],
+            bin_edges,
+            fallback_window=smooth_window,
+        )
 
         ax.stairs(
             raw_counts,
@@ -168,17 +209,17 @@ def plot_replica_scaling_histograms(
         )
 
         ax.plot(
-            bin_centers,
-            smoothed_counts,
+            smooth_x,
+            smooth_y,
             linewidth=2.0,
             color=color,
             label=f"{result['replica']} (target={float(result['intended_center']):.2f})",
         )
 
-        if smoothed_counts.size > 0:
-            peak_idx = int(np.argmax(smoothed_counts))
-            peak_x = float(bin_centers[peak_idx])
-            peak_y = float(smoothed_counts[peak_idx])
+        if smooth_y.size > 0:
+            peak_idx = int(np.argmax(smooth_y))
+            peak_x = float(smooth_x[peak_idx])
+            peak_y = float(smooth_y[peak_idx])
         else:
             peak_x = float(result["actual_center"])
             peak_y = 0.0
@@ -271,6 +312,7 @@ def analyze_replica_scaling_files(
                 "active_start_idx": int(result["active_start_idx"]),
                 "n_active": int(len(result["active_values"])),
                 "n_tail": int(len(result["tail_values"])),
+                "tail_values": np.asarray(result["tail_values"], dtype=float),
                 "hist_counts": counts,
                 "bin_centers": bin_centers,
                 "bin_edges": bin_edges,
