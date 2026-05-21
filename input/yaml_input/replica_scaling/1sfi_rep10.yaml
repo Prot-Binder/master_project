@@ -36,6 +36,7 @@ methods:
     nstlim: 350000
     d: [ 0.28 ]
     e: [ 0.86 ]
+    stride: 1
     pull_intervals:
       - start: 17.00
         end: 25.00
