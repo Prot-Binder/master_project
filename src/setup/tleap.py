@@ -61,6 +61,7 @@ def run_tleap(
     cluster: str,
     setup_dir: Path,
     pdb_path: Path,
+    box_size: float,
     bond: Optional[str],
     paths: TLeapPaths,
 ) -> Tuple[Path, Path, int]:
@@ -89,6 +90,7 @@ def run_tleap(
         {
             "FORCEFIELD_DIR": str(ff_dir),
             "PDB_PATH": str(pdb_path),
+            "SIZE": f"{float(box_size):.1f}",
             "BOND": _bond_line_from_cfg(bond),
             "N_NA": 0,
             "N_CL": 0,
@@ -110,6 +112,7 @@ def run_tleap(
         {
             "FORCEFIELD_DIR": str(ff_dir),
             "PDB_PATH": str(pdb_path),
+            "SIZE": f"{float(box_size):.1f}",
             "BOND": _bond_line_from_cfg(bond),
             "N_NA": n_each,
             "N_CL": n_each,

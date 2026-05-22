@@ -126,6 +126,7 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
         cluster=cluster,
         setup_dir=setup_dir,
         pdb_path=cfg.system.pdb,
+        box_size=cfg.system.box_size,
         bond=cfg.system.bond,
         paths=tleap_paths,
     )
@@ -152,6 +153,7 @@ def create_restraint_class_box_and_prmtop(cfg, ctx, target_class: str) -> Restra
         cluster=cluster,
         setup_dir=setup_dir,
         pdb_path=class_system.pdb,
+        box_size=cfg.system.box_size,
         bond=None,
         paths=tleap_paths,
     )

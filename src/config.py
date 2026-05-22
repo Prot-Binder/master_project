@@ -150,6 +150,7 @@ class SystemCfg:
     name: str
     ligand_residues: str
     protein_residues: str
+    box_size: float = 40.0
     bond: Optional[str] = None
 
 
@@ -323,6 +324,8 @@ class Config:
 
         if not self.system.pdb.exists():
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
+        if self.system.box_size <= 0:
+            raise ValueError("system.box_size must be > 0.")
 
         if self.restraints is not None and self.restraints.systems is not None:
             for target_class in ("complex", "receptor", "ligand"):
@@ -632,6 +635,11 @@ def _load_system_cfg(sys_raw: dict, *, ctx: str, defaults: SystemCfg | None = No
                 if defaults is not None
                 else str(_require(sys_raw, "protein_residues", ctx))
             )
+        ),
+        box_size=(
+            _as_float(sys_raw["box_size"], f"{ctx}.box_size")
+            if "box_size" in sys_raw
+            else (defaults.box_size if defaults is not None else 40.0)
         ),
         bond=(
             str(sys_raw["bond"])
