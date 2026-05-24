@@ -2,11 +2,10 @@
 # Describe what this run is all about.
 # This helps your brain later (while writing your thesis).
 # Comment:
-# running us-remd for the 1sfi system. From 16.5.50.00 to 27.25 using
-# a spacing of 0.25 and force constant k = 24. Try to explicitly
-# run it on t38cn048.
+# this is a test to run us-remd on two nodes (t38cn035 and t38cn037) for the 1sfi system.
+# initially, we saw that jobs are only scheduled tot38cn035, not 037.
 ##################################################################
-tag: rep12_usxch_t2
+tag: rep12_usxch_t3
 test: False
 
 cluster:
@@ -31,6 +30,7 @@ methods:
     ngpu: 4
     nodes: 2
     nodelist: [ t38cn035, t38cn037 ]
+    ntasks_per_node: 8
     # partition: "barracuda"
     # constraint: "rtx4090|rtx5090|rtxa5000"
     # nodelist: "t38cn037"
@@ -44,7 +44,6 @@ methods:
     numexchg: 40000
     d: [0.380]
     e: [0.820]
-    ntasks_per_node: 16
     us_remd_intervals:
-      - windows: [16.00, 16.50, 17.00, 17.50, 18.00, 18.50, 19.00, 19.50, 20.00, 20.50, 21.00, 21.50, 22.00, 22.50, 23.00, 23.25, 24.00, 24.75, 25.50, 26.25, 27.00, 27.75, 28.50, 29.25, 30.00, 30.75, 31.50, 32.25, 33.00, 33.75, 34.50, 35.25]
-        kappas: [12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
+      - windows: [16.00, 16.50, 17.00, 17.50, 18.00, 18.50, 19.00, 19.50, 20.00, 20.50, 21.00, 21.50, 22.00, 22.50, 23.00, 23.25] #, 24.00, 24.75, 25.50, 26.25, 27.00, 27.75, 28.50, 29.25, 30.00, 30.75, 31.50, 32.25, 33.00, 33.75, 34.50, 35.25]
+        kappas: [12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 04.00] #, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
