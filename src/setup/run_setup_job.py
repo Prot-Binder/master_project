@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 from src.config import compute_paths, load_config
 from src.methods.JobContext import JobContext
@@ -15,6 +16,7 @@ def main(cfg_path: str) -> None:
 
     ctx = JobContext()
     ctx.paths = cfg.paths
+    ctx.cfg_path = str(Path(cfg_path).resolve())
 
     _run_setup_pipeline(cfg, ctx)
 

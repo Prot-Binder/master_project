@@ -55,6 +55,16 @@ def _replace_directory_excluding_yaml(src_dir: Path, dest_dir: Path) -> None:
     shutil.copytree(src_dir, dest_dir, ignore=_ignore_yaml_files)
 
 
+def _copy_current_yaml_into_setup_dirs(cfg, ctx) -> None:
+    if ctx.cfg_path is None:
+        return
+
+    cfg_path = Path(ctx.cfg_path).resolve()
+    for method_name in get_configured_method_names(cfg):
+        setup_dir = ctx.paths[method_name]["setup"].resolve()
+        shutil.copy2(cfg_path, setup_dir)
+
+
 def _get_method_cfg(cfg, method_name: str):
     method_cfg = getattr(cfg.methods, method_name, None)
     if method_cfg is None:
@@ -345,6 +355,8 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     for method_name in method_names:
        generate_inputs(str(method_name), cfg, ctx)
        print(f"\033[92m[setup] Input files copied and adjusted for {method_name}\033[0m")
+
+    _copy_current_yaml_into_setup_dirs(cfg, ctx)
 
 
 def _submit_setup_job_and_wait(cfg, ctx, cfg_path: Path) -> str:
