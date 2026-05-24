@@ -8,7 +8,7 @@
 # all 10 ns blocks. Previous run (rep8_usxch20_2) failed, and all
 # rep8_usxch20_tm runs are for testing purposes.
 ##################################################################
-tag: rep8_usxch20_b3
+tag: rep8_usxch20_b1
 test: False
 
 cluster:
@@ -38,12 +38,12 @@ methods:
     # If source_method is omitted, it defaults to the current method: us_remd.
     continuation:
       enabled: True
-      source_tag: rep8_b3_rst
+      source_tag: rep8_rst_2
       source_method: us_remd  # us or us_remd
     nstlim: 250
     numexchg: 20000
     d: [0.200]
     e: [0.900]
     us_remd_intervals:
-      - windows: [22.00, 22.50, 23.00, 23.25, 23.75, 24.00, 24.75, 25.50, 26.25, 27.00, 27.75, 28.50, 29.25, 30.00, 30.75, 31.50]
-        kappas:  [12.00, 12.00, 12.00, 08.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
+      - windows: [16.50, 17.00, 17.50, 17.75, 18.00, 18.25, 18.50, 19.00, 19.50, 20.00, 20.50, 21.00, 21.50, 22.00, 22.50, 23.00]
+        kappas:  [12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 04.00, 04.00, 04.00, 04.00]
