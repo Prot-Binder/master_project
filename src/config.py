@@ -388,8 +388,12 @@ class Config:
         if self.methods.pull is not None:
             if len(self.methods.pull.d) == 0 or len(self.methods.pull.e) == 0:
                 raise ValueError("pull requires non-empty d and e values.")
+            if self.methods.pull.mode not in {"serial", "parallel"}:
+                raise ValueError("pull.mode must be either 'serial' or 'parallel'")
             if self.methods.pull.stride <= 0:
                 raise ValueError("pull.stride must be > 0")
+            if not float(self.methods.pull.stride).is_integer():
+                raise ValueError("pull.stride must be an integer number of windows.")
             if self.methods.pull.nstlim <= 0:
                 raise ValueError("pull.nstlim must be > 0")
 
@@ -815,7 +819,7 @@ def _load_pull(raw: dict) -> Optional[PullCfg]:
         e=_as_float_list(_require(pull_raw, "e", "pull"), "pull.e"),
         nstlim=_as_int(pull_raw.get("nstlim", 2500000), "pull.nstlim"),
         stride=float(_require(pull_raw, "stride", "pull")),
-        mode=str(_require(pull_raw, "mode", "pull")),
+        mode=str(_require(pull_raw, "mode", "pull")).strip().lower(),
         pull_intervals=pull_intervals,
     )
 
