@@ -6,7 +6,7 @@
 # a spacing of 0.25 and force constant k = 24. Try to explicitly
 # run it on t38cn048.
 ##################################################################
-tag: rep12_usxch_2
+tag: rep12_usxch_t2
 test: False
 
 cluster:
