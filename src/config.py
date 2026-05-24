@@ -276,6 +276,7 @@ class USREMDCfg(MethodCfgBase):
     continuation: Optional[ContinuationCfg] = None
     nodelist: Optional[str] = None
     nodes: Optional[int] = None
+    ntasks_per_node: Optional[int] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
 
@@ -516,6 +517,8 @@ class Config:
                 raise ValueError("methods.us_remd.nodelist must not be empty if specified")
             if us_remd_cfg.nodes is not None and us_remd_cfg.nodes <= 0:
                 raise ValueError("methods.us_remd.nodes must be > 0 if specified")
+            if us_remd_cfg.ntasks_per_node is not None and us_remd_cfg.ntasks_per_node <= 0:
+                raise ValueError("methods.us_remd.ntasks_per_node must be > 0 if specified")
             resolve_scheduler_nodes(nodelist=us_remd_cfg.nodelist, nodes=us_remd_cfg.nodes)
             self._validate_continuation_cfg(
                 us_remd_cfg.continuation,
@@ -1016,6 +1019,8 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
         if us_remd_raw.get("nodelist") is not None else None,
         nodes=_as_int(us_remd_raw["nodes"], "methods.us_remd.nodes")
         if us_remd_raw.get("nodes") is not None else None,
+        ntasks_per_node=_as_int(us_remd_raw["ntasks_per_node"], "methods.us_remd.ntasks_per_node")
+        if us_remd_raw.get("ntasks_per_node") is not None else None,
         partition=str(us_remd_raw["partition"]) if us_remd_raw.get("partition") is not None else None,
         constraint=str(us_remd_raw["constraint"]) if us_remd_raw.get("constraint") is not None else None,
     )

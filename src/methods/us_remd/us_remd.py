@@ -84,6 +84,8 @@ class USREMDMethod(BaseMethod):
                 usremd_cmd.append(f"--partition={method_cfg.partition}")
             if method_cfg.constraint is not None:
                 usremd_cmd.append(f"--constraint={method_cfg.constraint}")
+            if method_cfg.ntasks_per_node is not None:
+                usremd_cmd.append(f"--ntasks-per-node={method_cfg.ntasks_per_node}")
 
             usremd_cmd += [
                 f"--gres=gpu:{method_cfg.ngpu}",
