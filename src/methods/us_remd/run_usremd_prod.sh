@@ -1,6 +1,13 @@
 #!/bin/bash
 
-module load pmemd
+module purge
+
+module load gcc/11.5.0
+module load cuda/12.8.0
+module load openmpi/5.0.7-cuda-12.8.0
+module load pmix/5.0.5-cuda-12.8.0
+module load pmemd/24.1-cuda-12.8.0
+module load ambertools/25.10-cuda-12.8.0
 
 NUM_REPS=$1
 INPUT_FILE=$2
