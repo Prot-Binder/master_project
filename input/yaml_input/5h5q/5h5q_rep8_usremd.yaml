@@ -33,10 +33,10 @@ methods:
     nodelist: "t38cn053"
     # Optional continuation from a previous tag.
     # If source_method is omitted, it defaults to the current method: us_remd.
-    # continuation:
-    #   enabled: True
-    #   source_tag: rep8
-    #   source_method: us  # or us_remd
+    continuation:
+      enabled: True
+      source_tag: rep8_rst
+      source_method: us_remd  # or us_remd
     nstlim: 250
     numexchg: 40000
     d: [ 0.200 ]
