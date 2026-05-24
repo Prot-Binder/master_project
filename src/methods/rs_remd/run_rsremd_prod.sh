@@ -1,6 +1,8 @@
 #!/bin/bash
 
-module load pmemd
+SCRIPT_DIR=$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$SCRIPT_DIR/../load_amber_modules.sh"
+load_amber_modules
 
 NUM_REPS=$1
 INPUT_FILE=$2
@@ -22,6 +24,7 @@ echo "CUDA home:   $CUDA_HOME"
 echo "Visible GPU: ${CUDA_VISIBLE_DEVICES:-<unset>}"
 echo "GPU Info:    $(nvidia-smi -L)"
 echo "Nodes:       $SLURM_JOB_NODELIST"
+echo "Modules:     $MODULE_SETUP_LABEL"
 echo "======"
 
         mpirun --oversubscribe -n $NUM_REPS pmemd.cuda_SPFP.MPI -O -ng $NUM_REPS -groupfile $INPUT_FILE -rem 3

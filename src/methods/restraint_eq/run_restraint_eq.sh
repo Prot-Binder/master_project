@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
-module load pmemd
+SCRIPT_DIR=$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$SCRIPT_DIR/../load_amber_modules.sh"
+load_amber_modules
 
 OUTDIR=$1
 PRMTOP=$2
@@ -23,6 +25,7 @@ echo "Job ID: $SLURM_JOB_ID"
 echo "SLURM local node: $SLURMD_NODENAME"
 echo "Node list: $SLURM_JOB_NODELIST"
 echo "Running on node: $(hostname)"
+echo "Modules: $MODULE_SETUP_LABEL"
 
 CURRENT_COORD=$INPUT_COORD
 

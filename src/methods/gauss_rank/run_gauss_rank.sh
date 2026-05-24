@@ -1,6 +1,8 @@
 #!/bin/bash
 
-module load pmemd
+SCRIPT_DIR=$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$SCRIPT_DIR/../load_amber_modules.sh"
+load_amber_modules
 
 MDIN=$1
 OUTDIR=$2
@@ -15,6 +17,7 @@ echo "Job ID: $SLURM_JOB_ID"
 echo "SLURM local node: $SLURMD_NODENAME"
 echo "Node list: $SLURM_JOB_NODELIST"
 echo "Running on node: $(hostname)"
+echo "Modules: $MODULE_SETUP_LABEL"
 echo "MDIN: $MDIN"
 echo "Coordinate file: $COORD_FILE"
 
