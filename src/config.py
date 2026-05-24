@@ -327,6 +327,13 @@ class Config:
             raise ValueError(f"system.pdb does not exist: {self.system.pdb}")
         if self.system.box_size <= 0:
             raise ValueError("system.box_size must be > 0.")
+        if not self.setup.setup:
+            if self.setup.setup_dir is None:
+                raise ValueError("setup.setup_dir is required when setup.setup is false.")
+            if not self.setup.setup_dir.exists():
+                raise ValueError(f"setup.setup_dir does not exist: {self.setup.setup_dir}")
+            if not self.setup.setup_dir.is_dir():
+                raise ValueError(f"setup.setup_dir is not a directory: {self.setup.setup_dir}")
 
         if self.restraints is not None and self.restraints.systems is not None:
             for target_class in ("complex", "receptor", "ligand"):

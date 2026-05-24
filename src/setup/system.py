@@ -36,6 +36,25 @@ def _replace_directory(src_dir: Path, dest_dir: Path) -> None:
     shutil.copytree(src_dir, dest_dir)
 
 
+def _ignore_yaml_files(_src: str, names: list[str]) -> set[str]:
+    ignored: set[str] = set()
+    for name in names:
+        lower_name = name.lower()
+        if lower_name.endswith(".yaml") or lower_name.endswith(".yml"):
+            ignored.add(name)
+    return ignored
+
+
+def _replace_directory_excluding_yaml(src_dir: Path, dest_dir: Path) -> None:
+    if src_dir.resolve() == dest_dir.resolve():
+        return
+
+    if dest_dir.exists():
+        shutil.rmtree(dest_dir)
+
+    shutil.copytree(src_dir, dest_dir, ignore=_ignore_yaml_files)
+
+
 def _get_method_cfg(cfg, method_name: str):
     method_cfg = getattr(cfg.methods, method_name, None)
     if method_cfg is None:
@@ -140,6 +159,27 @@ def create_box_and_prmtop(cfg, ctx, method_name: str) -> tuple[Path, Path, int]:
     )
 
     return prmtop, rst, n_ions_each
+
+
+def reuse_existing_setup_directory(cfg, ctx, method_name: str) -> tuple[Path, Path]:
+    if cfg.setup.setup_dir is None:
+        raise ValueError("reuse_existing_setup_directory() requires setup.setup_dir to be configured.")
+
+    source_setup_dir = cfg.setup.setup_dir.resolve()
+    dest_setup_dir = ctx.paths[method_name]["setup"].resolve()
+    _replace_directory_excluding_yaml(source_setup_dir, dest_setup_dir)
+
+    prmtop = dest_setup_dir / "prmtop"
+    rst = dest_setup_dir / "system.rst"
+    system_pdb = dest_setup_dir / "system.pdb"
+    missing_paths = [path for path in (prmtop, rst, system_pdb) if not path.exists()]
+    if len(missing_paths) > 0:
+        raise FileNotFoundError(
+            "Existing setup directory is missing required file(s): "
+            + ", ".join(str(path) for path in missing_paths)
+        )
+
+    return prmtop, rst
 
 
 def create_restraint_class_box_and_prmtop(cfg, ctx, target_class: str) -> RestraintSetupArtifacts:
@@ -266,9 +306,16 @@ def _run_setup_pipeline(cfg, ctx) -> None:
     first_method = method_names[0]
     first_setup_dir = ctx.paths[first_method]["setup"].resolve()
 
-    # run tleap and HMR
-    create_box_and_prmtop(cfg, ctx, first_method)
-    
+    if cfg.setup.setup:
+        create_box_and_prmtop(cfg, ctx, first_method)
+        print(f"\033[92m[setup] Generated shared setup in {first_method} via tleap/HMR\033[0m")
+    else:
+        reuse_existing_setup_directory(cfg, ctx, first_method)
+        print(
+            f"\033[92m[setup] Reused existing shared setup from {cfg.setup.setup_dir} "
+            f"for {first_method}\033[0m"
+        )
+
     # create restraint template files
     system_pdb = first_setup_dir / "system.pdb"
     create_restraints(first_setup_dir, system_pdb, cfg.system.protein_residues, cfg.system.ligand_residues)
