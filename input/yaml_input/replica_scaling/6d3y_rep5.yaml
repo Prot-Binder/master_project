@@ -19,8 +19,8 @@ system:
   protein_residues: 1-247
 
 setup:
-  setup: False # TODO: think of deleting this filed as it may be redundant
-  setup_dir: ~/mp_results/scaling_test/6d3y_rep5/eq/setup
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  # setup_dir: ~/mp_results/scaling_test/6d3y_rep5/eq/setup
   setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
 
 methods:
