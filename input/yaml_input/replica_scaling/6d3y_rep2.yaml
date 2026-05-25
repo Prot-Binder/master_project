@@ -1,0 +1,48 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# some short pull simulations to get a rough estimate of the PMF. I.e. how steep it is.
+# We will run a pull simulation on a scaled replica with d = 0.280, e = 0.860
+##################################################################
+tag: 6d3y_rep2
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn053,t38cn045,t38cn049]
+
+system:
+  pdb: ~/cluster/master_project/input/pdb_files/6d3y/6d3y_cleaned.pdb
+  output_prefix: ~/cluster/mp_results/
+  name: scaling_test
+  ligand_residues: 248-261
+  protein_residues: 1-247
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+
+methods:
+  eq:
+    name: "eq"
+    d: [ 0.280 ]
+    e: [ 0.860 ]
+    execute: True
+    use_cpu: False
+    nstlim: 250000
+  pull:
+    name: "pull"
+    nstlim: 350000
+    mode: "serial"
+    d: [ 0.280 ]
+    e: [ 0.860 ]
+    stride: 5
+    pull_intervals:
+      - start: 17.00
+        end: 20.75
+        step: 0.75
+        k: 4.0
+      - start: 24.50
+        end: 26.00
+        step: 0.75
+        k: 4.0
