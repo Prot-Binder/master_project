@@ -5,7 +5,6 @@ from pathlib import Path
 
 from src.config import (
     compute_paths,
-    copy_yaml_input,
     load_config,
     validate_continuation_settings,
 )
@@ -90,5 +89,4 @@ def bootstrap_run(cfg_path: str, dry_run: bool = False) -> BootstrapResult | Non
 
     setup_id = setup_simulation(cfg, ctx, cfg_path_resolved)
     print(f"\033[92m[setup] Setup completed with ID {setup_id}\033[0m")
-    copy_yaml_input(cfg, cfg_path)
     return BootstrapResult(cfg=cfg, ctx=ctx, setup_id=setup_id)
