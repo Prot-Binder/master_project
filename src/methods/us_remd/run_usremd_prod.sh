@@ -42,6 +42,9 @@ echo "GPU Info:    $(nvidia-smi -L)"
 echo "Nodes:       $SLURM_JOB_NODELIST"
 echo "Modules:     $MODULE_SETUP_LABEL"
 echo "======"
+echo "=== NVIDIA-SMI ==="
+nvidia-smi
+echo "=================="
 
 mpirun --oversubscribe -n "$NUM_REPS" pmemd.cuda_SPFP.MPI -O -ng "$NUM_REPS" -groupfile "$INPUT_FILE" -rem 3
 
