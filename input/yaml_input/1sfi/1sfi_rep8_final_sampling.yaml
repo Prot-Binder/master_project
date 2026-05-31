@@ -1,0 +1,48 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# running us-remd for the 1sfi system scaled (rep8). 
+# for the whole system. Hopefully one last time. Previously wrong tag. Now corrected
+##################################################################
+tag: rep8_usremd_f2
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn038,t38cn028,t38cn030,t38cn015,t38cn024,t38cn027,t38cn018,t38cn031,t38cn020,t38cn032,t38cn022,t38cn055,t38cn026,t38cn045]
+
+system:
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 1sfi
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+
+setup:
+  setup: False # TODO: think of deleting this filed as it may be redundant
+  setup_dir: ~/mp_results/1sfi/rep8_usxch20_2p2/us_remd/setup
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  us_remd:
+    name: "us_remd"
+    ngpu: 4
+    # partition: "barracuda"
+    # constraint: "rtx4090|rtx5090|rtxa5000"
+    nodelist: "t38cn053"
+    # Optional continuation from a previous tag.
+    # If source_method is omitted, it defaults to the current method: us_remd.
+    continuation:
+      enabled: True
+      source_tag: rep8_usxch20_2p2
+      source_method: us_remd  # or us_remd
+    nstlim: 250
+    numexchg: 40000
+    d: [0.200]
+    e: [0.900]
+    us_remd_intervals:
+      - windows: [15.50, 16.00, 16.50, 17.00, 17.50, 17.75, 18.00, 18.25, 18.50, 19.00, 19.50, 20.00, 20.50, 21.00, 21.50, 22.00, 22.50, 23.00, 23.25, 23.75, 24.00, 24.75, 25.50, 26.25, 27.00, 27.75, 28.50, 29.25, 30.00, 30.75, 31.50, 32.25]
+        kappas:  [12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 12.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
+
