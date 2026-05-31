@@ -38,7 +38,7 @@ methods:
     # If source_method is omitted, it defaults to the current method: us_remd.
     continuation:
       enabled: True
-      source_tag: re8_rst2
+      source_tag: rep8_tmp_rst
       source_method: us_remd  # or us_remd
     nstlim: 250
     numexchg: 40000
