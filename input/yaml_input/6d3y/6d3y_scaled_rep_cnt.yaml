@@ -31,6 +31,10 @@ methods:
     ngpu: 4
     # partition: "barracuda"
     constraint: "rtx5000"
+    continuation:
+      enabled: True
+      source_tag: repX_rst_cnt1
+      source_method: us_remd  # or us_remd
     nstlim: 250
     numexchg: 40000
     d: [ 0.320 ]
