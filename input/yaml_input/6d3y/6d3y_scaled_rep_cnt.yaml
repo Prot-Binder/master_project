@@ -30,7 +30,7 @@ methods:
     name: "us_remd"
     ngpu: 4
     # partition: "barracuda"
-    constraint: "rtx5000"
+    constraint: "rtxa5000"
     continuation:
       enabled: True
       source_tag: repX_rst_cnt1
