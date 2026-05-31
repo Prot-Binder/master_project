@@ -93,7 +93,7 @@ class USREMDMethod(BaseMethod):
                 "--time=2-00:00:00",
                 f"--ntasks={n_windows}",
                 "--cpus-per-task=1",
-                "--mem=30G",
+                "--mem=64G",
                 exclude_arg,
                 f"--output={slurm_dir.resolve()}/slurm-%j_usremd_b{block_idx}.out",
                 f"{script_dir.resolve()}/run_usremd_prod.sh",

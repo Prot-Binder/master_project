@@ -30,10 +30,10 @@ setup:
 methods:
   us_remd:
     name: "us_remd"
-    ngpu: 1
+    ngpu: 4
     # partition: "barracuda"
     # constraint: "rtx4090|rtxa5000"
-    # nodelist: "t38cn054"
+    nodelist: "t38cn054"
     # Optional continuation from a previous tag.
     # If source_method is omitted, it defaults to the current method: us_remd.
     continuation:
