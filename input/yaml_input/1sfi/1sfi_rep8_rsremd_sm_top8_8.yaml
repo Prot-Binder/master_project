@@ -4,7 +4,7 @@
 # from scaled equilibrated structure. We now use a smaller box.
 # we use 8 replicas in total and the force constant we used in usremd simulation.
 ##################################################################
-tag: rep8_rsremd_sm_top1_8
+tag: rep8_rsremd_sm_top8_8
 test: False
 
 cluster:
