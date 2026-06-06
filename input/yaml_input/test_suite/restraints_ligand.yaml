@@ -16,6 +16,8 @@ setup:
   setup_type: cluster
 
 restraints:
+  d: 0.0
+  e: 1.0
   systems:
     ligand:
       pdb: input/pdb_files/5h5q/5h5q_l.pdb

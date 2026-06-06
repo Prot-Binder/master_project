@@ -16,6 +16,8 @@ setup:
   setup_type: local
 
 restraints:
+  d: 0.2
+  e: 0.9
   systems:
     complex:
       pdb: input/pdb_files/5h5q/5h5q_cleaned.pdb
