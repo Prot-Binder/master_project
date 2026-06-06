@@ -23,3 +23,4 @@ NPT equilibration for restraint contribution preparation
 	ntb=2,
 	cut=8.5,
  &end
+
