@@ -1,4 +1,4 @@
-tag: test_suite_restraints_complex
+tag: test_suite_restraints_complex_angular
 test: True
 
 cluster:
