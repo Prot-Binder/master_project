@@ -372,11 +372,11 @@ class Config:
                     raise ValueError(f"restraints.contributions[{contribution_idx}].nstlim must be > 0.")
                 self.get_restraint_system_for_class(contribution.target_class)
 
-                for point_idx, kappa in enumerate(contribution.kappa):
-                    if kappa <= 0:
-                        raise ValueError(
-                            f"restraints.contributions[{contribution_idx}].kappa[{point_idx}] must be > 0."
-                        )
+                # for point_idx, kappa in enumerate(contribution.kappa):
+                #     if kappa <= 0:
+                #         raise ValueError(
+                #             f"restraints.contributions[{contribution_idx}].kappa[{point_idx}] must be > 0."
+                #        )
 
         if self.methods.eq is not None and self.methods.eq.execute:
             eq_cfg = self.methods.eq
