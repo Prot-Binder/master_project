@@ -124,6 +124,7 @@ def main() -> None:
             average_blocks=args.rmsd_average_blocks,
             histogram_blocks=args.rmsd_histogram_blocks,
             bins=_parse_bins(args.bins),
+            smooth_window=args.smooth_window,
         )
 
     print(f"Processed {len(replica_files)} replica scaling files from {input_dir}")

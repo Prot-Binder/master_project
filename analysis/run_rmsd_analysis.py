@@ -44,6 +44,12 @@ def _parse_args() -> argparse.Namespace:
         default="auto",
         help="Histogram bin setting passed to NumPy. Default: auto",
     )
+    parser.add_argument(
+        "--smooth-window",
+        type=int,
+        default=5,
+        help="Moving-average smoothing window for RMSD histogram overlays. Default: 5",
+    )
     return parser.parse_args()
 
 
@@ -87,6 +93,7 @@ def main() -> None:
         average_blocks=args.average_blocks,
         histogram_blocks=args.histogram_blocks,
         bins=_parse_bins(args.bins),
+        smooth_window=args.smooth_window,
     )
 
     print(f"Processed {len(rmsd_files)} RMSD file(s) from {input_path}")

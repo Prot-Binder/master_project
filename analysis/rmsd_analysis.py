@@ -6,6 +6,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
+try:
+    from scipy.stats import gaussian_kde
+except ImportError:  # pragma: no cover - optional dependency
+    gaussian_kde = None
+
 
 def load_rmsd_components(file_path: str | Path) -> dict[str, np.ndarray]:
     path = Path(file_path)
@@ -114,6 +119,48 @@ def build_histogram_bin_edges(values: Sequence[float], bins: int | str = "auto")
     return np.asarray(bin_edges, dtype=float)
 
 
+def smooth_histogram_counts(counts, window: int = 5) -> np.ndarray:
+    values = np.asarray(counts, dtype=float)
+    if window <= 1 or values.size == 0:
+        return values
+
+    window = int(window)
+    if window % 2 == 0:
+        window += 1
+
+    kernel = np.ones(window, dtype=float) / float(window)
+    return np.convolve(values, kernel, mode="same")
+
+
+def compute_kde_curve(values, bin_edges, fallback_window: int = 5) -> tuple[np.ndarray, np.ndarray]:
+    sample_values = np.asarray(values, dtype=float)
+    sample_values = sample_values[np.isfinite(sample_values)]
+    if sample_values.size == 0:
+        return np.asarray([], dtype=float), np.asarray([], dtype=float)
+
+    x_min = float(np.min(sample_values))
+    x_max = float(np.max(sample_values))
+    if x_min == x_max:
+        x_values = np.array([x_min], dtype=float)
+        y_values = np.array([float(sample_values.size)], dtype=float)
+        return x_values, y_values
+
+    x_values = np.linspace(x_min, x_max, 400)
+
+    if gaussian_kde is not None and sample_values.size > 1:
+        kde = gaussian_kde(sample_values)
+        bin_widths = np.diff(np.asarray(bin_edges, dtype=float))
+        scale = float(sample_values.size) * float(np.mean(bin_widths))
+        y_values = kde(x_values) * scale
+        return x_values, np.asarray(y_values, dtype=float)
+
+    counts, edges = np.histogram(sample_values, bins=bin_edges)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    smoothed_counts = smooth_histogram_counts(counts, window=fallback_window)
+    y_values = np.interp(x_values, centers, smoothed_counts, left=0.0, right=0.0)
+    return x_values, y_values
+
+
 def plot_rmsd_vs_time(series: Mapping[str, np.ndarray], output_file: str | Path) -> Path:
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -161,6 +208,7 @@ def plot_ligand_block_histograms(
     ligand_blocks: Sequence[Mapping[str, object]],
     output_file: str | Path,
     bins: int | str = "auto",
+    smooth_window: int = 5,
 ) -> Path:
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -170,17 +218,60 @@ def plot_ligand_block_histograms(
 
     fig, ax = plt.subplots(figsize=(8, 5))
     colors = plt.get_cmap("Set2")
+    global_max = 0.0
+
+    for block in ligand_blocks:
+        _, smooth_y = compute_kde_curve(
+            block["y"],
+            bin_edges,
+            fallback_window=smooth_window,
+        )
+        if smooth_y.size > 0:
+            global_max = max(global_max, float(np.max(smooth_y)))
 
     for idx, block in enumerate(ligand_blocks):
         block_values = np.asarray(block["y"], dtype=float)
-        ax.hist(
+        counts, _ = np.histogram(block_values, bins=bin_edges)
+        smooth_x, smooth_y = compute_kde_curve(
             block_values,
             bins=bin_edges,
-            histtype="stepfilled",
-            alpha=0.28,
-            color=colors(idx % colors.N),
-            linewidth=1.5,
+            fallback_window=smooth_window,
+        )
+        color = colors(idx % colors.N)
+
+        ax.stairs(
+            counts,
+            bin_edges,
+            fill=True,
+            alpha=0.18,
+            color=color,
+            linewidth=1.0,
+        )
+        ax.plot(
+            smooth_x,
+            smooth_y,
+            linewidth=2.0,
+            color=color,
             label=f"{block['label']} (mean={float(block['y_mean']):.2f})",
+        )
+
+        if smooth_y.size > 0:
+            peak_idx = int(np.argmax(smooth_y))
+            peak_x = float(smooth_x[peak_idx])
+            peak_y = float(smooth_y[peak_idx])
+        else:
+            peak_x = float(block["y_mean"])
+            peak_y = 0.0
+
+        y_offset = 0.03 * global_max if global_max > 0.0 else 0.1
+        ax.text(
+            peak_x,
+            peak_y + y_offset,
+            f"{float(block['y_mean']):.2f}",
+            color=colors(idx % colors.N),
+            fontsize=9,
+            ha="center",
+            va="bottom",
         )
 
     ax.set_xlabel("Ligand RMSD")
@@ -269,6 +360,7 @@ def analyze_rmsd_file(
     average_blocks: int = 10,
     histogram_blocks: int = 4,
     bins: int | str = "auto",
+    smooth_window: int = 5,
 ) -> dict[str, object]:
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -292,6 +384,7 @@ def analyze_rmsd_file(
         ligand_hist_blocks,
         output_file=output_path / "ligand_rmsd_block_histograms.png",
         bins=bins,
+        smooth_window=smooth_window,
     )
     summary_file = write_rmsd_summary(
         rmsd_file=rmsd_file,
@@ -321,6 +414,7 @@ def analyze_rmsd_files(
     average_blocks: int = 10,
     histogram_blocks: int = 4,
     bins: int | str = "auto",
+    smooth_window: int = 5,
 ) -> dict[str, object]:
     root_output_dir = Path(output_dir)
     root_output_dir.mkdir(parents=True, exist_ok=True)
@@ -342,6 +436,7 @@ def analyze_rmsd_files(
             average_blocks=average_blocks,
             histogram_blocks=histogram_blocks,
             bins=bins,
+            smooth_window=smooth_window,
         )
 
     return {
