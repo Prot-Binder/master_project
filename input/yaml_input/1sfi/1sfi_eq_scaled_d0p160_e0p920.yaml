@@ -1,0 +1,34 @@
+##################################################################
+# Comment:
+# Standalone equilibration for 1sfi under a scaled Hamiltonian.
+# d/e pairs collected from:
+# - 1sfi_rep8_rsremd_sm_top1_8.yaml
+# - 1sfi_rep8_rsremd_sm_top1_16.yaml
+##################################################################
+tag: eq_scaled_d0p160_e0p920
+test: False
+
+cluster:
+  exclude_ranks: [t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn026]
+
+system:
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 1sfi
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+  box_size: 12.5
+
+setup:
+  setup: True
+  setup_type: cluster
+
+methods:
+  eq:
+    name: "eq"
+    d: [0.160]
+    e: [0.920]
+    execute: True
+    use_cpu: True
+    nstlim: 250000
