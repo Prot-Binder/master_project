@@ -12,7 +12,7 @@ system:
   protein_residues: 1-164
 
 setup:
-  setup: False
+  setup: True
   setup_type: local
 
 restraints:
