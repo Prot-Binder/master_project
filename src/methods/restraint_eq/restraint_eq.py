@@ -33,6 +33,7 @@ class RestraintEqLauncher(BaseMethod):
         ctx.restraint_eq_job_ids = {}
         ctx.restraint_pre_job_ids = {}
         ctx.restraint_prod_job_ids = {}
+        setup_is_pending = ctx.setup_job_id is not None
 
         for group in group_restraint_cases_by_class(self.cfg):
             class_eq_paths = ctx.paths["restraints"]["eq"][group.target_class]
@@ -42,14 +43,19 @@ class RestraintEqLauncher(BaseMethod):
             result_dir = class_eq_paths["root"]
             setup_dir = ctx.paths["restraints"]["setup"][group.target_class]
 
-            stage_files = self._resolve_class_stage_files(input_dir, group.target_class)
+            stage_files = self._resolve_class_stage_files(
+                input_dir,
+                group.target_class,
+                require_existing=not setup_is_pending,
+            )
             prmtop = self._resolve_prmtop(setup_dir, group.target_class)
             initial_coord = setup_dir / "system.rst"
             reference_coord = setup_dir / "system.rst"
 
-            self._require_existing_file(prmtop, f"restraint prmtop for class {group.target_class}")
-            self._require_existing_file(initial_coord, f"restraint coordinate file for class {group.target_class}")
-            self._require_existing_file(reference_coord, f"restraint reference coordinate file for class {group.target_class}")
+            if not setup_is_pending:
+                self._require_existing_file(prmtop, f"restraint prmtop for class {group.target_class}")
+                self._require_existing_file(initial_coord, f"restraint coordinate file for class {group.target_class}")
+                self._require_existing_file(reference_coord, f"restraint reference coordinate file for class {group.target_class}")
 
             print(f"\033[92m[RESTRAINT_EQ] submit class {group.target_class}\033[0m")
             sbatch_cmd = [
@@ -114,12 +120,14 @@ class RestraintEqLauncher(BaseMethod):
             initial_coord = class_eq_paths["amber"] / f"{case.target_class}_npt.restrt"
             reference_coord = setup_dir / "system.rst"
 
-            self._require_existing_file(pre_mdin, f"restraint pre mdin for case {case.case_name}")
-            self._require_existing_file(restraint_file, f"rendered restraint file for case {case.case_name}")
-            self._require_existing_file(prmtop, f"restraint prmtop for class {case.target_class}")
+            if not setup_is_pending:
+                self._require_existing_file(pre_mdin, f"restraint pre mdin for case {case.case_name}")
+                self._require_existing_file(restraint_file, f"rendered restraint file for case {case.case_name}")
+                self._require_existing_file(prmtop, f"restraint prmtop for class {case.target_class}")
             if class_job_id is None:
                 self._require_existing_file(initial_coord, f"class-equilibrated restraint coordinate for class {case.target_class}")
-            self._require_existing_file(reference_coord, f"restraint reference coordinate file for class {case.target_class}")
+            if not setup_is_pending:
+                self._require_existing_file(reference_coord, f"restraint reference coordinate file for class {case.target_class}")
 
             print(f"\033[92m[RESTRAINT_EQ] submit pre case {case.case_name}\033[0m")
             sbatch_cmd = [
@@ -174,7 +182,8 @@ class RestraintEqLauncher(BaseMethod):
             )
             prod_initial_coord = amber_dir / f"{case.case_name}_pre.restrt"
 
-            self._require_existing_file(prod_mdin, f"restraint production mdin for case {case.case_name}")
+            if not setup_is_pending:
+                self._require_existing_file(prod_mdin, f"restraint production mdin for case {case.case_name}")
             if pre_job_id is None:
                 self._require_existing_file(prod_initial_coord, f"restraint pre output coordinate for case {case.case_name}")
 
@@ -226,10 +235,11 @@ class RestraintEqLauncher(BaseMethod):
             raise FileNotFoundError(f"Missing {description}: {path}")
 
     @classmethod
-    def _resolve_class_stage_files(cls, input_dir: Path, target_class: str) -> list[Path]:
+    def _resolve_class_stage_files(cls, input_dir: Path, target_class: str, require_existing: bool = True) -> list[Path]:
         stage_files = [input_dir / stage_name for stage_name in cls.REQUIRED_EQUILIBRATION_STAGES]
-        for stage_file in stage_files:
-            cls._require_existing_file(stage_file, f"restraint equilibration stage for class {target_class}")
+        if require_existing:
+            for stage_file in stage_files:
+                cls._require_existing_file(stage_file, f"restraint equilibration stage for class {target_class}")
         return stage_files
 
     @staticmethod
