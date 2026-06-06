@@ -3,7 +3,7 @@ Minimisation for restraint contribution preparation
 	imin=1,
 	ntxo=2,
 	ntpr=500,
-	maxcyc=2000,
+	maxcyc=5000,
 	ntmin=2,
 	dielc=1.0,
 	cut=9.0,
