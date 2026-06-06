@@ -234,7 +234,7 @@ def plot_ligand_block_histograms(
         counts, _ = np.histogram(block_values, bins=bin_edges)
         smooth_x, smooth_y = compute_kde_curve(
             block_values,
-            bins=bin_edges,
+            bin_edges,
             fallback_window=smooth_window,
         )
         color = colors(idx % colors.N)
