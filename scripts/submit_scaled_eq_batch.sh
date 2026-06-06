@@ -46,9 +46,9 @@ echo "Submitting ${#configs[@]} scaled eq config(s) for system $system_name"
 for config in "${configs[@]}"; do
     echo "[submit_scaled_eq_batch] $(basename "$config")"
     if [[ "$dry_run" == true ]]; then
-        python3 scripts/run.py "$config" --dry-run
+        python3 -m scripts.run "$config" --dry-run
     else
-        python3 scripts/run.py "$config"
+        python3 -m scripts.run "$config"
     fi
 done
 
