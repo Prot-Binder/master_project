@@ -293,6 +293,8 @@ class RestraintContributionCfg:
 class RestraintsCfg:
     contributions: list[RestraintContributionCfg]
     systems: Optional[RestraintSystemsCfg] = None
+    d: float = 0.0
+    e: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -345,6 +347,15 @@ class Config:
                 self._validate_restraint_system_cfg(class_system, target_class=target_class)
 
         if self.restraints is not None:
+            if self.restraints.d != 0.0 or self.restraints.e != 1.0:
+                involved_classes = {contribution.target_class for contribution in self.restraints.contributions}
+                for target_class in involved_classes:
+                    class_system = self.get_restraint_system_for_class(target_class)
+                    if class_system.receptor_residues is None or class_system.ligand_residues is None:
+                        raise ValueError(
+                            "restraints.d/e scaling requires a restraint target class with both "
+                            f"receptor_residues and ligand_residues. Unsupported class: {target_class}."
+                        )
             for contribution_idx, contribution in enumerate(self.restraints.contributions):
                 if not contribution.name.strip():
                     raise ValueError(f"restraints.contributions[{contribution_idx}].name must be non-empty.")
@@ -724,7 +735,7 @@ def _load_restraints(raw: dict, default_system: SystemCfg) -> Optional[Restraint
     contributions: list[RestraintContributionCfg] = []
 
     for contribution_name, contribution_raw in restraints_raw.items():
-        if contribution_name == "systems":
+        if contribution_name in {"systems", "d", "e"}:
             continue
         ctx = f"restraints.{contribution_name}"
         contribution_raw = _ensure_mapping(contribution_raw, ctx)
@@ -765,7 +776,12 @@ def _load_restraints(raw: dict, default_system: SystemCfg) -> Optional[Restraint
             )
         )
 
-    return RestraintsCfg(contributions=contributions, systems=restraint_systems)
+    return RestraintsCfg(
+        contributions=contributions,
+        systems=restraint_systems,
+        d=_as_float(restraints_raw.get("d", 0.0), "restraints.d"),
+        e=_as_float(restraints_raw.get("e", 1.0), "restraints.e"),
+    )
 
 
 def _load_eq(raw: dict) -> Optional[EqCfg]:

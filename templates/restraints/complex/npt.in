@@ -22,11 +22,5 @@ NPT equilibration for restraint contribution preparation
 	ntf=2,
 	ntb=2,
 	cut=8.5,
-	infe=1,
  &end
- &pmd
-	output_file = '{OUTPUT_PATH}/pmd_npt_{CASE_INDEX}.txt'
-	output_freq = 50
-	cv_file = '{RESTRAINT_PATH}'
- /
-eof
+

@@ -20,19 +20,14 @@ Heating for restraint contribution preparation
 	ntf=2,
 	ntb=1,
 	cut=8.5,
-	infe=1,
  &end
- &pmd
-	output_file = '{OUTPUT_PATH}/pmd_heat_{CASE_INDEX}.txt'
-	output_freq = 50
-	cv_file = '{RESTRAINT_PATH}'
- /
 &wt
     type='TEMP0',
     istep1=0,
-    istep2=80000,
+    istep2=80000,    ! == nstlim
     value1=0,
     value2=300,
 &end
 &wt type='END', &end
 eof
+

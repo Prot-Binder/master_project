@@ -216,10 +216,37 @@ def create_restraint_class_box_and_prmtop(cfg, ctx, target_class: str) -> Restra
         paths=parmed_paths,
     )
 
+    restraint_d = 0.0
+    restraint_e = 1.0
+    if cfg.restraints is not None:
+        restraint_d = float(cfg.restraints.d)
+        restraint_e = float(cfg.restraints.e)
+
+    if restraint_d != 0.0 or restraint_e != 1.0:
+        if class_system.receptor_residues is None or class_system.ligand_residues is None:
+            raise ValueError(
+                "restraint topology scaling via restraints.d/e requires a restraint system with both "
+                f"receptor_residues and ligand_residues. Target class '{target_class}' does not support that."
+            )
+
+        scaled_output_basename = setup_dir / "_scaled_prmtop"
+        generate_scaled_top_files(
+            hmr_prmtop,
+            1,
+            [restraint_d],
+            [restraint_e],
+            rst,
+            scaled_output_basename,
+            ":" + class_system.receptor_residues,
+            ":" + class_system.ligand_residues,
+        )
+        scaled_prmtop = Path(f"{scaled_output_basename}1")
+        scaled_prmtop.replace(setup_dir / "prmtop")
+
     return RestraintSetupArtifacts(
         target_class=target_class,
         setup_dir=setup_dir,
-        prmtop=hmr_prmtop,
+        prmtop=setup_dir / "prmtop",
         coordinate_file=rst,
         system_pdb=setup_dir / "system.pdb",
     )
