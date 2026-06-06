@@ -5,8 +5,10 @@ from pathlib import Path
 
 try:
     from analysis.replica_scaling_analysis import analyze_replica_scaling_files
+    from analysis.rmsd_analysis import analyze_rmsd_files
 except ImportError:
     from replica_scaling_analysis import analyze_replica_scaling_files
+    from rmsd_analysis import analyze_rmsd_files
 
 
 def _parse_args() -> argparse.Namespace:
@@ -38,6 +40,29 @@ def _parse_args() -> argparse.Namespace:
         default=5,
         help="Moving-average smoothing window for plotted histograms. Default: 5",
     )
+    parser.add_argument(
+        "--time-blocks",
+        type=int,
+        default=4,
+        help="Number of contiguous blocks used to split the active value>0 region. Default: 4",
+    )
+    parser.add_argument(
+        "--rmsd-prefix",
+        default="pmd_pull_us",
+        help="Filename prefix used to collect RMSD files for integrated RMSD analysis. Default: pmd_pull_us",
+    )
+    parser.add_argument(
+        "--rmsd-average-blocks",
+        type=int,
+        default=10,
+        help="Number of contiguous blocks for RMSD block-average plots. Default: 10",
+    )
+    parser.add_argument(
+        "--rmsd-histogram-blocks",
+        type=int,
+        default=4,
+        help="Number of contiguous blocks for ligand RMSD histogram plots. Default: 4",
+    )
     return parser.parse_args()
 
 
@@ -57,6 +82,14 @@ def _collect_replica_files(input_dir: Path, prefix: str) -> dict[str, Path]:
     return replica_files
 
 
+def _collect_optional_files(input_dir: Path, prefix: str) -> dict[str, Path]:
+    return {
+        file_path.stem: file_path
+        for file_path in sorted(input_dir.iterdir())
+        if file_path.is_file() and file_path.stem.startswith(prefix)
+    }
+
+
 def _parse_bins(value: str) -> int | str:
     if value == "auto":
         return value
@@ -74,17 +107,35 @@ def main() -> None:
     )
 
     replica_files = _collect_replica_files(input_dir, prefix=args.prefix)
-    result = analyze_replica_scaling_files(
+    scaling_result = analyze_replica_scaling_files(
         replica_files,
         output_dir=output_dir,
         prefix=args.prefix,
         bins=_parse_bins(args.bins),
         smooth_window=args.smooth_window,
+        n_blocks=args.time_blocks,
     )
+    rmsd_files = _collect_optional_files(input_dir, prefix=args.rmsd_prefix)
+    rmsd_result = None
+    if len(rmsd_files) > 0:
+        rmsd_result = analyze_rmsd_files(
+            rmsd_files,
+            output_dir=output_dir / "rmsd",
+            average_blocks=args.rmsd_average_blocks,
+            histogram_blocks=args.rmsd_histogram_blocks,
+            bins=_parse_bins(args.bins),
+        )
 
     print(f"Processed {len(replica_files)} replica scaling files from {input_dir}")
-    print(f"Summary file: {result['summary_file']}")
-    print(f"Plot file: {result['plot_file']}")
+    print(f"Summary file: {scaling_result['summary_file']}")
+    print(f"Block summary file: {scaling_result['block_summary_file']}")
+    print(f"Plot file: {scaling_result['plot_file']}")
+    print(f"Block histogram directory: {Path(scaling_result['output_dir']) / 'block_histograms'}")
+    if rmsd_result is None:
+        print(f"No RMSD files with prefix '{args.rmsd_prefix}' found in {input_dir}")
+    else:
+        print(f"Processed {len(rmsd_files)} RMSD file(s) from {input_dir}")
+        print(f"RMSD output directory: {rmsd_result['output_dir']}")
 
 
 if __name__ == "__main__":

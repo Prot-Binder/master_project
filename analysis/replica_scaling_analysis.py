@@ -66,6 +66,38 @@ def extract_active_tail(values) -> dict[str, np.ndarray | int]:
     }
 
 
+def split_active_blocks(values, n_blocks: int = 4) -> list[dict[str, object]]:
+    active_values = np.asarray(values, dtype=float).ravel()
+    active_values = active_values[np.isfinite(active_values)]
+    if active_values.size == 0:
+        raise ValueError("No finite active values available for block analysis.")
+    if n_blocks < 1:
+        raise ValueError("n_blocks must be at least 1.")
+
+    blocks: list[dict[str, object]] = []
+    for block_idx, block_values in enumerate(np.array_split(active_values, n_blocks)):
+        block_array = np.asarray(block_values, dtype=float)
+        if block_array.size == 0:
+            continue
+
+        fraction_start = float(block_idx) / float(n_blocks)
+        fraction_end = float(block_idx + 1) / float(n_blocks)
+        blocks.append(
+            {
+                "block_index": block_idx,
+                "fraction_start": fraction_start,
+                "fraction_end": fraction_end,
+                "label": f"{int(round(fraction_start * 100.0))}-{int(round(fraction_end * 100.0))}%",
+                "values": block_array,
+            }
+        )
+
+    if len(blocks) == 0:
+        raise ValueError("No non-empty blocks available for block analysis.")
+
+    return blocks
+
+
 def parse_intended_center_from_filename(file_path: str | Path, prefix: str = "com_pull_") -> float:
     stem = Path(file_path).stem
     if not stem.startswith(prefix):
@@ -130,6 +162,19 @@ def compute_histogram_center(counts, bin_centers) -> float:
     return float(np.sum(counts * bin_centers) / total)
 
 
+def build_histogram_bin_edges(values, bins: int | str = "auto") -> np.ndarray:
+    sample_values = np.asarray(values, dtype=float).ravel()
+    sample_values = sample_values[np.isfinite(sample_values)]
+    if sample_values.size == 0:
+        raise ValueError("Cannot build histogram bins from an empty value set.")
+
+    bin_edges = np.histogram_bin_edges(sample_values, bins=bins)
+    if np.unique(bin_edges).size < 2:
+        value = float(sample_values[0])
+        bin_edges = np.array([value - 0.5, value + 0.5], dtype=float)
+    return np.asarray(bin_edges, dtype=float)
+
+
 def write_replica_scaling_results(
     results: Sequence[Mapping[str, float | int | str]],
     output_file: str | Path = "replica_scaling_summary.txt",
@@ -163,6 +208,47 @@ def write_replica_scaling_results(
             else:
                 fields.append(f"{float(value):.6f}")
         lines.append("\t".join(fields))
+
+    output_path.write_text("\n".join(lines) + "\n")
+    return output_path
+
+
+def write_replica_scaling_block_results(
+    results: Sequence[Mapping[str, object]],
+    output_file: str | Path = "replica_scaling_block_summary.txt",
+) -> Path:
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    columns = [
+        "replica",
+        "file_name",
+        "intended_center",
+        "block_index",
+        "block_label",
+        "fraction_start",
+        "fraction_end",
+        "block_center",
+        "delta_block_minus_intended",
+        "n_block",
+    ]
+
+    lines = ["\t".join(columns)]
+    for result in results:
+        for block in result["blocks"]:
+            fields = [
+                str(result["replica"]),
+                str(result["file_name"]),
+                f"{float(result['intended_center']):.6f}",
+                str(int(block["block_index"])),
+                str(block["label"]),
+                f"{float(block['fraction_start']):.6f}",
+                f"{float(block['fraction_end']):.6f}",
+                f"{float(block['block_center']):.6f}",
+                f"{float(block['delta_block_minus_intended']):.6f}",
+                str(int(block["n_block"])),
+            ]
+            lines.append("\t".join(fields))
 
     output_path.write_text("\n".join(lines) + "\n")
     return output_path
@@ -247,12 +333,69 @@ def plot_replica_scaling_histograms(
     return output_path
 
 
+def plot_replica_scaling_block_histograms(
+    results: Sequence[Mapping[str, object]],
+    output_dir: str | Path,
+    bins: int | str = "auto",
+) -> list[Path]:
+    block_output_dir = Path(output_dir)
+    block_output_dir.mkdir(parents=True, exist_ok=True)
+
+    plot_files: list[Path] = []
+    colors = plt.get_cmap("Set2")
+
+    for result in results:
+        active_values = np.asarray(result["active_values"], dtype=float)
+        block_bin_edges = build_histogram_bin_edges(active_values, bins=bins)
+
+        fig, ax = plt.subplots(figsize=(8, 5))
+
+        for idx, block in enumerate(result["blocks"]):
+            block_values = np.asarray(block["values"], dtype=float)
+            color = colors(idx % colors.N)
+            ax.hist(
+                block_values,
+                bins=block_bin_edges,
+                histtype="stepfilled",
+                alpha=0.28,
+                color=color,
+                linewidth=1.5,
+                label=(
+                    f"{block['label']} "
+                    f"(center={float(block['block_center']):.2f}, "
+                    f"delta={float(block['delta_block_minus_intended']):+.2f})"
+                ),
+            )
+
+        intended_center = float(result["intended_center"])
+        ax.axvline(
+            intended_center,
+            color="black",
+            linestyle="--",
+            linewidth=1.2,
+            label=f"target={intended_center:.2f}",
+        )
+        ax.set_xlabel("COM distance")
+        ax.set_ylabel("Count")
+        ax.set_title(f"{result['replica']} block histograms")
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+
+        output_path = block_output_dir / f"{result['replica']}_block_histograms.png"
+        fig.savefig(output_path, dpi=200)
+        plt.close(fig)
+        plot_files.append(output_path)
+
+    return plot_files
+
+
 def analyze_replica_scaling_files(
     replica_files: Mapping[str, str | Path] | Sequence[str | Path],
     output_dir: str | Path = "analysis",
     prefix: str = "com_pull_",
     bins: int | str = "auto",
     smooth_window: int = 5,
+    n_blocks: int = 4,
 ):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -273,6 +416,7 @@ def analyze_replica_scaling_files(
         series = load_replica_scaling_series(file_path)
         extracted = extract_active_tail(series)
         tail_values = np.asarray(extracted["tail_values"], dtype=float)
+        blocks = split_active_blocks(extracted["active_values"], n_blocks=n_blocks)
 
         prepared_results.append(
             {
@@ -284,6 +428,7 @@ def analyze_replica_scaling_files(
                 "active_start_idx": int(extracted["active_start_idx"]),
                 "active_values": np.asarray(extracted["active_values"], dtype=float),
                 "tail_values": tail_values,
+                "blocks": blocks,
             }
         )
         all_tail_values.append(tail_values)
@@ -292,7 +437,7 @@ def analyze_replica_scaling_files(
         raise ValueError("No replica files available for replica scaling analysis.")
 
     combined_values = np.concatenate(all_tail_values)
-    bin_edges = np.histogram_bin_edges(combined_values, bins=bins)
+    bin_edges = build_histogram_bin_edges(combined_values, bins=bins)
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
     final_results: list[dict[str, object]] = []
@@ -300,6 +445,29 @@ def analyze_replica_scaling_files(
         counts, _ = np.histogram(result["tail_values"], bins=bin_edges)
         actual_center = compute_histogram_center(counts, bin_centers)
         delta = actual_center - float(result["intended_center"])
+        block_bin_edges = build_histogram_bin_edges(result["active_values"], bins=bins)
+        block_bin_centers = 0.5 * (block_bin_edges[:-1] + block_bin_edges[1:])
+
+        final_blocks: list[dict[str, object]] = []
+        for block in result["blocks"]:
+            block_values = np.asarray(block["values"], dtype=float)
+            block_counts, _ = np.histogram(block_values, bins=block_bin_edges)
+            block_center = compute_histogram_center(block_counts, block_bin_centers)
+            final_blocks.append(
+                {
+                    "block_index": int(block["block_index"]),
+                    "fraction_start": float(block["fraction_start"]),
+                    "fraction_end": float(block["fraction_end"]),
+                    "label": str(block["label"]),
+                    "values": block_values,
+                    "n_block": int(block_values.size),
+                    "block_center": block_center,
+                    "delta_block_minus_intended": block_center - float(result["intended_center"]),
+                    "hist_counts": block_counts,
+                    "bin_edges": block_bin_edges,
+                    "bin_centers": block_bin_centers,
+                }
+            )
 
         final_results.append(
             {
@@ -312,10 +480,12 @@ def analyze_replica_scaling_files(
                 "active_start_idx": int(result["active_start_idx"]),
                 "n_active": int(len(result["active_values"])),
                 "n_tail": int(len(result["tail_values"])),
+                "active_values": np.asarray(result["active_values"], dtype=float),
                 "tail_values": np.asarray(result["tail_values"], dtype=float),
                 "hist_counts": counts,
                 "bin_centers": bin_centers,
                 "bin_edges": bin_edges,
+                "blocks": final_blocks,
             }
         )
 
@@ -325,15 +495,26 @@ def analyze_replica_scaling_files(
         final_results,
         output_file=output_dir / "replica_scaling_summary.txt",
     )
+    block_summary_file = write_replica_scaling_block_results(
+        final_results,
+        output_file=output_dir / "replica_scaling_block_summary.txt",
+    )
     plot_file = plot_replica_scaling_histograms(
         final_results,
         output_file=output_dir / "replica_scaling_histograms.png",
         smooth_window=smooth_window,
     )
+    block_plot_files = plot_replica_scaling_block_histograms(
+        final_results,
+        output_dir=output_dir / "block_histograms",
+        bins=bins,
+    )
 
     return {
         "results": final_results,
         "summary_file": summary_file,
+        "block_summary_file": block_summary_file,
         "plot_file": plot_file,
+        "block_plot_files": block_plot_files,
         "output_dir": output_dir,
     }
