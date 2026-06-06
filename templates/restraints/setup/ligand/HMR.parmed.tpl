@@ -1,4 +1,4 @@
 parm system.prmtop
 HMassRepartition
-outparm ligand.prmtop
+outparm prmtop
 quit
