@@ -12,8 +12,8 @@ system:
   protein_residues: 1-164
 
 setup:
-  setup: False
-  setup_type: local
+  setup: True
+  setup_type: cluster
 
 restraints:
   d: 0.2
