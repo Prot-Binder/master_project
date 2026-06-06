@@ -5,7 +5,7 @@
 # this is just an input file to find a decent size for the box to
 # run a quick simulation e.g. only pull 10A not 20
 ##################################################################
-tag: 6d3y_box_size2
+tag: 6d3y_box_size3
 test: False
 
 cluster:
@@ -17,7 +17,7 @@ system:
   name: scaling_test
   ligand_residues: 248-261
   protein_residues: 1-247
-  box_size: 19.0 # in Angstrom
+  box_size: 40.0 # in Angstrom
 
 setup:
   setup: True # TODO: think of deleting this filed as it may be redundant
