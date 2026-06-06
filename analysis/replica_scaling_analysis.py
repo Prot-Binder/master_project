@@ -337,6 +337,7 @@ def plot_replica_scaling_block_histograms(
     results: Sequence[Mapping[str, object]],
     output_dir: str | Path,
     bins: int | str = "auto",
+    smooth_window: int = 5,
 ) -> list[Path]:
     block_output_dir = Path(output_dir)
     block_output_dir.mkdir(parents=True, exist_ok=True)
@@ -349,22 +350,66 @@ def plot_replica_scaling_block_histograms(
         block_bin_edges = build_histogram_bin_edges(active_values, bins=bins)
 
         fig, ax = plt.subplots(figsize=(8, 5))
+        global_max = 0.0
+
+        for block in result["blocks"]:
+            _, smooth_y = compute_kde_curve(
+                block["values"],
+                block_bin_edges,
+                fallback_window=smooth_window,
+            )
+            if smooth_y.size > 0:
+                global_max = max(global_max, float(np.max(smooth_y)))
 
         for idx, block in enumerate(result["blocks"]):
             block_values = np.asarray(block["values"], dtype=float)
             color = colors(idx % colors.N)
-            ax.hist(
+            raw_counts = np.asarray(block["hist_counts"], dtype=float)
+            smooth_x, smooth_y = compute_kde_curve(
                 block_values,
-                bins=block_bin_edges,
-                histtype="stepfilled",
-                alpha=0.28,
+                block_bin_edges,
+                fallback_window=smooth_window,
+            )
+
+            ax.stairs(
+                raw_counts,
+                block_bin_edges,
+                fill=True,
+                alpha=0.18,
                 color=color,
-                linewidth=1.5,
+                linewidth=1.0,
+            )
+            ax.plot(
+                smooth_x,
+                smooth_y,
+                linewidth=2.0,
+                color=color,
                 label=(
                     f"{block['label']} "
                     f"(center={float(block['block_center']):.2f}, "
                     f"delta={float(block['delta_block_minus_intended']):+.2f})"
                 ),
+            )
+
+            if smooth_y.size > 0:
+                peak_idx = int(np.argmax(smooth_y))
+                peak_x = float(smooth_x[peak_idx])
+                peak_y = float(smooth_y[peak_idx])
+            else:
+                peak_x = float(block["block_center"])
+                peak_y = 0.0
+
+            y_offset = 0.03 * global_max if global_max > 0.0 else 0.1
+            delta = float(block["delta_block_minus_intended"])
+            delta_color = "green" if delta < 0.0 else "red"
+            ax.text(
+                peak_x,
+                peak_y + y_offset,
+                f"{delta:+.2f}",
+                color=delta_color,
+                fontsize=9,
+                ha="center",
+                va="bottom",
             )
 
         intended_center = float(result["intended_center"])
@@ -508,6 +553,7 @@ def analyze_replica_scaling_files(
         final_results,
         output_dir=output_dir / "block_histograms",
         bins=bins,
+        smooth_window=smooth_window,
     )
 
     return {
