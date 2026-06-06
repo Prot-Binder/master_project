@@ -10,11 +10,10 @@ tag: eq_scaled_d0p114_e0p943
 test: False
 
 cluster:
-  exclude_ranks: [t38cn030,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn026]
-
+  exclude_ranks: []  # previous: [t38cn030,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn026]
 system:
-  pdb: ~/master_project/input/pdb_files/5h5q/5h5q_cleaned.pdb
-  output_prefix: ~/mp_results/
+  pdb: ~/cluster/master_project/input/pdb_files/5h5q/5h5q_cleaned.pdb
+  output_prefix: ~/cluster/mp_results/
   name: 5h5q
   ligand_residues: 165-177
   protein_residues: 1-164
