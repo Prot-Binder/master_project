@@ -16,5 +16,7 @@ Minimisation AdvFECalculations
 	cut=9.0,	! nonbonded cut-off in Angstrom
 	nsnb=20,	! Frequency of non-bonded list updates
 	igb=0,		! explicit solvent is used (no Poisson/Boltzmann)
+	ntb = 1     ! constant-volume PBC
+    ntp = 0     ! no pressure coupling
  &end
 eof

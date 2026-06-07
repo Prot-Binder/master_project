@@ -31,7 +31,7 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 	gamma_ln=5 
 	
 	! PRESSURE REGULATION
-	ntp=1,
+	ntp=0,
 	barostat=2
 	taup=2.0,
 
@@ -40,7 +40,7 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 	
 	! POTENTIAL FUNCTION PARAMETERS
 	ntf=2,
-	ntb=2,
+	ntb=1,
 	dielc=1.0,
 	cut=9.0,
 
