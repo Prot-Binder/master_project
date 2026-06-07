@@ -1,0 +1,50 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# running us-remd for the 5h5q system. From 21.50 to 27.75 adjusted. Probably, we need more resampling here
+# we later also add another run to sample the back part of the pmf intensively.
+# This is a continuation from rep8_usxch_final2 actually.
+##################################################################
+tag: rep8_usxch_b3
+test: False
+
+cluster:
+  exclude_ranks: [] # [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn055,t38cn026,t38cn045,t38cn049]
+
+system:
+  pdb: ~/master_project/input/pdb_files/5h5q/5h5q_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 5h5q
+  ligand_residues: 165-177
+  protein_residues: 1-164
+  # bond: "377.N-390.C"
+
+setup:
+  setup: False # TODO: think of deleting this filed as it may be redundant
+  setup_dir: ~/mp_results/5h5q/rep8_usxch_final2/us_remd/setup
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  us_remd:
+    name: "us_remd"
+    ngpu: 4
+    # partition: "barracuda"
+    constraint: "rtx4090|rtxa5000|rtx5090"
+    # nodelist: "t38cn050"
+    # Optional continuation from a previous tag.
+    # If source_method is omitted, it defaults to the current method: us_remd.
+    continuation:
+      enabled: True
+      # source_tag: rep8_tmp_rst
+      source_tag: rep8_usxch_final
+      source_method: us_remd  # or us_remd
+    nstlim: 250
+    numexchg: 40000
+    d: [ 0.200 ]
+    e: [ 0.900 ]
+    us_remd_intervals:
+      - windows: [28.50, 29.25, 30.00, 30.75, 31.50, 32.25, 33.00, 33.75, 34.50, 35.25, 36.00, 36.75, 37.50, 38.25, 39.00, 39.75]
+        kappas: [ 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
+
