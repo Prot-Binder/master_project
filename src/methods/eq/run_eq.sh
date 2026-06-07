@@ -49,6 +49,13 @@ do
 	# initialize N as the next step
 	N=$((n+$STEP))
 
+	if (( n == 3 ))
+	then
+		echo "Skipping equilibration stage $n"
+		cp $MDINDIR/inpcrd$n $MDINDIR/inpcrd$N
+		continue
+	fi
+
 	if (( n < CPU_USAGE ))
 	then
 		printf "sander minimization started... "
