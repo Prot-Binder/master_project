@@ -8,7 +8,7 @@ Minimisation AdvFECalculations
 	ntpr=500,	! Num of Timesteps to Print Readable energy informatio
 
 	! ENERGY MINIMIZATION
-	maxcyc=50000,	! The maximum number of cycles of minimization 
+	maxcyc=50000,	! The maximum number of cycles of minimization
 	ntmin=2,	! Steepest descent method is used
 
 	! POTENTIAL FUNCTION PARAMETERS
@@ -17,7 +17,7 @@ Minimisation AdvFECalculations
 	nsnb=20,	! Frequency of non-bonded list updates
 	igb=0,		! explicit solvent is used (no Poisson/Boltzmann)
 
-	ntb = 1     ! constant-volume PBC
-    ntp = 0     ! no pressure coupling
+	ntb = 1,     ! constant-volume PBC
+    ntp = 0,     ! no pressure coupling
  &end
 eof
