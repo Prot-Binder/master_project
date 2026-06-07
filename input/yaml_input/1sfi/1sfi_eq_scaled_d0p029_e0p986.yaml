@@ -5,7 +5,7 @@
 # - 1sfi_rep8_rsremd_sm_top1_8.yaml
 # - 1sfi_rep8_rsremd_sm_top1_16.yaml
 ##################################################################
-tag: eq_scaled_d0p107_e0p947
+tag: eq_scaled_d0p029_e0p986
 test: False
 
 cluster:
@@ -20,14 +20,15 @@ system:
   box_size: 12.5
 
 setup:
-  setup: True
+  setup: False
+  setup_dir: ~/cluster/mp_results/1sfi/eq_scaled_d0p000_e1p000/eq/setup
   setup_type: cluster
 
 methods:
   eq:
     name: "eq"
-    d: [0.107]
-    e: [0.947]
+    d: [0.029]
+    e: [0.986]
     execute: True
     use_cpu: True
     nstlim: 250000

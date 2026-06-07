@@ -21,7 +21,7 @@ system:
 
 setup:
   setup: False
-  setup_dir: ~/cluster/mp_results/1sfi/eq_scaled_d0p000_e1p000
+  setup_dir: ~/cluster/mp_results/1sfi/eq_scaled_d0p000_e1p000/eq/setup
   setup_type: cluster
 
 methods:
