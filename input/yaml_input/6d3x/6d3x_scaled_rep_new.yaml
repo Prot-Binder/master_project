@@ -54,7 +54,7 @@ methods:
     name: "us_remd"
     ngpu: 4
     # partition: "barracuda"
-    constraint: "rtx4090|rta5000|rtx5090"
+    constraint: "rtx4090|rtxa5000|rtx5090"
     nstlim: 250
     numexchg: 40000
     d: [ 0.200 ]
