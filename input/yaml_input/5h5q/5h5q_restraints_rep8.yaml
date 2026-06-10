@@ -27,13 +27,13 @@ restraints:
   lrmsd:
     class: complex
     restraint_file: _l.r
-    nstlim: 50000000
-    kappa: [10.0, 8.0, 6.0, 3.0, 1.0, 0.0]
+    nstlim: 100000000
+    kappa: [10.0, 8.0, 6.0, 3.0, 1.0, 0.8, 0.6, 0.4, 0.2, 0.0]
 
   rrmsd:
     class: complex
     restraint_file: _lr.r
-    nstlim: 50000000
+    nstlim: 100000000
     kappa: [10.0, 8.0, 6.0, 3.0, 1.0]
 
   ori:
