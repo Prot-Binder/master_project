@@ -26,7 +26,7 @@ if [[ "$use_special_module_stack" == true ]]; then
     module load ambertools/25.10-cuda-12.8.0
     MODULE_SETUP_LABEL="special stack"
 else
-    module load pmemd
+    # module load pmemd
     MODULE_SETUP_LABEL="default pmemd module"
 fi
 
