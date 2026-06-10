@@ -10,7 +10,7 @@ Heating for restraint contribution preparation
 	ntr=1,
 	restraint_wt=1.0,
 	restraintmask='(!:WAT & !@H=)',
-	nstlim=80000,
+	nstlim=8000,
 	dt=0.001,
 	ntt=3,
 	gamma_ln=1.0,
@@ -24,7 +24,7 @@ Heating for restraint contribution preparation
 &wt
     type='TEMP0',
     istep1=0,
-    istep2=80000,    ! == nstlim
+    istep2=8000,    ! == nstlim
     value1=0,
     value2=300,
 &end
