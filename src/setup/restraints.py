@@ -223,7 +223,7 @@ class ARW_setup(mda.core.universe.Universe):
     def _strength_tokens(cls, mode, strength: float) -> tuple[str, str]:
         normalized_mode = cls._normalize_restraint_mode(mode)
         if normalized_mode == cls.RESTRAINT_MODE_OFF:
-            return "0", "0"
+            return "0.0", "0.0"
         if normalized_mode == cls.RESTRAINT_MODE_VARIABLE:
             return "{KAPPA}", "{KAPPA}"
         if normalized_mode == cls.RESTRAINT_MODE_FIXED:
