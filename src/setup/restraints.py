@@ -11,6 +11,9 @@ from MDAnalysis.lib.distances import calc_dihedrals
 from MDAnalysis.topology.guessers import guess_types
 
 class ARW_setup(mda.core.universe.Universe):
+    RESTRAINT_MODE_OFF = "off"
+    RESTRAINT_MODE_FIXED = "fixed"
+    RESTRAINT_MODE_VARIABLE = "variable"
     
     def __init__(self, 
                  topfile,
@@ -204,7 +207,31 @@ class ARW_setup(mda.core.universe.Universe):
         # output the torsion parameters for further use (e.g. by write_COM_TORSION method)
         return tors, tors_ni, tors_i0, tors_i1, tors_i2, tors_i3
     
-    def write_MULTI_RMSD(self, attr, file, k_rmsd=0, referenceRMSD=1.0, template=False):
+    @classmethod
+    def _normalize_restraint_mode(cls, mode, *, template: bool = False) -> str | None:
+        if mode is None:
+            return None
+        if mode is True:
+            return cls.RESTRAINT_MODE_VARIABLE if template else cls.RESTRAINT_MODE_FIXED
+        if mode is False:
+            return cls.RESTRAINT_MODE_OFF
+        if mode in {cls.RESTRAINT_MODE_OFF, cls.RESTRAINT_MODE_FIXED, cls.RESTRAINT_MODE_VARIABLE}:
+            return mode
+        raise ValueError(f"Unsupported restraint mode: {mode}")
+
+    @classmethod
+    def _strength_tokens(cls, mode, strength: float) -> tuple[str, str]:
+        normalized_mode = cls._normalize_restraint_mode(mode)
+        if normalized_mode == cls.RESTRAINT_MODE_OFF:
+            return "0", "0"
+        if normalized_mode == cls.RESTRAINT_MODE_VARIABLE:
+            return "{KAPPA}", "{KAPPA}"
+        if normalized_mode == cls.RESTRAINT_MODE_FIXED:
+            strength_token = str(strength)
+            return strength_token, strength_token
+        raise ValueError(f"Unsupported normalized restraint mode: {normalized_mode}")
+
+    def write_MULTI_RMSD(self, attr, file, k_rmsd=0, referenceRMSD=1.0, mode=RESTRAINT_MODE_FIXED):
         
         if referenceRMSD == None: referenceRMSD=1.0 
         lowerRMSD = np.round(referenceRMSD - 15, 3)
@@ -217,12 +244,10 @@ class ARW_setup(mda.core.universe.Universe):
         file.write('\tcv_i = {},\n'.format(cv_i))
         file.write('\tcv_r = {},\n'.format(cv_r))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(lowerRMSD,referenceRMSD,referenceRMSD,upperRMSD))
-        if template:
-            file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
-        else:
-            file.write('\tanchor_strength = {}, {},/\n'.format(k_rmsd,k_rmsd))
+        strength_start, strength_end = self._strength_tokens(mode, k_rmsd)
+        file.write('\tanchor_strength = {}, {},/\n'.format(strength_start, strength_end))
         
-    def write_COM_ANGLE(self, file, ang_name, k_ang=0, template=False):
+    def write_COM_ANGLE(self, file, ang_name, k_ang=0, mode=RESTRAINT_MODE_FIXED):
         if ang_name == 'Theta': 
             ang_type = 'Theta Orientational Restraints'
             ang, ang_ni, ang_i0, ang_i1, ang_i2 = self.parameterise_COM_ANGLE(self.lig_anchor['1'],
@@ -246,13 +271,10 @@ class ARW_setup(mda.core.universe.Universe):
         file.write('\tcv_ni = {},\n'.format(ang_ni))
         file.write('\tcv_i = {},0,{},0,{},0,\n'.format(ang_i0, ang_i1, ang_i2))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(low, ang, ang, up))
-
-        if template:
-            file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
-        else:
-            file.write('\tanchor_strength = {}, {},/\n'.format(k_ang,k_ang))
+        strength_start, strength_end = self._strength_tokens(mode, k_ang)
+        file.write('\tanchor_strength = {}, {},/\n'.format(strength_start, strength_end))
         
-    def write_COM_TORSION(self, file, tors_name, k_tors=0, template=False):
+    def write_COM_TORSION(self, file, tors_name, k_tors=0, mode=RESTRAINT_MODE_FIXED):
         # if else clauses to distinguish between the different torsions necessary for woo roux method
         if tors_name == 'Phi': 
             tors_type = 'Phi Orientational Restraints'
@@ -288,13 +310,11 @@ class ARW_setup(mda.core.universe.Universe):
         file.write('\tcv_ni = {},\n'.format(tors_ni))
         file.write('\tcv_i = {},0,{},0,{},0,{},0,\n'.format(tors_i0, tors_i1, tors_i2, tors_i3))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(low, tors, tors, up))
-        if template:
-            file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
-        else:
-            file.write('\tanchor_strength = {}, {},/\n'.format(k_tors,k_tors))
+        strength_start, strength_end = self._strength_tokens(mode, k_tors)
+        file.write('\tanchor_strength = {}, {},/\n'.format(strength_start, strength_end))
     
     
-    def write_COM_DIST(self, file, k_dist=0):
+    def write_COM_DIST(self, file, k_dist=0, mode=RESTRAINT_MODE_VARIABLE):
         
         com_ni = self.lig_anchor['0'].n_atoms + self.rec_anchor['0'].n_atoms
         com_i0 = ','.join(self.lig_anchor['0'].ids.astype(str))
@@ -307,7 +327,8 @@ class ARW_setup(mda.core.universe.Universe):
         # file.write('\tanchor_position = {}, {}, {}, {},\n'.format(0, 'WINDOW', 'WINDOW', 99))
         # file.write('\tanchor_strength = {}, {},/\n'.format(k_dist, k_dist))
         file.write('\tanchor_position = {}, {}, {}, {},\n'.format(0, '{WINDOW}', '{WINDOW}', 99))
-        file.write('\tanchor_strength = {}, {},/\n'.format("{KAPPA}", "{KAPPA}"))
+        strength_start, strength_end = self._strength_tokens(mode, k_dist)
+        file.write('\tanchor_strength = {}, {},/\n'.format(strength_start, strength_end))
 
 
     def write_pull_file(self, filename, initial_distance=None, final_distance=None,
@@ -376,44 +397,30 @@ class ARW_setup(mda.core.universe.Universe):
             file.write('/\n')
     
     def write_restraint_file(self,filename, lig=None, rec=None, ori=None, ang=None, com=None, template=False):
+        lig_mode = self._normalize_restraint_mode(lig, template=template)
+        rec_mode = self._normalize_restraint_mode(rec, template=template)
+        ori_mode = self._normalize_restraint_mode(ori, template=template)
+        ang_mode = self._normalize_restraint_mode(ang, template=template)
+        com_mode = self._normalize_restraint_mode(com, template=template)
         
         with open(filename, 'w') as file:
-            match(lig):
-                case True : self.write_MULTI_RMSD('lig',file,self.klig, self.userSpecifiedRMSDlig, template=template)
-                case False: self.write_MULTI_RMSD('lig',file, referenceRMSD=self.userSpecifiedRMSDlig, template=template)
-                case None : pass
+            if lig_mode is not None:
+                self.write_MULTI_RMSD('lig', file, self.klig, self.userSpecifiedRMSDlig, mode=lig_mode)
 
-            match(rec):
-                case True : self.write_MULTI_RMSD('rec',file, self.krec, self.userSpecifiedRMSDrec, template=template)
-                case False: self.write_MULTI_RMSD('rec',file, referenceRMSD=self.userSpecifiedRMSDrec, template=template)
-                case None : pass
+            if rec_mode is not None:
+                self.write_MULTI_RMSD('rec', file, self.krec, self.userSpecifiedRMSDrec, mode=rec_mode)
 
-            match(ori):
-                case True:
-                    self.write_COM_ANGLE(file, 'Theta', k_ang=self.kTheta, template=template)
-                    self.write_COM_TORSION(file, 'Phi', k_tors=self.kPhi, template=template)
-                    self.write_COM_TORSION(file, 'Psi', k_tors=self.kPsi, template=template)
-                case False:
-                    self.write_COM_ANGLE(file, 'Theta', template=template)
-                    self.write_COM_TORSION(file, 'Phi', template=template)
-                    self.write_COM_TORSION(file, 'Psi', template=template)
-                case None:
-                    pass
+            if ori_mode is not None:
+                self.write_COM_ANGLE(file, 'Theta', k_ang=self.kTheta, mode=ori_mode)
+                self.write_COM_TORSION(file, 'Phi', k_tors=self.kPhi, mode=ori_mode)
+                self.write_COM_TORSION(file, 'Psi', k_tors=self.kPsi, mode=ori_mode)
 
-            match(ang):
-                case True:
-                    self.write_COM_ANGLE(file, 'theta', k_ang=self.ktheta, template=template)
-                    self.write_COM_TORSION(file, 'phi', k_tors=self.kphi, template=template)
-                case False:
-                    self.write_COM_ANGLE(file, 'theta', template=template)
-                    self.write_COM_TORSION(file, 'phi', template=template)
-                case None:
-                    pass
+            if ang_mode is not None:
+                self.write_COM_ANGLE(file, 'theta', k_ang=self.ktheta, mode=ang_mode)
+                self.write_COM_TORSION(file, 'phi', k_tors=self.kphi, mode=ang_mode)
 
-            match(com):
-                case  True: self.write_COM_DIST(file,k_dist=self.kdist)
-                case False: self.write_COM_DIST(file)
-                case  None: pass
+            if com_mode is not None:
+                self.write_COM_DIST(file, k_dist=self.kdist, mode=com_mode)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -457,10 +464,38 @@ def create_restraints_complex(setup_path: Path, pdb_path: Path, protein: str, li
     test1.set_anchors()
     test1.save_anchor_view(anchorsPDB=f'{setup_path}/anchors.pdb', ligrecPDB=f'{setup_path}/lig_rec.pdb')
     test1.write_restraint_file(f"{setup_path}/_.r",False, False, False, False, None, template=True) #measure colvars
-    test1.write_restraint_file(f"{setup_path}/_l.r",True, False, False, False, None, template=True)
-    test1.write_restraint_file(f"{setup_path}/_lr.r",True, True, False, False, None, template=True)
-    test1.write_restraint_file(f"{setup_path}/_lro.r",True, True, True, False, None, template=True)
-    test1.write_restraint_file(f"{setup_path}/_lroa.r",True, True, True, True, None, template=True)
+    test1.write_restraint_file(
+        f"{setup_path}/_l.r",
+        ARW_setup.RESTRAINT_MODE_VARIABLE,
+        ARW_setup.RESTRAINT_MODE_OFF,
+        ARW_setup.RESTRAINT_MODE_OFF,
+        ARW_setup.RESTRAINT_MODE_OFF,
+        None,
+    )
+    test1.write_restraint_file(
+        f"{setup_path}/_lr.r",
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_VARIABLE,
+        ARW_setup.RESTRAINT_MODE_OFF,
+        ARW_setup.RESTRAINT_MODE_OFF,
+        None,
+    )
+    test1.write_restraint_file(
+        f"{setup_path}/_lro.r",
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_VARIABLE,
+        ARW_setup.RESTRAINT_MODE_OFF,
+        None,
+    )
+    test1.write_restraint_file(
+        f"{setup_path}/_lroa.r",
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_VARIABLE,
+        None,
+    )
 
 def create_restraints_receptor(setup_path: Path, pdb_path: Path, protein: str):
 
