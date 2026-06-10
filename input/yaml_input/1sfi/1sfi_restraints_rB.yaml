@@ -1,4 +1,4 @@
-tag: rep8_restraints
+tag: restraints_rB
 test: False
 
 cluster:
@@ -19,11 +19,8 @@ restraints:
   d: 0.0
   e: 1.0
   systems:
-    ligand:
-      pdb: input/pdb_files/1sfi/1sfi_l.pdb
-      ligand_residues: 224-237
     receptor:
-      pdb: input/pdb_files/5h5q/1sfi_r.pdb
+      pdb: input/pdb_files/1sfi/1sfi_r.pdb
       receptor_residues: 1-223
 
   lB:

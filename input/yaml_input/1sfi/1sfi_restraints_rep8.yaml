@@ -27,7 +27,7 @@ restraints:
       pdb: input/pdb_files/1sfi/1sfi_l.pdb
       ligand_residues: 224-237
     receptor:
-      pdb: input/pdb_files/5h5q/1sfi_r.pdb
+      pdb: input/pdb_files/1sfi/1sfi_r.pdb
       receptor_residues: 1-223
 
   lrmsd:
@@ -53,15 +53,3 @@ restraints:
     restraint_file: _lroa.r
     nstlim: 75000000
     kappa: [100.0]
-
-  lB:
-    class: ligand
-    restraint_file: _lB.r
-    nstlim: 100000000
-    kappa: [ 10.0, 8.0, 6.0, 4.0, 2.0, 1.0, 0.8, 0.6, 0.4, 0.2, 0.0]
-
-  rB:
-    class: receptor
-    restraint_file: _rB.r
-    nstlim: 100000000
-    kappa: [ 10.0, 6.0, 3.0, 1.0, 0.5, 0.25, 0.0]
