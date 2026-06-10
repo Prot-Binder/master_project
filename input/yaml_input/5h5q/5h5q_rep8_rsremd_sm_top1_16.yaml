@@ -4,7 +4,7 @@
 # from unscaled equilibrated structure. We now use a smaller box.
 # we use 16 replicas in total and the force constant we used in usremd simulation.
 ##################################################################
-tag: rep8_rsremd_sm_top1_16
+tag: rep8_rsremd_sm_top1_16_n
 test: False
 
 cluster:
@@ -41,7 +41,7 @@ methods:
     eq_replica: 1
 
     nstlim_eq: 250000
-    nstlim_eq_each: 250000
+    # nstlim_eq_each: 250000
     nstlim: 250
     numexchg: 100000
     d: [ 0.000, 0.013, 0.027, 0.040, 0.053, 0.067, 0.080, 0.093, 0.107, 0.120, 0.133, 0.147, 0.160, 0.173, 0.187, 0.200 ]
