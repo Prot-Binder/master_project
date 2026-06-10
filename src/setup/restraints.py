@@ -447,7 +447,14 @@ def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: st
     test1.write_restraint_file(f"{setup_path}/_lr.r",True, True, False, False, None)
     test1.write_restraint_file(f"{setup_path}/_lro.r",True, True, True, False, None)
     test1.write_restraint_file(f"{setup_path}/_lroa.r",True, True, True, True, None)
-    test1.write_restraint_file(f"{setup_path}/_lroaus.r",True, True, True, True,True)
+    test1.write_restraint_file(
+        f"{setup_path}/_lroaus.r",
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_FIXED,
+        ARW_setup.RESTRAINT_MODE_VARIABLE,
+    )
     test1.write_pull_file(f'{setup_path}/pull.r', final_distance=None)
 
 
