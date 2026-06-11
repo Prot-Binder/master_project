@@ -17,6 +17,7 @@ system:
   name: scaling_test
   ligand_residues: 248-261
   protein_residues: 1-247
+  box_size: 22.0
 
 setup:
   setup: True # TODO: think of deleting this filed as it may be redundant

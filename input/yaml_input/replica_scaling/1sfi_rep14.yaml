@@ -9,7 +9,7 @@ tag: rep14_scaling_test
 test: False
 
 cluster:
-  exclude_ranks: [ t38cn031 ]
+  exclude_ranks: [ t38cn031 ,t38cn030]
 
 
 system:
@@ -19,6 +19,7 @@ system:
   ligand_residues: 224-237
   protein_residues: 1-223
   bond: 224.N-237.C
+  box_size: 22.0
 
 setup:
   setup: True # TODO: think of deleting this filed as it may be redundant
