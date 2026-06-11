@@ -6,7 +6,7 @@
 # We selected  d = 0.320  and e = 0.840 to be ideal.
 # we first perform pulling and subsequently like to perform us-remd simulation.
 ##################################################################
-tag: _repX_new_test
+tag: _repX_new_1
 test: False
 
 cluster:
