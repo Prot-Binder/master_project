@@ -1,0 +1,44 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# some short pull simulations to get a rough estimate of the PMF. I.e. how steep it is.
+##################################################################
+tag: k5a_rep3
+test: False
+
+cluster:
+  exclude_ranks: [ t38cn028,t38cn015,t38cn024,t38cn027,t38cn020,t38cn032,t38cn022,t38cn026]
+
+system:
+  pdb: ~/cluster/master_project/input/pdb_files/1sfi_K5A/1sfi_K5A.pdb
+  output_prefix: ~/cluster/mp_results/
+  name: scaling_test
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+
+methods:
+  eq:
+    name: "eq"
+    d: [ 0.200 ]
+    e: [ 0.840 ]
+    execute: True
+    use_cpu: False
+    nstlim: 250000
+  pull:
+    name: "pull"
+    nstlim: 350000
+    mode: "serial"
+    d: [ 0.200 ]
+    e: [ 0.840 ]
+    stride: 5
+    pull_intervals:
+      - start: 15.50
+        end: 25.50
+        step: 1.00
+        k: 4.0
