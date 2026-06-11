@@ -34,7 +34,7 @@ methods:
     # constraint: "rtx4090|rtxa5000|rtx5090"
     continuation:
       enabled: True
-      source_tag: repX_new
+      source_tag: repX_new_test
       source_method: us_remd  # or us_remd
     nstlim: 250
     numexchg: 40000
