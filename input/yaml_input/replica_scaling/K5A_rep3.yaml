@@ -11,8 +11,8 @@ cluster:
   exclude_ranks: [ t38cn028,t38cn015,t38cn024,t38cn027,t38cn020,t38cn032,t38cn022,t38cn026]
 
 system:
-  pdb: ~/cluster/master_project/input/pdb_files/1sfi_K5A/1sfi_K5A.pdb
-  output_prefix: ~/cluster/mp_results/
+  pdb: ~/master_project/input/pdb_files/1sfi_K5A/1sfi_K5A.pdb
+  output_prefix: ~/mp_results/
   name: scaling_test
   ligand_residues: 224-237
   protein_residues: 1-223
