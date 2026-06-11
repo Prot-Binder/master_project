@@ -8,7 +8,7 @@ tag: 1sfi_rep5
 test: False
 
 cluster:
-  exclude_ranks: [ t38cn028,t38cn015,t38cn024,t38cn027,t38cn020,t38cn032,t38cn022,t38cn026]
+  exclude_ranks: [ t38cn028,t38cn015,t38cn024,t38cn027,t38cn020,t38cn032,t38cn022,t38cn026,t38cn031]
 
 system:
   pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb

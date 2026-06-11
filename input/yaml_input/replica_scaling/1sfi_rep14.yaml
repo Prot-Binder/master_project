@@ -9,7 +9,8 @@ tag: rep14_scaling_test
 test: False
 
 cluster:
-  exclude_ranks: []
+  exclude_ranks: [ t38cn031 ]
+
 
 system:
   pdb: ~/cluster/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
