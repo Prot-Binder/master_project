@@ -26,8 +26,23 @@ if [[ "$use_special_module_stack" == true ]]; then
     module load ambertools/25.10-cuda-12.8.0
     MODULE_SETUP_LABEL="special stack"
 else
-    # module load pmemd
-    MODULE_SETUP_LABEL="default pmemd module"
+    module purge
+
+    if module load pmemd 2>/dev/null; then
+        echo "Loaded module: pmemd"
+        MODULE_SETUP_LABEL="pmemd module"
+    else
+        echo "Could not load module: pmemd"
+        echo "Trying module: amber"
+
+        if module load amber 2>/dev/null; then
+            echo "Loaded module: amber"
+            MODULE_SETUP_LABEL="amber module"
+        else
+            echo "ERROR: Could not load either pmemd or amber module"
+            exit 1
+        fi
+    fi
 fi
 
 OUTDIR=$1
