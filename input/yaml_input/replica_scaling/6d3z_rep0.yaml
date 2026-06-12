@@ -25,18 +25,11 @@ system:
   box_size: 22.0
 
 setup:
-  setup: True # TODO: think of deleting this filed as it may be redundant
-  # setup_dir: ~/mp_results/scaling_test/6d3y_rep3/eq/setup
+  setup: False # TODO: think of deleting this filed as it may be redundant
+  setup_dir: ~/mp_results/scaling_test/6d3z_rep0/eq/setup
   setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
 
 methods:
-  eq:
-    name: "eq"
-    d: [ 0.200 ]
-    e: [ 0.900 ]
-    execute: True
-    use_cpu: True
-    nstlim: 250000
   pull:
     name: "pull"
     nstlim: 1350000
@@ -46,6 +39,10 @@ methods:
     stride: 5
     pull_intervals:
       - start: 17.00
+        end: 17.00
+        step: 1.0
+        k: 4.0
+      - start: 21.00
         end: 27.00
         step: 1.0
         k: 4.0

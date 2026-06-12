@@ -30,13 +30,6 @@ setup:
   setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
 
 methods:
-  eq:
-    name: "eq"
-    d: [ 0.200 ]
-    e: [ 0.820 ]
-    execute: True
-    use_cpu: True
-    nstlim: 250000
   pull:
     name: "pull"
     nstlim: 1350000
@@ -45,7 +38,7 @@ methods:
     e: [ 0.820 ]
     stride: 5
     pull_intervals:
-      - start: 17.00
+      - start: 19.00
         end: 27.00
         step: 1.0
         k: 4.0
