@@ -5,7 +5,7 @@
 # running us-remd for the 1sfi system. from 16.0 to 19.50 using 20 windows in between
 # we add some intermediate values to get better overlap and balance.
 ##################################################################
-tag: _test_rep0_usremd_res_b1
+tag: _test_rep0_usremd_res_b1_2
 test: False
 
 cluster:
