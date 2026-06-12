@@ -9,7 +9,7 @@ tag: rep14_scaling_test
 test: False
 
 cluster:
-  exclude_ranks: [ t38cn031 ,t38cn030]
+  exclude_ranks: [ t38cn031 ,t38cn030,t38cn036]
 
 
 system:
