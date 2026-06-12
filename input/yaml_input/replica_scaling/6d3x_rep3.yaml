@@ -10,7 +10,7 @@
 # now we use some longer pull simulations and also pull longer. However, we use a smaller box.
 # The overall idea is to get a reasonable estimate for the PMF, so that we do not overscale.
 ##################################################################
-tag: 6d3x_rep3
+tag: 6d3x_rep3_n
 test: False
 
 cluster:
