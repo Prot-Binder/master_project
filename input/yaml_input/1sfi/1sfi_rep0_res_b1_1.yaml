@@ -5,7 +5,7 @@
 # running us-remd for the 1sfi system. from 16.0 to 19.50 using 20 windows in between
 # we add some intermediate values to get better overlap and balance.
 ##################################################################
-tag: rep0_usremd_res_b1_2
+tag: rep0_usremd_res_b1_1
 test: False
 
 cluster:
@@ -36,7 +36,7 @@ methods:
     # If source_method is omitted, it defaults to the current method: us_remd.
     continuation:
       enabled: True
-      source_tag: rep0_usremd_res_b1
+      source_tag: rep0_rst_b1_1
       source_method: us_remd  # or us_remd
     nstlim: 250
     numexchg: 40000
