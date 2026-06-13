@@ -31,7 +31,7 @@ methods:
     name: "us_remd"
     ngpu: 4
     # partition: "barracuda"
-    constraint: "rtx5090|rtx4090"
+    constraint: "rtx5090|rtx4090|rtxa5000"
     # nodelist: ""
     # Optional continuation from a previous tag.
     # If source_method is omitted, it defaults to the current method: us_remd.
