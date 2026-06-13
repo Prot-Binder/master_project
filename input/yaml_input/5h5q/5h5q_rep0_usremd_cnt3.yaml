@@ -36,7 +36,7 @@ methods:
     numexchg: 40000
     continuation:
       enabled: True
-      source_tag: rep0_pull_3
+      source_tag: rep0_pull_3p5_rst
       source_method: us_remd  # or us_remd
     d: [ 0.00 ]
     e: [ 1.00 ]
