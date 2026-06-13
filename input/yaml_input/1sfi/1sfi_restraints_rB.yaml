@@ -1,4 +1,4 @@
-tag: restraints_rB
+tag: restraints_rB_k0
 test: False
 
 cluster:
@@ -27,4 +27,5 @@ restraints:
     class: receptor
     restraint_file: _rB.r
     nstlim: 100000000
-    kappa: [ 10.0, 6.0, 3.0, 1.0, 0.5, 0.25, 0.0]
+    # kappa: [ 10.0, 6.0, 3.0, 1.0, 0.5, 0.25, 0.0]
+    kappa: [0.0]
