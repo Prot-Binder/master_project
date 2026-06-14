@@ -1,0 +1,72 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# 6d3x simulation scaled PMF based on previous scaling studies.
+# We selected  d = 0.225  and e = 0.800 to be ideal.
+# we first perform pulling and subsequently like to perform us-remd simulation.
+##################################################################
+tag: repX_pull_usremd
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn036,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn026]
+
+system:
+  pdb: ~/master_project/input/pdb_files/6d3x/6d3x.pdb
+  output_prefix: ~/mp_results/
+  name: 6d3x
+  ligand_residues: 247-260
+  protein_residues: 1-246
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  eq:
+      name: "eq"
+      d: [0.00]
+      e: [1.00]
+      execute: True
+      use_cpu: True
+      nstlim: 250000
+
+  pull:
+    name: "pull"
+    d: [ 0.225 ]
+    e: [ 0.800 ]
+    mode: "serial"
+    stride: 5
+    nstlim: 350000
+    pull_intervals:
+    - start: 16.00
+      end: 22.50
+      step: 0.5
+      k: 8.0
+    - start: 23.00
+      end:  35.00
+      step: 0.75
+      k: 4.0
+    - start: 20.25
+      end: 20.25
+      step: 0.75
+      k: 8.0
+
+
+  us_remd:
+    name: "us_remd"
+    ngpu: 4
+    # partition: "barracuda"
+    constraint: "rtx4090|rtx5090"
+    nstlim: 250
+    numexchg: 50000
+    d: [ 0.225 ]
+    e: [ 0.800 ]
+    us_remd_intervals:
+      - windows: [16.00, 16.50, 17.00, 17.50, 18.00, 18.50, 19.00, 19.50, 20.00, 20.25, 20.50, 21.00, 21.50, 22.00, 22.50, 23.00, 23.75, 24.50, 25.25, 26.00, 26.75, 27.50, 28.25, 29.00, 29.75, 30.50, 31.25, 32.00, 32.75, 33.50, 34.25, 35.00]
+        kappas: [ 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
+
+
+
