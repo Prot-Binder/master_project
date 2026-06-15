@@ -13,8 +13,8 @@ cluster:
 
 
 system:
-  pdb: ~/cluster/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
-  output_prefix: ~/cluster/mp_results/
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/
   name: scaling_test
   ligand_residues: 224-237
   protein_residues: 1-223
