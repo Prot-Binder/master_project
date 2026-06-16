@@ -28,7 +28,7 @@ methods:
   eq:
     name: "eq"
     d: [ 0.200 ]
-    e: [ 0.860 ]
+    e: [ 0.900 ]
     execute: True
     use_cpu: True
     nstlim: 250000
@@ -37,14 +37,10 @@ methods:
     nstlim: 1350000
     mode: "serial"
     d: [ 0.200 ]
-    e: [ 0.860 ]
+    e: [ 0.900 ]
     stride: 5
     pull_intervals:
       - start: 17.00
-        end: 20.75
-        step: 0.75
-        k: 4.0
-      - start: 24.50
-        end: 26.00
-        step: 0.75
+        end: 27.00
+        step: 1.0
         k: 4.0
