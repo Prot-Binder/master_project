@@ -51,6 +51,8 @@ class USMethod(BaseMethod):
                 dependency_arg = self._dependency_arg(ctx.setup_job_id, dependency_job_id)
                 if dependency_arg is not None:
                     us_cmd.append(dependency_arg)
+                if self.cfg.methods.us.constraint is not None:
+                    us_cmd.append(f"--constraint={self.cfg.methods.us.constraint}")
 
                 us_cmd += [
                     "--gres=gpu:1",

@@ -228,6 +228,7 @@ class ContinuationCfg:
 class USCfg(MethodCfgBase):
     us_intervals: list[USIntervalCfg]
     continuation: Optional[ContinuationCfg] = None
+    constraint: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -424,6 +425,8 @@ class Config:
                 if interval.start > interval.end:
                     raise ValueError(f"methods.us.us_intervals[{idx}].start must be < end")
             self._validate_continuation_cfg(us_cfg.continuation, current_method="us", ctx="methods.us")
+            if us_cfg.constraint is not None and not us_cfg.constraint.strip():
+                raise ValueError("methods.us.constraint must not be empty if specified")
 
         if self.methods.rs_remd is not None:
             rs_cfg = self.methods.rs_remd
@@ -921,6 +924,7 @@ def _load_us(raw: dict) -> Optional[USCfg]:
         nstlim=_as_int(us_raw.get("nstlim", 25000000), "methods.us.nstlim"),
         us_intervals=us_intervals,
         continuation=_load_continuation(us_raw, "methods.us"),
+        constraint=str(us_raw["constraint"]) if us_raw.get("constraint") is not None else None,
     )
 
 
