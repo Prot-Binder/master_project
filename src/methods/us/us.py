@@ -74,6 +74,7 @@ class USMethod(BaseMethod):
                 str(input_dir.resolve()),
                 str(amber_dir.resolve()),
                 str(ctx.paths["us"]["top"].resolve()),
+                "1" if self.cfg.methods.us.use_mps else "0",
                 *window_args,
             ]
 

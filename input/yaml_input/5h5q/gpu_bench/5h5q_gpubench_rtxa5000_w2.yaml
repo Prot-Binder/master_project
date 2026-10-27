@@ -1,0 +1,59 @@
+##################################################################
+# Comment:
+# GPU benchmark for umbrella sampling on rtxa5000:
+# 2 US window(s) share one GPU (CUDA MPS) -> exactly one US slurm job.
+# Equilibration 100 ps, pull 100 ps per window, US 1 ns per window.
+# Compare ns/day in the mdinfo6.w* files across the gpu_bench runs.
+##################################################################
+tag: gpubench_rtxa5000_w2
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn026]
+
+system:
+  pdb: ~/master_project/input/pdb_files/5h5q/5h5q_cleaned.pdb
+  output_prefix: ~/mp_results/
+  name: 5h5q
+  ligand_residues: 165-177
+  protein_residues: 1-164
+
+setup:
+  setup: True
+  setup_type: cluster
+
+methods:
+  eq:
+    name: "eq"
+    d: [0.00]
+    e: [1.00]
+    execute: True
+    use_cpu: False
+    nstlim: 100000         # 100 ps (dt = 1 fs in mdin4)
+
+  pull:
+    name: "pull"
+    d: [0.00]
+    e: [1.00]
+    mode: "serial"
+    stride: 1
+    nstlim: 25000          # 100 ps (dt = 4 fs)
+    pull_intervals:
+    - start: 20.00
+      end: 20.50
+      step: 0.50
+      k: 20.0
+
+  us:
+    name: "us"
+    nstlim: 250000         # 1 ns (dt = 4 fs)
+    d: [0.00]
+    e: [1.00]
+    constraint: "rtxa5000"
+    windows_per_gpu: 2
+    use_mps: True
+    us_intervals:
+      - start: 20.00
+        end: 20.50
+        step: 0.50
+        k: 20.0

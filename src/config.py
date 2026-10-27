@@ -230,6 +230,7 @@ class USCfg(MethodCfgBase):
     continuation: Optional[ContinuationCfg] = None
     constraint: Optional[str] = None
     windows_per_gpu: int = 1
+    use_mps: bool = False
 
 
 @dataclass(frozen=True)
@@ -430,6 +431,8 @@ class Config:
                 raise ValueError("methods.us.constraint must not be empty if specified")
             if us_cfg.windows_per_gpu <= 0:
                 raise ValueError("methods.us.windows_per_gpu must be > 0")
+            if us_cfg.use_mps and us_cfg.windows_per_gpu == 1:
+                print("\033[93m[US] use_mps has no effect with windows_per_gpu = 1\033[0m")
 
         if self.methods.rs_remd is not None:
             rs_cfg = self.methods.rs_remd
@@ -933,6 +936,7 @@ def _load_us(raw: dict) -> Optional[USCfg]:
             if us_raw.get("windows_per_gpu") is not None
             else 1
         ),
+        use_mps=_as_bool(us_raw["use_mps"], "methods.us.use_mps") if us_raw.get("use_mps") is not None else False,
     )
 
 

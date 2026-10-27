@@ -43,12 +43,14 @@ else
     fi
 fi
 
-# usage: run_us.sh MDINDIR OUTDIR TOPDIR window1 coord1 [window2 coord2 ...]
-# all given windows run concurrently on the GPU of this job
+# usage: run_us.sh MDINDIR OUTDIR TOPDIR USE_MPS window1 coord1 [window2 coord2 ...]
+# all given windows run concurrently on the GPU of this job;
+# with USE_MPS=1 they share the GPU through a per-job CUDA MPS daemon
 MDINDIR=$1
 OUTDIR=$2
 TOPDIR=$3
-shift 3
+USE_MPS=$4
+shift 4
 
 if (( $# == 0 || $# % 2 != 0 )); then
     echo "ERROR: expected pairs of <window> <coordinate file>, got: $*"
@@ -61,6 +63,33 @@ echo "Node list: $SLURM_JOB_NODELIST"
 echo "Running on node: $(hostname)"
 echo "Modules: $MODULE_SETUP_LABEL"
 echo "GPU Info: $(nvidia-smi -L)"
+echo "Compute mode: $(nvidia-smi --query-gpu=compute_mode --format=csv,noheader)"
+
+if [[ "$USE_MPS" == 1 ]]; then
+    # per-job directories, so jobs on the same node (or sharing $HOME) do not interfere;
+    # CUDA_VISIBLE_DEVICES is left as set by slurm
+    MPS_DIR="${TMPDIR:-/tmp}/mps_${SLURM_JOB_ID:-$$}"
+    export CUDA_MPS_PIPE_DIRECTORY="$MPS_DIR/pipe"
+    export CUDA_MPS_LOG_DIRECTORY="$MPS_DIR/log"
+    mkdir -p "$CUDA_MPS_PIPE_DIRECTORY" "$CUDA_MPS_LOG_DIRECTORY"
+
+    if ! nvidia-cuda-mps-control -d; then
+        echo "ERROR: could not start CUDA MPS daemon"
+        exit 1
+    fi
+    echo "MPS: started (pipe: $CUDA_MPS_PIPE_DIRECTORY)"
+
+    # stop the daemon however the job ends (normal exit, failure, scancel, time limit)
+    stop_mps() {
+        echo quit | nvidia-cuda-mps-control
+        rm -rf "$MPS_DIR"
+        echo "MPS: stopped"
+    }
+    trap stop_mps EXIT
+    trap 'exit 143' TERM INT
+else
+    echo "MPS: off"
+fi
 
 windows=()
 pids=()
