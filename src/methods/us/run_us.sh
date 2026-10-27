@@ -43,18 +43,46 @@ else
     fi
 fi
 
-window=$1
-MDINDIR=$2
-OUTDIR=$3
-TOPDIR=$4
-COORD_FILE=$5
+# usage: run_us.sh MDINDIR OUTDIR TOPDIR window1 coord1 [window2 coord2 ...]
+# all given windows run concurrently on the GPU of this job
+MDINDIR=$1
+OUTDIR=$2
+TOPDIR=$3
+shift 3
+
+if (( $# == 0 || $# % 2 != 0 )); then
+    echo "ERROR: expected pairs of <window> <coordinate file>, got: $*"
+    exit 1
+fi
 
 echo "Job ID: $SLURM_JOB_ID"
 echo "SLURM local node: $SLURMD_NODENAME"
 echo "Node list: $SLURM_JOB_NODELIST"
 echo "Running on node: $(hostname)"
 echo "Modules: $MODULE_SETUP_LABEL"
+echo "GPU Info: $(nvidia-smi -L)"
 
-printf "Running Umbrella Sampling for Window $window... "
-pmemd.cuda -O -i $MDINDIR/mdin6.w$window -o $OUTDIR/mdout6.w$window -p $TOPDIR/prmtop1 -c $COORD_FILE -r $OUTDIR/restrt6.w$window -x $OUTDIR/traj6.w$window.nc -inf $OUTDIR/mdinfo6.w$window
-echo "done"
+windows=()
+pids=()
+while (( $# > 0 )); do
+    window=$1
+    COORD_FILE=$2
+    shift 2
+
+    echo "Starting Umbrella Sampling for Window $window (input: $COORD_FILE)"
+    pmemd.cuda -O -i $MDINDIR/mdin6.w$window -o $OUTDIR/mdout6.w$window -p $TOPDIR/prmtop1 -c $COORD_FILE -r $OUTDIR/restrt6.w$window -x $OUTDIR/traj6.w$window.nc -inf $OUTDIR/mdinfo6.w$window &
+    windows+=("$window")
+    pids+=("$!")
+done
+
+status=0
+for i in "${!pids[@]}"; do
+    if wait "${pids[$i]}"; then
+        echo "Window ${windows[$i]} done"
+    else
+        echo "ERROR: Window ${windows[$i]} failed"
+        status=1
+    fi
+done
+
+exit $status

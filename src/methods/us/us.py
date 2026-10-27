@@ -26,64 +26,72 @@ class USMethod(BaseMethod):
         pull_dir = None if continuation_enabled else self._get_pull_dir(ctx)
 
         ctx.us_job_ids = {}
+        windows_per_gpu = self.cfg.methods.us.windows_per_gpu
 
+        windows = []
         for interval in self.cfg.methods.us.us_intervals:
             w_start = float(f"{float(interval.start):.2f}")
             w_end = float(f"{float(interval.end):.2f}")
             step = float(f"{float(interval.step):.2f}")
 
-            windows = [float(f"{float(window):.2f}") for window in np.arange(w_start, w_end + step, step)]
+            windows += [float(f"{float(window):.2f}") for window in np.arange(w_start, w_end + step, step)]
 
-            for window in windows:
-                window_value = float(f"{float(window):.2f}")
+        # group windows so that at most windows_per_gpu simulations share one GPU job
+        for group_start in range(0, len(windows), windows_per_gpu):
+            group = windows[group_start:group_start + windows_per_gpu]
+            group_str = "_".join(f"{window:.2f}" for window in group)
+
+            window_args = []
+            dependency_job_ids = []
+            for window_value in group:
                 window_str = f"{window_value:.2f}"
                 coordinate_file = self._resolve_input_coordinate(window_value, pull_dir)
-                dependency_job_id = None
+                window_args += [window_str, str(coordinate_file.resolve())]
                 if not continuation_enabled:
-                    dependency_job_id = self._resolve_pull_dependency(window_value, pull_dir, ctx)
+                    dependency_job_ids.append(self._resolve_pull_dependency(window_value, pull_dir, ctx))
 
-                print(f"\033[92m[US] submit us window {window_str}\033[0m")
-                us_cmd = [
-                    "sbatch",
-                    f"--job-name={job_id}_{window_str}",
-                ]
+            print(f"\033[92m[US] submit us window(s) {', '.join(window_args[::2])}\033[0m")
+            us_cmd = [
+                "sbatch",
+                f"--job-name={job_id}_{group_str}",
+            ]
 
-                dependency_arg = self._dependency_arg(ctx.setup_job_id, dependency_job_id)
-                if dependency_arg is not None:
-                    us_cmd.append(dependency_arg)
-                if self.cfg.methods.us.constraint is not None:
-                    us_cmd.append(f"--constraint={self.cfg.methods.us.constraint}")
+            dependency_arg = self._dependency_arg(ctx.setup_job_id, dependency_job_ids)
+            if dependency_arg is not None:
+                us_cmd.append(dependency_arg)
+            if self.cfg.methods.us.constraint is not None:
+                us_cmd.append(f"--constraint={self.cfg.methods.us.constraint}")
 
-                us_cmd += [
-                    "--gres=gpu:1",
-                    "--nodes=1",
-                    "--time=2-00:00:00",
-                    "--ntasks=1",
-                    "--cpus-per-task=1",
-                    exclude_arg,
-                    f"--output={slurm_dir.resolve()}/slurm-%j_us{window_str}.out",
-                    f"{script_dir.resolve()}/run_us.sh",
-                    f"{window_str}",
-                    str(input_dir.resolve()),
-                    str(amber_dir.resolve()),
-                    str(ctx.paths["us"]["top"].resolve()),
-                    str(coordinate_file.resolve()),
-                ]
+            us_cmd += [
+                "--gres=gpu:1",
+                "--nodes=1",
+                "--time=2-00:00:00",
+                "--ntasks=1",
+                f"--cpus-per-task={len(group)}",
+                exclude_arg,
+                f"--output={slurm_dir.resolve()}/slurm-%j_us{group_str}.out",
+                f"{script_dir.resolve()}/run_us.sh",
+                str(input_dir.resolve()),
+                str(amber_dir.resolve()),
+                str(ctx.paths["us"]["top"].resolve()),
+                *window_args,
+            ]
 
-                us_result = subprocess.run(
-                    us_cmd,
-                    capture_output=True,
-                    text=True,
-                    cwd=result_dir.resolve(),
-                )
+            us_result = subprocess.run(
+                us_cmd,
+                capture_output=True,
+                text=True,
+                cwd=result_dir.resolve(),
+            )
 
-                if us_result.returncode != 0:
-                    print("STDOUT:\n", us_result.stdout)
-                    print("STDERR:\n", us_result.stderr)
-                    raise RuntimeError("sbatch failed")
+            if us_result.returncode != 0:
+                print("STDOUT:\n", us_result.stdout)
+                print("STDERR:\n", us_result.stderr)
+                raise RuntimeError("sbatch failed")
 
-                us_job_id = us_result.stdout.strip().split()[-1]
-                ctx.us_job_ids[window] = us_job_id
+            us_job_id = us_result.stdout.strip().split()[-1]
+            for window_value in group:
+                ctx.us_job_ids[window_value] = us_job_id
 
 
     def _is_continuation_enabled(self) -> bool:

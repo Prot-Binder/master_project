@@ -229,6 +229,7 @@ class USCfg(MethodCfgBase):
     us_intervals: list[USIntervalCfg]
     continuation: Optional[ContinuationCfg] = None
     constraint: Optional[str] = None
+    windows_per_gpu: int = 1
 
 
 @dataclass(frozen=True)
@@ -427,6 +428,8 @@ class Config:
             self._validate_continuation_cfg(us_cfg.continuation, current_method="us", ctx="methods.us")
             if us_cfg.constraint is not None and not us_cfg.constraint.strip():
                 raise ValueError("methods.us.constraint must not be empty if specified")
+            if us_cfg.windows_per_gpu <= 0:
+                raise ValueError("methods.us.windows_per_gpu must be > 0")
 
         if self.methods.rs_remd is not None:
             rs_cfg = self.methods.rs_remd
@@ -925,6 +928,11 @@ def _load_us(raw: dict) -> Optional[USCfg]:
         us_intervals=us_intervals,
         continuation=_load_continuation(us_raw, "methods.us"),
         constraint=str(us_raw["constraint"]) if us_raw.get("constraint") is not None else None,
+        windows_per_gpu=(
+            _as_int(us_raw["windows_per_gpu"], "methods.us.windows_per_gpu")
+            if us_raw.get("windows_per_gpu") is not None
+            else 1
+        ),
     )
 
 
