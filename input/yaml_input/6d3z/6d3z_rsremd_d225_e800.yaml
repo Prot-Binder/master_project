@@ -20,29 +20,27 @@ system:
   protein_residues: 1-246
 
 setup:
-  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup: False # TODO: think of deleting this filed as it may be redundant
+  setup_dir: setup_dir: ~/mp_results/6d3y/rep_scaled_rsremd/rs_remd/setup
   setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
   # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
 
 methods:
-  eq:
-    name: "eq"
-    d: [ 0.000 ]
-    e: [ 1.00 ]
-    execute: True
-    use_cpu: True
-    nstlim: 250000
 
   rs_remd:
     name: "rs_remd"
     n_rep: 16
     ngpu: 4
-    constraint: "rtx4090|rtxa5000|rtx5090"
+    # constraint: "rtx4090|rtxa5000|rtx5090"
     eq_replica: 1
+    # nodelist: "t38cn056"
     nstlim_eq: 250000
+    restart:
+      enabled: True
+      path: ~/mp_results/6d3z/rep_scaled_rsremd/rs_remd/run_output/amber
     # nstlim_eq_each: 250000
     nstlim: 250
-    numexchg: 100000
+    numexchg: 50000
     d: [ 0.000, 0.015, 0.030, 0.045, 0.060, 0.075, 0.090, 0.105, 0.120, 0.135, 0.150, 0.165, 0.180, 0.195, 0.210, 0.225 ]
     e: [ 1.000, 0.987, 0.973, 0.960, 0.947, 0.933, 0.920, 0.907, 0.893, 0.880, 0.867, 0.853, 0.840, 0.827, 0.813, 0.800 ]
     k: 8.0

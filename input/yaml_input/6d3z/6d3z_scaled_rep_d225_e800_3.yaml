@@ -1,0 +1,45 @@
+##################################################################
+# Describe what this run is all about.
+# This helps your brain later (while writing your thesis).
+# Comment:
+# 6d3y simulation scaled PMF based on previous US-RMSD run, with tag: repX_pull_usremd.
+##################################################################
+tag: repX_pull_usremd3
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn036,t38cn030,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn026]
+
+system:
+  pdb: ~/master_project/input/pdb_files/6d3z/6d3z.pdb
+  output_prefix: ~/mp_results/
+  name: 6d3z
+  ligand_residues: 247-260
+  protein_residues: 1-246
+
+setup:
+  setup: False # TODO: think of deleting this filed as it may be redundant
+  setup_dir: ~/mp_results/6d3z/repX_pull_usremd/us_remd/setup
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+
+  us_remd:
+    name: "us_remd"
+    ngpu: 4
+    # partition: "barracuda"
+    constraint: "rtx4090|rtxa5000|rtx5090"
+    nstlim: 250
+    numexchg: 50000
+    continuation:
+      enabled: True
+      source_tag: repX_pull_usremd_rst3
+      source_method: us_remd  # or us_remd
+    d: [ 0.225 ]
+    e: [ 0.800 ]
+    us_remd_intervals:
+      - windows: [16.00, 16.50, 17.00, 17.50, 18.00, 18.50, 19.00, 19.50, 19.75, 20.00, 20.50, 21.00, 21.50, 22.00, 22.50, 23.00, 23.75, 24.50, 25.25, 26.00] #, 26.75, 27.50, 28.25, 29.00, 29.75, 30.50, 31.25, 32.00, 32.75, 33.50, 34.25, 35.00]
+        kappas:  [08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 08.00, 04.00] #, 04.00, 04.00, 04.00, 04.00] # , 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00, 04.00]
+
+ 

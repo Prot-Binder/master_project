@@ -1,0 +1,44 @@
+tag: repX_restraints_remain
+test: False
+
+cluster:
+  exclude_ranks: [t38cn030,t38cn028,t38cn015,t38cn024,t38cn027,t38cn031,t38cn020,t38cn032,t38cn019,t38cn022,t38cn026,t38cn036,t38cn038,t38cn039,t38cn040,t38cn041,t38cn042,t38cn043,t38cn044,t38cn045,t38cn046,t38cn047,t38cn048,t38cn049,t38cn050,t38cn051,t38cn052,t38cn053,t38cn054,t38cn055]
+
+system:
+  pdb: ~/master_project/input/pdb_files/6d3z/6d3z.pdb
+  output_prefix: ~/mp_results/
+  name: 6d3z
+  ligand_residues: 247-260
+  protein_residues: 1-246
+
+setup:
+  setup: True
+  setup_type: cluster
+
+restraints:
+  d: 0.225
+  e: 0.800
+  systems:
+    complex:
+      pdb: input/pdb_files/6d3z/6d3z.pdb
+      ligand_residues: 247-260
+      receptor_residues: 1-246
+  
+  ori:
+    class: complex
+    restraint_file: _lro.r
+    nstlim: 75000000
+    kappa: [100.0]
+
+  lrmsd:
+    class: complex
+    restraint_file: _l.r
+    nstlim: 100000000
+    kappa: [10.0, 6.0, 3.0, 1.0, 0.9, 0.6, 0.3, 0.1, 0.0]
+
+  rrmsd:
+    class: complex
+    restraint_file: _lr.r
+    nstlim: 75000000
+    kappa: [10.0, 8.0, 6.0, 3.0, 1.0]
+
