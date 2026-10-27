@@ -299,7 +299,8 @@ def plot_replica_scaling_histograms(
             smooth_y,
             linewidth=2.0,
             color=color,
-            label=f"{result['replica']} (target={float(result['intended_center']):.2f})",
+            # label=f"{result['replica']} (target={float(result['intended_center']):.2f})",
+            label=f"COM = {float(result['intended_center']):.2f}",
         )
 
         if smooth_y.size > 0:
@@ -323,9 +324,9 @@ def plot_replica_scaling_histograms(
             va="bottom",
         )
 
-    ax.set_xlabel("COM distance")
-    ax.set_ylabel("Count")
-    ax.set_title("Replica scaling histograms")
+    ax.set_xlabel("COM distance", fontsize=15)
+    ax.set_ylabel("Count", fontsize=15)
+    # ax.set_title("Replica scaling histograms")
     ax.legend(fontsize=8, ncols=2)
     fig.tight_layout()
     fig.savefig(output_path, dpi=200)

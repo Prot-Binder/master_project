@@ -43,7 +43,8 @@ def calculate_com_distance(ctx, cfg) -> float:
 
     if not np.isfinite(avg_com_dist):
         raise ValueError(f"Average COM distance is not finite: {avg_com_dist}. Check trajectory and topology files.")
-    return avg_com_dist
+    # return avg_com_dist
+    return avg_com_dist + 2.0
 
 def setup_rs_remd(cfg, ctx):
     restart_enabled = (
