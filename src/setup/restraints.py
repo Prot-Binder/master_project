@@ -430,15 +430,21 @@ def parse_args():
     
     return parser.parse_args()
 
-def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: str):
-    if ('-' not in protein) or ('-' not in ligand):
-        raise ValueError("Receptor or ligand interval string is not properly formated. Try to use: \"1-123\"")
 
-    r_start = protein.split('-')[0]
-    r_end = protein.split('-')[1]
-    l_start = ligand.split('-')[0]
-    l_end = ligand.split('-')[1]
-    test1 = ARW_setup(pdb_path, receptor=f'resid {r_start} to {r_end} and not element H', ligand=f'resid {l_start} to {l_end} and not element H')
+def _residue_range_selection(interval: str, label: str) -> str:
+    if "-" not in interval:
+        raise ValueError(
+            f"{label} interval string is not properly formatted. Try to use: \"1-123\""
+        )
+
+    start, end = interval.split("-", 1)
+    return f"resid {start} to {end} and not element H"
+
+
+def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: str):
+    receptor_selection = _residue_range_selection(protein, "Receptor")
+    ligand_selection = _residue_range_selection(ligand, "Ligand")
+    test1 = ARW_setup(pdb_path, receptor=receptor_selection, ligand=ligand_selection)
 
     test1.set_anchors()
     test1.save_anchor_view(anchorsPDB=f'{setup_path}/anchors.pdb', ligrecPDB=f'{setup_path}/lig_rec.pdb')
@@ -459,14 +465,9 @@ def create_restraints(setup_path: Path, pdb_path: Path, protein: str, ligand: st
 
 
 def create_restraints_complex(setup_path: Path, pdb_path: Path, protein: str, ligand: str):
-    if ('-' not in protein) or ('-' not in ligand):
-        raise ValueError("Receptor or ligand interval string is not properly formated. Try to use: \"1-123\"")
-
-    r_start = protein.split('-')[0]
-    r_end = protein.split('-')[1]
-    l_start = ligand.split('-')[0]
-    l_end = ligand.split('-')[1]
-    test1 = ARW_setup(pdb_path, receptor=f'resid {r_start} to {r_end} and not element H', ligand=f'resid {l_start} to {l_end} and not element H')
+    receptor_selection = _residue_range_selection(protein, "Receptor")
+    ligand_selection = _residue_range_selection(ligand, "Ligand")
+    test1 = ARW_setup(pdb_path, receptor=receptor_selection, ligand=ligand_selection)
 
     test1.set_anchors()
     test1.save_anchor_view(anchorsPDB=f'{setup_path}/anchors.pdb', ligrecPDB=f'{setup_path}/lig_rec.pdb')
@@ -504,15 +505,10 @@ def create_restraints_complex(setup_path: Path, pdb_path: Path, protein: str, li
         None,
     )
 
+
 def create_restraints_receptor(setup_path: Path, pdb_path: Path, protein: str):
-
-    r_start = protein.split('-')[0]
-    r_end = protein.split('-')[1]
-
-    # test2 = ARW_setup(pdb_path, receptor=f'resid {r_start} to {r_end} and not element H',
-    #                   ligand=f'resid {r_start} to {r_end} and not element H')
-
-    test2 = ARW_setup(pdb_path, receptor=f'protein and not element H', ligand=f'protein and not element H')
+    receptor_selection = _residue_range_selection(protein, "Receptor")
+    test2 = ARW_setup(pdb_path, receptor=receptor_selection, ligand=receptor_selection)
     try:
         test2.set_anchors()
     except ValueError:
@@ -523,8 +519,8 @@ def create_restraints_receptor(setup_path: Path, pdb_path: Path, protein: str):
 
 
 def create_restraints_ligand(setup_path: Path, pdb_path: Path, ligand: str):
-    test3 = ARW_setup(pdb_path, receptor=f'protein and not element H',
-                      ligand=f'protein and not element H')
+    ligand_selection = _residue_range_selection(ligand, "Ligand")
+    test3 = ARW_setup(pdb_path, receptor=ligand_selection, ligand=ligand_selection)
     try:
         test3.set_anchors()
     except ValueError:
