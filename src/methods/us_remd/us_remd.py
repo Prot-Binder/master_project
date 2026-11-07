@@ -61,6 +61,8 @@ class USREMDMethod(BaseMethod):
             dependency_ids = _collect_pull_dependencies(self.cfg, ctx, windows)
 
             n_windows = len(windows)
+            # ncpu < n_windows: fewer cpu cores than replicas, the MPI ranks oversubscribe the cores
+            n_cpus = n_windows if method_cfg.ncpu is None else min(method_cfg.ncpu, n_windows)
             block_dir = result_dir / f"log_block_{block_idx}"
             block_dir.mkdir(parents=True, exist_ok=True)
 
@@ -91,7 +93,7 @@ class USREMDMethod(BaseMethod):
                 f"--gres=gpu:{method_cfg.ngpu}",
                 f"--nodes={requested_nodes}",
                 "--time=2-00:00:00",
-                f"--ntasks={n_windows}",
+                f"--ntasks={n_cpus}",
                 "--cpus-per-task=1",
                 "--mem=100G",
                 exclude_arg,
@@ -99,6 +101,8 @@ class USREMDMethod(BaseMethod):
                 f"{script_dir.resolve()}/run_usremd_prod.sh",
                 str(n_windows),
                 str(groupfile),
+                str(n_cpus),
+                "1" if method_cfg.use_mps else "0",
             ]
 
             result = subprocess.run(

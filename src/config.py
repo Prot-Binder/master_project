@@ -282,6 +282,8 @@ class USREMDCfg(MethodCfgBase):
     ntasks_per_node: Optional[int] = None
     partition: Optional[str] = None
     constraint: Optional[str] = None
+    ncpu: Optional[int] = None
+    use_mps: bool = False
 
 @dataclass(frozen=True)
 class RestraintContributionCfg:
@@ -550,7 +552,12 @@ class Config:
                 raise ValueError("methods.us_remd.nodes must be > 0 if specified")
             if us_remd_cfg.ntasks_per_node is not None and us_remd_cfg.ntasks_per_node <= 0:
                 raise ValueError("methods.us_remd.ntasks_per_node must be > 0 if specified")
-            resolve_scheduler_nodes(nodelist=us_remd_cfg.nodelist, nodes=us_remd_cfg.nodes)
+            requested_nodes = resolve_scheduler_nodes(nodelist=us_remd_cfg.nodelist, nodes=us_remd_cfg.nodes)
+            if us_remd_cfg.ncpu is not None:
+                if us_remd_cfg.ncpu <= 0:
+                    raise ValueError("methods.us_remd.ncpu must be > 0 if specified")
+                if requested_nodes > 1:
+                    raise ValueError("methods.us_remd.ncpu (cpu oversubscription) is only supported on a single node")
             self._validate_continuation_cfg(
                 us_remd_cfg.continuation,
                 current_method="us_remd",
@@ -1066,6 +1073,9 @@ def _load_us_remd(raw: dict) -> Optional[USREMDCfg]:
         if us_remd_raw.get("ntasks_per_node") is not None else None,
         partition=str(us_remd_raw["partition"]) if us_remd_raw.get("partition") is not None else None,
         constraint=str(us_remd_raw["constraint"]) if us_remd_raw.get("constraint") is not None else None,
+        ncpu=_as_int(us_remd_raw["ncpu"], "methods.us_remd.ncpu") if us_remd_raw.get("ncpu") is not None else None,
+        use_mps=_as_bool(us_remd_raw["use_mps"], "methods.us_remd.use_mps")
+        if us_remd_raw.get("use_mps") is not None else False,
     )
 
 
