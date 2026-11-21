@@ -236,6 +236,11 @@ def generate_eq(cfg, ctx) -> None:
     shutil.copy2(setup_dir / "system.rst", eq_input_dir / "inpcrd0")
     shutil.copy2(setup_dir / "system.rst", eq_input_dir / "refc")
 
+    # shared equilibration: provide the handoff structure that pull/us start from
+    if cfg.methods.eq.input_restart is not None:
+        shutil.copy2(cfg.methods.eq.input_restart, eq_input_dir / "inpcrd_eq")
+        print(f"\033[92m[setup] Copied shared eq structure {cfg.methods.eq.input_restart} to {eq_input_dir / 'inpcrd_eq'}\033[0m")
+
     # adjust input files for pull simulation
     mdin_file = eq_input_dir / "mdin4"
     mdin_text = (mdin_file.read_text()

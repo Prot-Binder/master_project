@@ -28,7 +28,9 @@ class PullMethod(BaseMethod):
 
         # check for dependency on equilibration job
         prev_job_id = ctx.eq_job_id if ctx.eq_job_id is not None else None
-        if prev_job_id is None and (not check_eq_exists(ctx.paths["eq"]["input"])):
+        # with a shared eq (eq.input_restart) the setup job provides inpcrd_eq; pull depends on setup
+        shared_eq = self.cfg.methods.eq is not None and self.cfg.methods.eq.input_restart is not None
+        if prev_job_id is None and not shared_eq and (not check_eq_exists(ctx.paths["eq"]["input"])):
             raise RuntimeError("Equilibration output files not found. Please run equilibration before launching pull method.")
 
         ctx.pull_job_ids = {}
