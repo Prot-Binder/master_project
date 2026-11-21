@@ -192,6 +192,8 @@ class EqCfg(MethodCfgBase):
     execute: bool
     use_cpu: bool
     nstlim_eq: Optional[int] = None
+    # If set, no equilibration is submitted; this restart file is used as inpcrd_eq instead.
+    input_restart: Optional[Path] = None
 
 
 @dataclass(frozen=True)
@@ -382,6 +384,13 @@ class Config:
                 #         raise ValueError(
                 #             f"restraints.contributions[{contribution_idx}].kappa[{point_idx}] must be > 0."
                 #        )
+
+        if self.methods.eq is not None and self.methods.eq.input_restart is not None:
+            if not self.methods.eq.input_restart.is_file():
+                raise ValueError(
+                    f"methods.eq.input_restart does not exist (run the shared equilibration first): "
+                    f"{self.methods.eq.input_restart}"
+                )
 
         if self.methods.eq is not None and self.methods.eq.execute:
             eq_cfg = self.methods.eq
@@ -818,6 +827,7 @@ def _load_eq(raw: dict) -> Optional[EqCfg]:
         e=_as_float_list(eq_raw.get("e", []), "eq.e"),
         nstlim=_as_int(eq_raw.get("nstlim", 250000), "eq.nstlim"),
         nstlim_eq=_as_int(eq_raw["nstlim_eq"], "eq.nstlim_eq") if eq_raw.get("nstlim_eq") is not None else None,
+        input_restart=_as_path(eq_raw["input_restart"]) if eq_raw.get("input_restart") is not None else None,
     )
 
 

@@ -1,6 +1,7 @@
 from src.methods.JobContext import JobContext
 from src.methods.base_method import BaseMethod
 from src.config import Config
+import shutil
 import subprocess
 
 class EqMethod(BaseMethod):
@@ -8,6 +9,16 @@ class EqMethod(BaseMethod):
     def launch(self, ctx: JobContext) -> None:
         if self.cfg.methods.eq is None:
             raise ValueError("EqMethod.launch() requires cfg.methods.eq to be configured.")
+
+        input_restart = self.cfg.methods.eq.input_restart
+        if input_restart is not None:
+            # Reuse an existing (shared) equilibrated structure instead of running equilibration.
+            target = ctx.paths["eq"]["input"] / "inpcrd_eq"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(input_restart, target)
+            print(f"\033[92m[EQ] skipped equilibration; using {input_restart} as {target}\033[0m")
+            ctx.eq_job_id = None
+            return
 
         job_id = str(self.cfg.system.name) + "_" + str(self.cfg.tag)
 
