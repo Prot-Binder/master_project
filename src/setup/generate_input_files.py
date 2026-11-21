@@ -32,6 +32,52 @@ def _render_template_text(text: str, values: dict[str, object]) -> str:
     return rendered
 
 
+WATER_RESIDUE_NAMES = {"WAT", "HOH", "TIP3"}
+
+
+def count_non_water_atoms(system_pdb: Path) -> int:
+    """Return ntwprt: number of atoms up to and including the last non-water atom.
+
+    pmemd can only write the first N atoms of the system to the trajectory (ntwprt), so this
+    relies on water being placed at the end of the system, which is what tleap does after
+    solvateoct/addIonsRand (solute, then ions, then water). Ions are therefore included.
+    """
+    n_atoms = 0
+    last_non_water = 0
+    water_seen_before_solute = False
+    with open(system_pdb) as fh:
+        for line in fh:
+            if not line.startswith(("ATOM", "HETATM")):
+                continue
+            n_atoms += 1
+            resname = line[17:21].strip()
+            if resname in WATER_RESIDUE_NAMES:
+                continue
+            if last_non_water != n_atoms - 1:
+                water_seen_before_solute = True
+            last_non_water = n_atoms
+    if last_non_water == 0:
+        raise ValueError(f"No non-water atoms found in {system_pdb}")
+    if water_seen_before_solute:
+        print(
+            f"\033[93m[setup] WARNING: water in {system_pdb} is not contiguous at the end; "
+            f"trajectory keeps the first {last_non_water} atoms (includes some water).\033[0m"
+        )
+    return last_non_water
+
+
+def _fill_ntwprt(mdin_dir: Path, setup_dir: Path) -> None:
+    """Replace {NTWPRT} in all mdin files of mdin_dir with the non-water atom count."""
+    ntwprt = count_non_water_atoms(setup_dir / "system.pdb")
+    for mdin in sorted(mdin_dir.glob("mdin*")):
+        if not mdin.is_file():
+            continue
+        text = mdin.read_text()
+        if "{NTWPRT}" in text:
+            mdin.write_text(text.replace("{NTWPRT}", str(ntwprt)))
+    print(f"\033[92m[setup] ntwprt={ntwprt} (non-water atoms) set in {mdin_dir}\033[0m")
+
+
 def _restraint_equilibration_filename(target_class: str) -> str:
     if target_class == "complex":
         return "_lroa.r"
@@ -209,6 +255,8 @@ def generate_eq(cfg, ctx) -> None:
         )
         mdin_eq_file.write_text(mdin_eq_text)
 
+    _fill_ntwprt(eq_input_dir, setup_dir)
+
 def generate_pull(cfg, ctx):
 
     pull_input_dir = ctx.paths["pull"]["input"]
@@ -262,6 +310,8 @@ def generate_pull(cfg, ctx):
             restraint_output_file = pull_input_dir/f"pull{window_str}.r"
             restraint_output_file.write_text(restraint_text)
 
+    _fill_ntwprt(pull_input_dir, setup_dir)
+
 def generate_us(cfg, ctx):
 
     us_input_dir = ctx.paths["us"]["input"]
@@ -306,6 +356,8 @@ def generate_us(cfg, ctx):
                               .replace("{KAPPA}", str(interval.k)))
             restraint_output_file = us_input_dir / f"_lroaus{window_str}.r"
             restraint_output_file.write_text(restraint_text)
+
+    _fill_ntwprt(us_input_dir, setup_dir)
 
 
 def generate_rs_remd_eq(cfg, ctx):

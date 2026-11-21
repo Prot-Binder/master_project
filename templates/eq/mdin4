@@ -8,6 +8,7 @@ Pre Pull Run with NPT for Correct Density for Adv-FE-Calculation
 	ntx=5,
 	ntwr=10000,    ! Number of timesteps to write out a backup restrt file
 	ntwx=10000,
+	ntwprt={NTWPRT},    ! write only the first NTWPRT atoms (non-water) to the trajectory
 
 	! NATURE AND FORMAT OF THE OUTPUT
 	ntxo=2,

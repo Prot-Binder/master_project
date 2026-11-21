@@ -7,6 +7,7 @@ NPT Eq. /w Cmplx Rstrnts
 	irest=1,
 	ntx=5,
 	ntwx=1000,
+	ntwprt={NTWPRT},    ! write only the first NTWPRT atoms (non-water) to the trajectory
 
 	! NATURE AND FORMAT OF THE OUTPUT
 	ntxo=2,

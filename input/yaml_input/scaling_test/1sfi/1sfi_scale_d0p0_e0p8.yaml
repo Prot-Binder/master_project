@@ -1,0 +1,59 @@
+##################################################################
+# US for 1sfi with LJ scaling d=0.00, e=0.80.
+# Windows 16.00 to 19.00, spacing 1.00, k=4.00.
+# Starts from the shared equilibration (scale_eq_shared).
+##################################################################
+tag: scale_d0p0_e0p8
+test: False
+
+cluster:
+  exclude_ranks: [t38cn035,t38cn030,t38cn038,t38cn028,t38cn015,t38cn024,t38cn027,t38cn016,t38cn018,t38cn031,t38cn020,t38cn021,t38cn032,t38cn019,t38cn022,t38cn026,t38cn053]
+
+system:
+  pdb: ~/master_project/input/pdb_files/1sfi/1sfi_cleaned.pdb
+  output_prefix: ~/mp_results/scaled_test
+  name: 1sfi
+  ligand_residues: 224-237
+  protein_residues: 1-223
+  bond: 224.N-237.C
+  box_size: 16.50
+
+setup:
+  setup: True # TODO: think of deleting this filed as it may be redundant
+  setup_type: cluster # cluster or local; i.e. tleap may not be available on the cluster
+  # setup_dir: ~/cluster/master_project/results/5h5s_new/us/test_multi_k/setup # path to the setup directory where the new setup will be created; if it already exists, it will be overwritten
+
+methods:
+  eq:
+    name: "eq"
+    d: [ 0.000 ]
+    e: [ 1.00 ]
+    execute: True
+    input_restart: ~/mp_results/scaled_test/1sfi/scale_eq_shared/eq/input/inpcrd_eq  # shared eq, see 1sfi_scale_eq_shared.yaml
+    use_cpu: False
+    nstlim: 100000
+    # Optional additional eq-stage mdin_eq runtime if templates/eq/mdin_eq is present.
+  pull:
+    name: "pull"
+    d: [0.00]
+    e: [0.80]
+    mode: "serial"
+    stride: 1
+    nstlim: 100000
+    pull_intervals:
+      - start: 16.00
+        end: 19.00
+        step: 1.00
+        k: 4.00
+  us:
+    name: "us"
+    nstlim: 5000000
+    d: [0.00]
+    e: [0.80]
+    windows_per_gpu: 4
+    use_mps: True
+    us_intervals:
+      - start: 16.00
+        end: 19.00
+        step: 1.00
+        k: 4.00

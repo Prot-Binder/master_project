@@ -1,8 +1,7 @@
 ##################################################################
-# Describe what this run is all about.
-# This helps your brain later (while writing your thesis).
-# Comment:
-# running 20ns simulation on 4 windows to detect ideal scaling
+# US for 5h5q with LJ scaling d=0.00, e=1.00.
+# Windows 16.00 to 19.00, spacing 1.00, k=4.00.
+# Starts from the shared equilibration (scale_eq_shared).
 ##################################################################
 tag: scale_d0p0_e1p0
 test: False
@@ -29,8 +28,8 @@ methods:
     d: [ 0.000 ]
     e: [ 1.00 ]
     execute: True
+    input_restart: ~/mp_results/scaled_test/5h5q/scale_eq_shared/eq/input/inpcrd_eq  # shared eq, see 5h5q_scale_eq_shared.yaml
     use_cpu: False
-    input_restart: ~/mp_results/scaled_test/5h5q/scale_eq_shared/eq/input/inpcrd_eq  # shared eq, see 1sfi_scale_eq_shared.yaml
     nstlim: 100000
     # Optional additional eq-stage mdin_eq runtime if templates/eq/mdin_eq is present.
   pull:

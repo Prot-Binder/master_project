@@ -11,7 +11,8 @@ NVT Eq. /w Cmplx Rstrnts
 	ntxo=2,
 	ntpr=500,
 	iwrap=0,
-	ntwx=1000
+	ntwx=1000,
+	ntwprt={NTWPRT},    ! write only the first NTWPRT atoms (non-water) to the trajectory
 
 	! FROZEN OR RESTRAINT ATOMS
 	ntr=1,
